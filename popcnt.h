@@ -160,8 +160,6 @@ inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 #endif
 }
 
-#endif
-
 inline __m256i popcnt_m256i(const __m256i v)
 {
   __m256i m1 = _mm256_set1_epi8(0x55);
