@@ -306,21 +306,26 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
 #if defined(__AVX2__)
 
-  uintptr_t align32 = (uintptr_t) data64 % 32;
-  if (align32 > size)
-    align32 = size;
-
-  // align memory to 32 bytes boundary for __m256i type
-  for (uint64_t i = 0; i < align32 / 8; i++)
+  // AVX2 popcount is faster than SSE4.2 POPCNT
+  // for array sizes >= 1 kilobyte
+  if (size >= 1024)
   {
-    total += popcnt64(*data64++);
-    size -= 8;
-  }
+    uintptr_t align32 = (uintptr_t) data64 % 32;
+    if (align32 > size)
+      align32 = size;
 
-  // process remaining 256-bit words
-  total += popcnt_harley_seal_avx2((const __m256i*) data64, size / 32);
-  data64 += (size / 32) * 4;
-  size = size % 32;
+    // align memory to 32 bytes boundary for __m256i type
+    for (uint64_t i = 0; i < align32 / 8; i++)
+    {
+      total += popcnt64(*data64++);
+      size -= 8;
+    }
+
+    // process remaining 256-bit words
+    total += popcnt_harley_seal_avx2((const __m256i*) data64, size / 32);
+    data64 += (size / 32) * 4;
+    size = size % 32;
+  }
 
 #endif /* __AVX2__ */
 
