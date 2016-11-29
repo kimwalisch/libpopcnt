@@ -30,12 +30,11 @@
 #define LIBPOPCNT_H
 
 #include <stdint.h>
-#include <immintrin.h>
 
 #if defined(_MSC_VER) && defined(_WIN64)
-#define HAVE_POPCNT64
-
 #include <nmmintrin.h>
+
+#define HAVE_POPCNT64
 
 inline uint64_t popcnt64(uint64_t x)
 {
@@ -43,9 +42,9 @@ inline uint64_t popcnt64(uint64_t x)
 }
 
 #elif defined(_MSC_VER) && defined(_WIN32)
-#define HAVE_POPCNT64
-
 #include <nmmintrin.h>
+
+#define HAVE_POPCNT64
 
 inline uint64_t popcnt64(uint64_t x)
 {
@@ -208,6 +207,9 @@ static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 #endif
 }
 
+#if defined(__AVX2__)
+#include <immintrin.h>
+
 inline __m256i popcnt_m256i(const __m256i v)
 {
   __m256i m1 = _mm256_set1_epi8(0x55);
@@ -280,12 +282,14 @@ static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
          (uint64_t) _mm256_extract_epi64(total, 3);
 }
 
+#endif /* __AVX2__ */
+
 static uint64_t popcnt(const void* data, uint64_t size)
 {
   uint64_t total = 0;
  
   const uint8_t* data8 = (const uint8_t*) data;
-  uint64_t align8 = (uintptr_t) data8 % 8;
+  uintptr_t align8 = (uintptr_t) data8 % 8;
   if (align8 > size)
     align8 = size;
 
@@ -297,7 +301,10 @@ static uint64_t popcnt(const void* data, uint64_t size)
   }
 
   const uint64_t* data64 = (const uint64_t*) data8;
-  uint64_t align32 = (uintptr_t) data64 % 32;
+
+#if defined(__AVX2__)
+
+  uintptr_t align32 = (uintptr_t) data64 % 32;
   if (align32 > size)
     align32 = size;
 
@@ -312,6 +319,8 @@ static uint64_t popcnt(const void* data, uint64_t size)
   total += popcnt_harley_seal_avx2((const __m256i*) data64, size / 32);
   data64 += (size / 32) * 4;
   size = size % 32;
+
+#endif /* __AVX2__ */
 
   // process remaining 64-bit words
   total += popcnt64_unrolled(data64, size / 8);
