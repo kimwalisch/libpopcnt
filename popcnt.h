@@ -175,7 +175,7 @@ inline __m256i popcnt_m256i(const __m256i v)
   return _mm256_sad_epu8(t3, _mm256_setzero_si256());
 }
 
-inline void CSA(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
+inline void CSA_m256i(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
 {
   __m256i u = a ^ b;
   h = (a & b) | (u & c);
@@ -200,21 +200,21 @@ inline uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
 
   for(; i < limit; i += 16)
   {
-    CSA(twosA, ones, ones, data[i+0], data[i+1]);
-    CSA(twosB, ones, ones, data[i+2], data[i+3]);
-    CSA(foursA, twos, twos, twosA, twosB);
-    CSA(twosA, ones, ones, data[i+4], data[i+5]);
-    CSA(twosB, ones, ones, data[i+6], data[i+7]);
-    CSA(foursB, twos, twos, twosA, twosB);
-    CSA(eightsA,fours, fours, foursA, foursB);
-    CSA(twosA, ones, ones, data[i+8], data[i+9]);
-    CSA(twosB, ones, ones, data[i+10], data[i+11]);
-    CSA(foursA, twos, twos, twosA, twosB);
-    CSA(twosA, ones, ones, data[i+12], data[i+13]);
-    CSA(twosB, ones, ones, data[i+14], data[i+15]);
-    CSA(foursB, twos, twos, twosA, twosB);
-    CSA(eightsB, fours, fours, foursA, foursB);
-    CSA(sixteens, eights, eights, eightsA, eightsB);
+    CSA_m256i(twosA, ones, ones, data[i+0], data[i+1]);
+    CSA_m256i(twosB, ones, ones, data[i+2], data[i+3]);
+    CSA_m256i(foursA, twos, twos, twosA, twosB);
+    CSA_m256i(twosA, ones, ones, data[i+4], data[i+5]);
+    CSA_m256i(twosB, ones, ones, data[i+6], data[i+7]);
+    CSA_m256i(foursB, twos, twos, twosA, twosB);
+    CSA_m256i(eightsA,fours, fours, foursA, foursB);
+    CSA_m256i(twosA, ones, ones, data[i+8], data[i+9]);
+    CSA_m256i(twosB, ones, ones, data[i+10], data[i+11]);
+    CSA_m256i(foursA, twos, twos, twosA, twosB);
+    CSA_m256i(twosA, ones, ones, data[i+12], data[i+13]);
+    CSA_m256i(twosB, ones, ones, data[i+14], data[i+15]);
+    CSA_m256i(foursB, twos, twos, twosA, twosB);
+    CSA_m256i(eightsB, fours, fours, foursA, foursB);
+    CSA_m256i(sixteens, eights, eights, eightsA, eightsB);
 
     total = _mm256_add_epi64(total, popcnt_m256i(sixteens));
   }
