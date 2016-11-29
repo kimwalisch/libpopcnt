@@ -53,6 +53,7 @@ inline uint64_t popcnt64(uint64_t x)
 }
 
 #elif defined(__x86_64__) && \
+      defined(__POPCNT__) && \
       defined(__GNUC__) && \
              (__GNUC__ > 4 || \
              (__GNUC__ == 4 && __GNUC_MINOR__> 1))
@@ -66,6 +67,7 @@ inline uint64_t popcnt64(uint64_t x)
 }
 
 #elif defined(__i386__) && \
+      defined(__POPCNT__) && \
       defined(__GNUC__) && \
              (__GNUC__ > 4 || \
              (__GNUC__ == 4 && __GNUC_MINOR__> 1))
