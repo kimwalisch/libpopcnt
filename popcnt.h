@@ -82,7 +82,7 @@ inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
 /// This implementation uses only 5.69 instructions per 64-bit word.
 /// @see Chapter 5 in "Hacker's Delight" 2nd edition.
 ///
-uint64_t popcnt_harley_seal(const uint64_t* data, size_t size)
+inline uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 {
   if (size == 0)
     return 0;
@@ -131,7 +131,7 @@ uint64_t popcnt_harley_seal(const uint64_t* data, size_t size)
 /// Count the number of 1 bits in an array using the POPCNT
 /// instruction. On x86 CPUs this requires SSE4.2.
 ///
-inline uint64_t popcnt64_unrolled(const uint64_t* data, size_t size)
+inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 {
 #if !defined(HAVE_POPCNT64)
   return popcnt_harley_seal(data, size);
@@ -175,14 +175,14 @@ inline __m256i popcnt_m256i(const __m256i v)
   return _mm256_sad_epu8(t3, _mm256_setzero_si256());
 }
 
-void CSA(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
+inline void CSA(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
 {
   __m256i u = a ^ b;
   h = (a & b) | (u & c);
   l = u ^ c;
 }
 
-inline uint64_t popcnt_harley_seal_avx2(const __m256i* data, size_t size)
+inline uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
 {
   if (size == 0)
     return 0;
@@ -234,14 +234,14 @@ inline uint64_t popcnt_harley_seal_avx2(const __m256i* data, size_t size)
          (uint64_t) _mm256_extract_epi64(total, 3);
 }
 
-inline uint64_t popcnt(const uint8_t* data, size_t size)
+inline uint64_t popcnt(const uint8_t* data, uint64_t size)
 {
   uint64_t total = 0;
 
   total += popcnt_harley_seal_avx2((const __m256i*) data, size / 32);
   total += popcnt64_unrolled((const uint64_t*) (data + size - size % 32), size % 32);
 
-  for (size_t i = size - size % 8; i < size; i++)
+  for (uint64_t i = size - size % 8; i < size; i++)
     total += popcnt64(data[i]);
 
   return total;
