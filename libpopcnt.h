@@ -343,7 +343,11 @@ inline __m256i popcnt_m256i(const __m256i v)
   return _mm256_sad_epu8(t3, _mm256_setzero_si256());
 }
 
-inline void CSA_m256i(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
+inline void CSA_m256i(__m256i& h,
+                      __m256i& l,
+                      __m256i a,
+                      __m256i b,
+                      __m256i c)
 {
   __m256i u = a ^ b;
   h = (a & b) | (u & c);
