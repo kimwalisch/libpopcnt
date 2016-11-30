@@ -14,7 +14,7 @@ C/C++ API
 #include "libpopcnt.h"
 
 /// Count the number of 1 bits in the data array.
-/// @param data  An array.
+/// @param data  An array
 /// @param size  Size of data in bytes
 uint64_t popcnt(const void* data, uint64_t size);
 ```
