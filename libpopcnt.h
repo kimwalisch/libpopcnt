@@ -52,19 +52,6 @@ inline uint64_t popcnt64(uint64_t x)
          _mm_popcnt_u32((uint32_t)(x >> 32));
 }
 
-#elif defined(__x86_64__) && \
-      defined(__GNUC__) && \
-             (__GNUC__ > 4 || \
-             (__GNUC__ == 4 && __GNUC_MINOR__> 1))
-
-#define HAVE_POPCNT64
-
-inline uint64_t popcnt64(uint64_t x)
-{
-  __asm__ ("popcnt %1, %0" : "=r" (x) : "0" (x));
-  return x;
-}
-
 #elif defined(__i386__) && \
       defined(__GNUC__) && \
              (__GNUC__ > 4 || \
@@ -72,16 +59,10 @@ inline uint64_t popcnt64(uint64_t x)
 
 #define HAVE_POPCNT64
 
-inline uint32_t popcnt32(uint32_t x)
-{
-  __asm__ ("popcnt %1, %0" : "=r" (x) : "0" (x));
-  return x;
-}
-
 inline uint64_t popcnt64(uint64_t x)
 {
-  return popcnt32((uint32_t) x) +
-         popcnt32((uint32_t)(x >> 32));
+  return __builtin_popcount((uint32_t) x) +
+         __builtin_popcount((uint32_t)(x >> 32));
 }
 
 #elif defined(__GNUC__) && \
