@@ -32,9 +32,9 @@
 #include <stdint.h>
 
 #if defined(_MSC_VER) && defined(_WIN64)
-#define HAVE_POPCNT64
-
 #include <nmmintrin.h>
+
+#define HAVE_POPCNT64
 
 inline uint64_t popcnt64(uint64_t x)
 {
@@ -42,9 +42,9 @@ inline uint64_t popcnt64(uint64_t x)
 }
 
 #elif defined(_MSC_VER) && defined(_WIN32)
-#define HAVE_POPCNT64
-
 #include <nmmintrin.h>
+
+#define HAVE_POPCNT64
 
 inline uint64_t popcnt64(uint64_t x)
 {
@@ -110,7 +110,7 @@ inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
 /// This implementation uses only 5.69 instructions per 64-bit word.
 /// @see Chapter 5 in "Hacker's Delight" 2nd edition.
 ///
-inline uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
+static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 {
   if (size == 0)
     return 0;
@@ -159,7 +159,7 @@ inline uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 /// Count the number of 1 bits in an array using the POPCNT
 /// instruction. On x86 CPUs this requires SSE4.2.
 ///
-inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
+static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 {
 #if !defined(HAVE_POPCNT64)
   return popcnt_harley_seal(data, size);
@@ -188,6 +188,9 @@ inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 #endif
 }
 
+#if defined(__AVX2__)
+#include <immintrin.h>
+
 inline __m256i popcnt_m256i(const __m256i v)
 {
   __m256i m1 = _mm256_set1_epi8(0x55);
@@ -208,7 +211,7 @@ inline void CSA_m256i(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
   l = u ^ c;
 }
 
-inline uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
+static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
 {
   if (size == 0)
     return 0;
@@ -260,15 +263,60 @@ inline uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
          (uint64_t) _mm256_extract_epi64(total, 3);
 }
 
-inline uint64_t popcnt(const uint8_t* data, uint64_t size)
+#endif /* __AVX2__ */
+
+static uint64_t popcnt(const void* data, uint64_t size)
 {
   uint64_t total = 0;
+ 
+  const uint8_t* data8 = (const uint8_t*) data;
+  uintptr_t align8 = (uintptr_t) data8 % 8;
+  if (align8 > size)
+    align8 = size;
 
-  total += popcnt_harley_seal_avx2((const __m256i*) data, size / 32);
-  total += popcnt64_unrolled((const uint64_t*) (data + size - size % 32), size % 32);
+  // align memory to 8 bytes boundary for uint64_t type
+  for (uint64_t i = 0; i < align8; i++)
+  {
+    total += popcnt64(*data8++);
+    size -= 1;
+  }
 
-  for (uint64_t i = size - size % 8; i < size; i++)
-    total += popcnt64(data[i]);
+  const uint64_t* data64 = (const uint64_t*) data8;
+
+#if defined(__AVX2__)
+
+  // AVX2 popcount is faster than SSE4.2 POPCNT
+  // for array sizes >= 1 kilobyte
+  if (size >= 1024)
+  {
+    uintptr_t align32 = (uintptr_t) data64 % 32;
+    if (align32 > size)
+      align32 = size;
+
+    // align memory to 32 bytes boundary for __m256i type
+    for (uint64_t i = 0; i < align32 / 8; i++)
+    {
+      total += popcnt64(*data64++);
+      size -= 8;
+    }
+
+    // process remaining 256-bit words
+    total += popcnt_harley_seal_avx2((const __m256i*) data64, size / 32);
+    data64 += (size / 32) * 4;
+    size = size % 32;
+  }
+
+#endif /* __AVX2__ */
+
+  // process remaining 64-bit words
+  total += popcnt64_unrolled(data64, size / 8);
+  data64 += size / 8;
+  size = size % 8;
+  data8 = (const uint8_t*) data64;
+
+  // process remaining bytes
+  for (uint64_t i = 0; i < size; i++)
+    total += popcnt64(data8[i]);
 
   return total;
 }
