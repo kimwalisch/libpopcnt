@@ -198,7 +198,7 @@ static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 
 #if defined(_MSC_VER) && \
    (defined(_WIN32) || defined(_WIN64))
-  // __cpuid()
+  // __cpuidex()
   #include <intrin.h>
 #endif
 
@@ -209,8 +209,7 @@ static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 /// (supports PIC and non-PIC code).
 /// Returns 1 if the CPU supports cpuid else 0.
 ///
-static int cpuid(unsigned int info,
-                 unsigned int *eax,
+static int cpuid(unsigned int *eax,
                  unsigned int *ebx,
                  unsigned int *ecx,
                  unsigned int *edx)
@@ -218,43 +217,40 @@ static int cpuid(unsigned int info,
 #if defined(_MSC_VER) && \
    (defined(_WIN32) || defined(_WIN64))
   int regs[4];
-  __cpuid(regs, info);
+  __cpuidex(regs, *eax, *ecx);
   *eax = regs[0];
   *ebx = regs[1];
   *ecx = regs[2];
   *edx = regs[3];
   return 1;
 #elif defined(__i386__) || defined(__i386)
-  *eax = info;
   #if defined(__PIC__)
     __asm__ __volatile__ (
      "mov %%ebx, %%esi;" // save %ebx PIC register
      "cpuid;"
      "xchg %%ebx, %%esi;"
      : "+a" (*eax), 
-       "=S" (*ebx),
-       "=c" (*ecx),
-       "=d" (*edx));
+       "+S" (*ebx),
+       "+c" (*ecx),
+       "+d" (*edx));
   #else
     __asm__ __volatile__ (
      "cpuid;"
      : "+a" (*eax), 
-       "=b" (*ebx),
-       "=c" (*ecx),
-       "=d" (*edx));
+       "+b" (*ebx),
+       "+c" (*ecx),
+       "+d" (*edx));
   #endif
   return 1;
 #elif defined(__x86_64__)
-  *eax = info;
   __asm__ __volatile__ (
    "cpuid;"
    : "+a" (*eax), 
-     "=b" (*ebx),
-     "=c" (*ecx),
-     "=d" (*edx));
+     "+b" (*ebx),
+     "+c" (*ecx),
+     "+d" (*edx));
   return 1;
 #else
-  (void) info;
   (void) eax;
   (void) ebx;
   (void) ecx;
@@ -265,10 +261,12 @@ static int cpuid(unsigned int info,
 
 static int init_has_avx2()
 {
-  unsigned int info = 0x01;
-  unsigned int eax, ebx, ecx, edx;
+  unsigned int eax = 7;
+  unsigned int ebx;
+  unsigned int ecx = 0;
+  unsigned int edx;
 
-  if (cpuid(info, &eax, &ebx, &ecx, &edx) != -1)
+  if (cpuid(&eax, &ebx, &ecx, &edx) != -1)
   {
     return (ebx & bit_AVX2) != 0;
   }
