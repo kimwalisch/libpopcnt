@@ -1,7 +1,7 @@
 .PHONY: all popcnt avx2 help
 
 COMPILER=$(notdir $(CXX))
-FLAGS=-O2 -Wall -pedantic -Wextra -Wno-unused-parameter
+FLAGS=-O2 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-c++11-long-long
 
 all: test.cpp libpopcnt.h
 	$(CXX) $(FLAGS) test.cpp -o test
