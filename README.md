@@ -32,6 +32,6 @@ whether the current CPU supports ```POPCNT``` & ```AVX2```. Hence
 not support the ```POPCNT``` & ```AVX2``` instructions.
 
 ```bash
-# How to compile on x86 & x86_64
+# How to compile on x86 & x86_64 CPUs
 gcc -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 program.c
 ```
