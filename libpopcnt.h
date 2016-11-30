@@ -31,170 +31,8 @@
 
 #include <stdint.h>
 
-#if defined(_MSC_VER) && \
-    defined(_WIN64)
-
-#include <nmmintrin.h>
-
-#define HAVE_POPCNT
-
-inline uint64_t popcnt64(uint64_t x)
-{
-  return _mm_popcnt_u64(x);
-}
-
-#elif defined(_MSC_VER) && \
-      defined(_WIN32)
-
-#include <nmmintrin.h>
-
-#define HAVE_POPCNT
-
-inline uint64_t popcnt64(uint64_t x)
-{
-  return _mm_popcnt_u32((uint32_t) x) + 
-         _mm_popcnt_u32((uint32_t)(x >> 32));
-}
-
-#elif defined(__i386__) && \
-      defined(__GNUC__) && \
-             (__GNUC__ > 4 || \
-             (__GNUC__ == 4 && __GNUC_MINOR__> 1))
-
-#define HAVE_POPCNT
-
-inline uint64_t popcnt64(uint64_t x)
-{
-  return __builtin_popcount((uint32_t) x) +
-         __builtin_popcount((uint32_t)(x >> 32));
-}
-
-#elif defined(__GNUC__) && \
-             (__GNUC__ > 4 || \
-             (__GNUC__ == 4 && __GNUC_MINOR__> 1))
-
-#define HAVE_POPCNT
-
-inline uint64_t popcnt64(uint64_t x)
-{
-  return __builtin_popcountll(x);
-}
-
-#else
-
-/// This uses fewer arithmetic operations than any other known  
-/// implementation on machines with fast multiplication.
-/// It uses 12 arithmetic operations, one of which is a multiply.
-/// http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
-///
-inline uint64_t popcnt64(uint64_t x)
-{
-  const uint64_t m1 = 0x5555555555555555ll;
-  const uint64_t m2 = 0x3333333333333333ll;
-  const uint64_t m = 0x0F0F0F0F0F0F0F0Fll;
-  const uint64_t h01 = 0x0101010101010101ll;
-
-  x -= (x >> 1) & m1;
-  x = (x & m2) + ((x >> 2) & m2);
-  x = (x + (x >> 4)) & m4;
-
-  return (x * h01) >> 56;
-}
-
-inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
-{
-  uint64_t u = a ^ b; 
-  h = (a & b) | (u & c);
-  l = u ^ c;
-}
-
-/// Harley-Seal popcount (4th iteration).
-/// The Harley-Seal popcount algorithm is one of the fastest algorithms
-/// for counting 1 bits in an array using only integer operations.
-/// This implementation uses only 5.69 instructions per 64-bit word.
-/// @see Chapter 5 in "Hacker's Delight" 2nd edition.
-///
-static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
-{
-  if (size == 0)
-    return 0;
-
-  uint64_t total = 0;
-  uint64_t ones = 0, twos = 0, fours = 0, eights = 0, sixteens = 0;
-  uint64_t twosA, twosB, foursA, foursB, eightsA, eightsB;
-  uint64_t limit = size - size % 16;
-  uint64_t i = 0;
-
-  for(; i < limit; i += 16)
-  {
-    CSA(twosA, ones, ones, data[i+0], data[i+1]);
-    CSA(twosB, ones, ones, data[i+2], data[i+3]);
-    CSA(foursA, twos, twos, twosA, twosB);
-    CSA(twosA, ones, ones, data[i+4], data[i+5]);
-    CSA(twosB, ones, ones, data[i+6], data[i+7]);
-    CSA(foursB, twos, twos, twosA, twosB);
-    CSA(eightsA,fours, fours, foursA, foursB);
-    CSA(twosA, ones, ones, data[i+8], data[i+9]);
-    CSA(twosB, ones, ones, data[i+10], data[i+11]);
-    CSA(foursA, twos, twos, twosA, twosB);
-    CSA(twosA, ones, ones, data[i+12], data[i+13]);
-    CSA(twosB, ones, ones, data[i+14], data[i+15]);
-    CSA(foursB, twos, twos, twosA, twosB);
-    CSA(eightsB, fours, fours, foursA, foursB);
-    CSA(sixteens, eights, eights, eightsA, eightsB);
-
-    total += popcnt64(sixteens);
-  }
-
-  total *= 16;
-  total += 8 * popcnt64(eights);
-  total += 4 * popcnt64(fours);
-  total += 2 * popcnt64(twos);
-  total += 1 * popcnt64(ones);
-
-  for(; i < size; i++)
-    total += popcnt64(data[i]);
-
-  return total;
-}
-
-#endif
-
-/// Count the number of 1 bits in an array using the POPCNT
-/// instruction. On x86 CPUs this requires SSE4.2.
-///
-static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
-{
-#if !defined(HAVE_POPCNT)
-  return popcnt_harley_seal(data, size);
-#else
-  if (size == 0)
-    return 0;
-
-  uint64_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
-  uint64_t limit = size - size % 4;
-  uint64_t i = 0;
-
-  for (; i < limit; i += 4)
-  {
-    sum0 += popcnt64(data[i+0]);
-    sum1 += popcnt64(data[i+1]);
-    sum2 += popcnt64(data[i+2]);
-    sum3 += popcnt64(data[i+3]);
-  }
-
-  uint64_t total = sum0 + sum1 + sum2 + sum3;
-
-  for (; i < size; i++)
-    total += popcnt64(data[i]);
-
-  return total;
-#endif
-}
-
-#if defined(HAVE_AVX2)
-
-#include <immintrin.h>
+#if defined(HAVE_POPCNT) || \
+    defined(HAVE_AVX2)
 
 #if defined(_MSC_VER) && \
    (defined(_WIN32) || defined(_WIN64))
@@ -204,6 +42,9 @@ static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 
 // %ebx bit flags
 #define bit_AVX2 (1 << 5)
+
+// %ecx bit flags
+#define bit_POPCNT (1 << 23)
 
 /// Portable cpuid implementation for x86 and x86-64 CPUs
 /// (supports PIC and non-PIC code).
@@ -259,6 +100,35 @@ static int cpuid(unsigned int *eax,
 #endif
 }
 
+#endif
+
+#if defined(HAVE_POPCNT)
+
+static int init_has_popcnt()
+{
+  unsigned int eax = 1;
+  unsigned int ebx;
+  unsigned int ecx = 0;
+  unsigned int edx;
+
+  if (cpuid(&eax, &ebx, &ecx, &edx) != -1)
+  {
+    return (ecx & bit_POPCNT) != 0;
+  }
+
+  return 0;
+}
+
+static int has_popcnt()
+{
+  static int popcnt = init_has_popcnt();
+  return popcnt;
+}
+
+#endif /* HAVE_POPCNT */
+
+#if defined(HAVE_AVX2)
+
 static int init_has_avx2()
 {
   unsigned int eax = 7;
@@ -279,6 +149,172 @@ static int has_avx2()
   static int avx2 = init_has_avx2();
   return avx2 ;
 }
+
+#endif /* HAVE_AVX2 */
+
+#if defined(HAVE_POPCNT) && \
+    defined(_MSC_VER) && \
+    defined(_WIN64)
+
+#include <nmmintrin.h>
+
+inline uint64_t popcnt_u64(uint64_t x)
+{
+  return _mm_popcnt_u64(x);
+}
+
+#elif defined(HAVE_POPCNT) && \
+      defined(_MSC_VER) && \
+      defined(_WIN32)
+
+#include <nmmintrin.h>
+
+inline uint64_t popcnt_u64(uint64_t x)
+{
+  return _mm_popcnt_u32((uint32_t) x) + 
+         _mm_popcnt_u32((uint32_t)(x >> 32));
+}
+
+#elif defined(HAVE_POPCNT) && \
+      defined(__i386__) && \
+      defined(__GNUC__) && \
+             (__GNUC__ > 4 || \
+             (__GNUC__ == 4 && __GNUC_MINOR__> 1))
+
+inline uint64_t popcnt_u64(uint64_t x)
+{
+  return __builtin_popcount((uint32_t) x) +
+         __builtin_popcount((uint32_t)(x >> 32));
+}
+
+#elif defined(HAVE_POPCNT) && \
+      defined(__GNUC__) && \
+             (__GNUC__ > 4 || \
+             (__GNUC__ == 4 && __GNUC_MINOR__> 1))
+
+inline uint64_t popcnt_u64(uint64_t x)
+{
+  return __builtin_popcountll(x);
+}
+
+#else
+
+/// This uses fewer arithmetic operations than any other known  
+/// implementation on machines with fast multiplication.
+/// It uses 12 arithmetic operations, one of which is a multiply.
+/// http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
+///
+inline uint64_t popcnt_u64(uint64_t x)
+{
+  const uint64_t m1 = 0x5555555555555555ll;
+  const uint64_t m2 = 0x3333333333333333ll;
+  const uint64_t m4 = 0x0F0F0F0F0F0F0F0Fll;
+  const uint64_t h01 = 0x0101010101010101ll;
+
+  x -= (x >> 1) & m1;
+  x = (x & m2) + ((x >> 2) & m2);
+  x = (x + (x >> 4)) & m4;
+
+  return (x * h01) >> 56;
+}
+
+#endif
+
+inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
+{
+  uint64_t u = a ^ b; 
+  h = (a & b) | (u & c);
+  l = u ^ c;
+}
+
+/// Harley-Seal popcount (4th iteration).
+/// The Harley-Seal popcount algorithm is one of the fastest algorithms
+/// for counting 1 bits in an array using only integer operations.
+/// This implementation uses only 5.69 instructions per 64-bit word.
+/// @see Chapter 5 in "Hacker's Delight" 2nd edition.
+///
+static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
+{
+  if (size == 0)
+    return 0;
+
+  uint64_t total = 0;
+  uint64_t ones = 0, twos = 0, fours = 0, eights = 0, sixteens = 0;
+  uint64_t twosA, twosB, foursA, foursB, eightsA, eightsB;
+  uint64_t limit = size - size % 16;
+  uint64_t i = 0;
+
+  for(; i < limit; i += 16)
+  {
+    CSA(twosA, ones, ones, data[i+0], data[i+1]);
+    CSA(twosB, ones, ones, data[i+2], data[i+3]);
+    CSA(foursA, twos, twos, twosA, twosB);
+    CSA(twosA, ones, ones, data[i+4], data[i+5]);
+    CSA(twosB, ones, ones, data[i+6], data[i+7]);
+    CSA(foursB, twos, twos, twosA, twosB);
+    CSA(eightsA,fours, fours, foursA, foursB);
+    CSA(twosA, ones, ones, data[i+8], data[i+9]);
+    CSA(twosB, ones, ones, data[i+10], data[i+11]);
+    CSA(foursA, twos, twos, twosA, twosB);
+    CSA(twosA, ones, ones, data[i+12], data[i+13]);
+    CSA(twosB, ones, ones, data[i+14], data[i+15]);
+    CSA(foursB, twos, twos, twosA, twosB);
+    CSA(eightsB, fours, fours, foursA, foursB);
+    CSA(sixteens, eights, eights, eightsA, eightsB);
+
+    total += popcnt_u64(sixteens);
+  }
+
+  total *= 16;
+  total += 8 * popcnt_u64(eights);
+  total += 4 * popcnt_u64(fours);
+  total += 2 * popcnt_u64(twos);
+  total += 1 * popcnt_u64(ones);
+
+  for(; i < size; i++)
+    total += popcnt_u64(data[i]);
+
+  return total;
+}
+
+/// Count the number of 1 bits in an array using the POPCNT
+/// instruction. On x86 CPUs this requires SSE4.2.
+///
+static uint64_t popcnt_u64_unrolled(const uint64_t* data, uint64_t size)
+{
+#if !defined(HAVE_POPCNT)
+  return popcnt_harley_seal(data, size);
+#else
+  if (!has_popcnt())
+    return popcnt_harley_seal(data, size);
+
+  if (size == 0)
+    return 0;
+
+  uint64_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
+  uint64_t limit = size - size % 4;
+  uint64_t i = 0;
+
+  for (; i < limit; i += 4)
+  {
+    sum0 += popcnt_u64(data[i+0]);
+    sum1 += popcnt_u64(data[i+1]);
+    sum2 += popcnt_u64(data[i+2]);
+    sum3 += popcnt_u64(data[i+3]);
+  }
+
+  uint64_t total = sum0 + sum1 + sum2 + sum3;
+
+  for (; i < size; i++)
+    total += popcnt_u64(data[i]);
+
+  return total;
+#endif
+}
+
+#if defined(HAVE_AVX2)
+
+#include <immintrin.h>
 
 inline __m256i popcnt_m256i(const __m256i v)
 {
@@ -366,7 +402,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
   // align memory to 8 bytes boundary for uint64_t type
   for (uint64_t i = 0; i < align8; i++)
   {
-    total += popcnt64(*data8++);
+    total += popcnt_u64(*data8++);
     size -= 1;
   }
 
@@ -386,7 +422,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
     // align memory to 32 bytes boundary for __m256i type
     for (uint64_t i = 0; i < align32 / 8; i++)
     {
-      total += popcnt64(*data64++);
+      total += popcnt_u64(*data64++);
       size -= 8;
     }
 
@@ -399,14 +435,14 @@ static uint64_t popcnt(const void* data, uint64_t size)
 #endif /* HAVE_AVX2 */
 
   // process remaining 64-bit words
-  total += popcnt64_unrolled(data64, size / 8);
+  total += popcnt_u64_unrolled(data64, size / 8);
   data64 += size / 8;
   size = size % 8;
   data8 = (const uint8_t*) data64;
 
   // process remaining bytes
   for (uint64_t i = 0; i < size; i++)
-    total += popcnt64(data8[i]);
+    total += popcnt_u64(data8[i]);
 
   return total;
 }
