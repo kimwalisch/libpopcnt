@@ -3,9 +3,9 @@ libpopcnt
 [![Build Status](https://travis-ci.org/kimwalisch/libpopcnt.svg)](https://travis-ci.org/kimwalisch/libpopcnt)
 [![GitHub license](https://img.shields.io/badge/license-BSD%202-blue.svg)](https://github.com/kimwalisch/libpopcnt/blob/master/LICENSE)
 
-```libpopcnt.h``` is a C/C++ library for counting the number of 1 bits
-(bit population count) in an array as quickly as possible using
-specialized CPU instructions e.g. POPCNT, AVX2.
+```libpopcnt.h``` is a header only C/C++ library for counting the
+number of 1 bits (bit population count) in an array as quickly as
+possible using specialized CPU instructions e.g. POPCNT, AVX2.
 
 The algorithms used in ```libpopcnt.h``` are described in the paper
 [Faster Population Counts using AVX2 Instructions](https://arxiv.org/abs/1611.07612)
