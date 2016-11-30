@@ -7,10 +7,10 @@ all: test.cpp libpopcnt.h
 	$(CXX) $(FLAGS) test.cpp -o test
 
 popcnt: test.cpp libpopcnt.h
-	$(CXX) $(FLAGS) -mpopcnt test.cpp -o test
+	$(CXX) $(FLAGS) -mpopcnt -DHAVE_POPCNT test.cpp -o test
 
 avx2: test.cpp libpopcnt.h
-	$(CXX) $(FLAGS) -mpopcnt -mavx2 -DHAVE_AVX2 test.cpp -o test
+	$(CXX) $(FLAGS) -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 test.cpp -o test
 
 help:
 	@echo "targets:"
