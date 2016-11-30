@@ -431,16 +431,14 @@ static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
 static uint64_t popcnt(const void* data, uint64_t size)
 {
   uint64_t total = 0;
-
   const uint8_t* data8 = (const uint8_t*) data;
-  uintptr_t align = (uintptr_t) data8 % 8;
 
-  if (align > size)
-    align = size;
-
-  // align memory to 8 bytes boundary
-  for (uint64_t i = 0; i < align; i++, size--)
+  // align memory to 32 bytes boundary
+  while (size > 0 && (uintptr_t) data8 % 8 != 0)
+  {
     total += popcount_u64(*data8++);
+    size -= 1;
+  }
 
   const uint64_t* data64 = (const uint64_t*) data8;
 
@@ -451,14 +449,12 @@ static uint64_t popcnt(const void* data, uint64_t size)
   if (size >= 1024 &&
       has_avx2())
   {
-    align = (uintptr_t) data64 % 32;
-
-    if (align > size)
-      align = size;
-
     // align memory to 32 bytes boundary
-    for (uint64_t i = 0; i < align / 8; i++, size -= 8)
+    while (size >= 8 && (uintptr_t) data64 % 32 != 0)
+    {
       total += popcount_u64(*data64++);
+      size -= 8;
+    }
 
     // process remaining 256-bit words
     total += popcnt_harley_seal_avx2((const __m256i*) data64, size / 32);
