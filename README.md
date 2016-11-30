@@ -23,7 +23,7 @@ How to use it
 =============
 At compile time you need to specify if your compiler supports the
 ```POPCNT``` & ```AVX2``` instructions. At runtime ```libpopcnt.h``` will then
-choose the fastest algorithm by checking (using ```cpuid```)
+choose the fastest popcount algorithm by checking (using ```cpuid```)
 whether the current CPU supports ```POPCNT``` & ```AVX2```. Hence
 ```libpopcnt.h``` is fast and portable, it also runs on CPUs that do
 not support the ```POPCNT``` & ```AVX2``` instructions.
