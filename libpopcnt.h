@@ -32,92 +32,6 @@
 #include <stdint.h>
 
 #if defined(_MSC_VER) && \
-   (defined(_WIN32) || defined(_WIN64))
-  // __cpuid()
-  #include <intrin.h>
-#endif
-
-// %ebx bit flags
-#define bit_AVX2 (1 << 5)
-
-/// Portable cpuid implementation for x86 and x86-64 CPUs
-/// (supports PIC and non-PIC code).
-/// Returns 1 if the CPU supports cpuid else 0.
-///
-static int cpuid(unsigned int info,
-                 unsigned int *eax,
-                 unsigned int *ebx,
-                 unsigned int *ecx,
-                 unsigned int *edx)
-{
-#if defined(_MSC_VER) && \
-   (defined(_WIN32) || defined(_WIN64))
-  int regs[4];
-  __cpuid(regs, info);
-  *eax = regs[0];
-  *ebx = regs[1];
-  *ecx = regs[2];
-  *edx = regs[3];
-  return 1;
-#elif defined(__i386__) || defined(__i386)
-  *eax = info;
-  #if defined(__PIC__)
-    __asm__ __volatile__ (
-     "mov %%ebx, %%esi;" // save %ebx PIC register
-     "cpuid;"
-     "xchg %%ebx, %%esi;"
-     : "+a" (*eax), 
-       "=S" (*ebx),
-       "=c" (*ecx),
-       "=d" (*edx));
-  #else
-    __asm__ __volatile__ (
-     "cpuid;"
-     : "+a" (*eax), 
-       "=b" (*ebx),
-       "=c" (*ecx),
-       "=d" (*edx));
-  #endif
-  return 1;
-#elif defined(__x86_64__)
-  *eax = info;
-  __asm__ __volatile__ (
-   "cpuid;"
-   : "+a" (*eax), 
-     "=b" (*ebx),
-     "=c" (*ecx),
-     "=d" (*edx));
-  return 1;
-#else
-  (void) info;
-  (void) eax;
-  (void) ebx;
-  (void) ecx;
-  (void) edx;
-  return 0;
-#endif
-}
-
-static int init_has_avx2()
-{
-  unsigned int info = 0x01;
-  unsigned int eax, ebx, ecx, edx;
-
-  if (cpuid(info, &eax, &ebx, &ecx, &edx) != -1)
-  {
-    return (ebx & bit_AVX2) != 0;
-  }
-
-  return 0;
-}
-
-static int has_avx2()
-{
-  static int avx2 = init_has_avx2();
-  return avx2 ;
-}
-
-#if defined(_MSC_VER) && \
     defined(_WIN64)
 
 #include <nmmintrin.h>
@@ -279,7 +193,94 @@ static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 }
 
 #if defined(HAVE_AVX2)
+
 #include <immintrin.h>
+
+#if defined(_MSC_VER) && \
+   (defined(_WIN32) || defined(_WIN64))
+  // __cpuid()
+  #include <intrin.h>
+#endif
+
+// %ebx bit flags
+#define bit_AVX2 (1 << 5)
+
+/// Portable cpuid implementation for x86 and x86-64 CPUs
+/// (supports PIC and non-PIC code).
+/// Returns 1 if the CPU supports cpuid else 0.
+///
+static int cpuid(unsigned int info,
+                 unsigned int *eax,
+                 unsigned int *ebx,
+                 unsigned int *ecx,
+                 unsigned int *edx)
+{
+#if defined(_MSC_VER) && \
+   (defined(_WIN32) || defined(_WIN64))
+  int regs[4];
+  __cpuid(regs, info);
+  *eax = regs[0];
+  *ebx = regs[1];
+  *ecx = regs[2];
+  *edx = regs[3];
+  return 1;
+#elif defined(__i386__) || defined(__i386)
+  *eax = info;
+  #if defined(__PIC__)
+    __asm__ __volatile__ (
+     "mov %%ebx, %%esi;" // save %ebx PIC register
+     "cpuid;"
+     "xchg %%ebx, %%esi;"
+     : "+a" (*eax), 
+       "=S" (*ebx),
+       "=c" (*ecx),
+       "=d" (*edx));
+  #else
+    __asm__ __volatile__ (
+     "cpuid;"
+     : "+a" (*eax), 
+       "=b" (*ebx),
+       "=c" (*ecx),
+       "=d" (*edx));
+  #endif
+  return 1;
+#elif defined(__x86_64__)
+  *eax = info;
+  __asm__ __volatile__ (
+   "cpuid;"
+   : "+a" (*eax), 
+     "=b" (*ebx),
+     "=c" (*ecx),
+     "=d" (*edx));
+  return 1;
+#else
+  (void) info;
+  (void) eax;
+  (void) ebx;
+  (void) ecx;
+  (void) edx;
+  return 0;
+#endif
+}
+
+static int init_has_avx2()
+{
+  unsigned int info = 0x01;
+  unsigned int eax, ebx, ecx, edx;
+
+  if (cpuid(info, &eax, &ebx, &ecx, &edx) != -1)
+  {
+    return (ebx & bit_AVX2) != 0;
+  }
+
+  return 0;
+}
+
+static int has_avx2()
+{
+  static int avx2 = init_has_avx2();
+  return avx2 ;
+}
 
 inline __m256i popcnt_m256i(const __m256i v)
 {
