@@ -31,8 +31,11 @@
 
 #include <stdint.h>
 
-#if defined(HAVE_POPCNT) || \
-    defined(HAVE_AVX2)
+#if (defined(__i386__) || \
+     defined(__x86_64__) || \
+     defined(_WIN32) || \
+     defined(_WIN64)) && \
+    (defined(HAVE_POPCNT) || defined(HAVE_AVX2))
 
 #if defined(_MSC_VER) && \
    (defined(_WIN32) || defined(_WIN64))
@@ -64,7 +67,7 @@ static int cpuid(unsigned int *eax,
   *ecx = regs[2];
   *edx = regs[3];
   return 1;
-#elif defined(__i386__) || defined(__i386)
+#elif defined(__i386__)
   #if defined(__PIC__)
     __asm__ __volatile__ (
      "mov %%ebx, %%esi;" // save %ebx PIC register
@@ -104,6 +107,12 @@ static int cpuid(unsigned int *eax,
 
 #if defined(HAVE_POPCNT)
 
+// x86 & x86_64 CPUs
+#if (defined(__i386__) || \
+     defined(__x86_64__) || \
+     defined(_WIN32) || \
+     defined(_WIN64))
+
 static int init_has_popcnt()
 {
   unsigned int eax = 1;
@@ -124,6 +133,17 @@ static int has_popcnt()
   static int popcnt = init_has_popcnt();
   return popcnt;
 }
+
+#else
+
+static int has_popcnt()
+{
+  // On non x86 CPUs use the POPCNT instruction
+  // without runtime check
+  return 1;
+}
+
+#endif
 
 #endif /* HAVE_POPCNT */
 
