@@ -31,20 +31,110 @@
 
 #include <stdint.h>
 
-#if defined(_MSC_VER) && defined(_WIN64)
+#if defined(_MSC_VER) && \
+   (defined(_WIN32) || defined(_WIN64))
+  // __cpuid()
+  #include <intrin.h>
+#endif
+
+// %ebx bit flags
+#define bit_AVX2 (1 << 5)
+
+/// Portable cpuid implementation for x86 and x86-64 CPUs
+/// (supports PIC and non-PIC code).
+/// Returns 1 if the CPU supports cpuid else 0.
+///
+static int cpuid(unsigned int info,
+                 unsigned int *eax,
+                 unsigned int *ebx,
+                 unsigned int *ecx,
+                 unsigned int *edx)
+{
+#if defined(_MSC_VER) && \
+   (defined(_WIN32) || defined(_WIN64))
+  int regs[4];
+  __cpuid(regs, info);
+  *eax = regs[0];
+  *ebx = regs[1];
+  *ecx = regs[2];
+  *edx = regs[3];
+  return 1;
+#elif defined(__i386__) || defined(__i386)
+  *eax = info;
+  #if defined(__PIC__)
+    __asm__ __volatile__ (
+     "mov %%ebx, %%esi;" // save %ebx PIC register
+     "cpuid;"
+     "xchg %%ebx, %%esi;"
+     : "+a" (*eax), 
+       "=S" (*ebx),
+       "=c" (*ecx),
+       "=d" (*edx));
+  #else
+    __asm__ __volatile__ (
+     "cpuid;"
+     : "+a" (*eax), 
+       "=b" (*ebx),
+       "=c" (*ecx),
+       "=d" (*edx));
+  #endif
+  return 1;
+#elif defined(__x86_64__)
+  *eax = info;
+  __asm__ __volatile__ (
+   "cpuid;"
+   : "+a" (*eax), 
+     "=b" (*ebx),
+     "=c" (*ecx),
+     "=d" (*edx));
+  return 1;
+#else
+  (void) info;
+  (void) eax;
+  (void) ebx;
+  (void) ecx;
+  (void) edx;
+  return 0;
+#endif
+}
+
+static int init_has_avx2()
+{
+  unsigned int info = 0x01;
+  unsigned int eax, ebx, ecx, edx;
+
+  if (cpuid(info, &eax, &ebx, &ecx, &edx) != -1)
+  {
+    return (ebx & bit_AVX2) != 0;
+  }
+
+  return 0;
+}
+
+static int has_avx2()
+{
+  static int avx2 = init_has_avx2();
+  return avx2 ;
+}
+
+#if defined(_MSC_VER) && \
+    defined(_WIN64)
+
 #include <nmmintrin.h>
 
-#define HAVE_POPCNT64
+#define HAVE_POPCNT
 
 inline uint64_t popcnt64(uint64_t x)
 {
   return _mm_popcnt_u64(x);
 }
 
-#elif defined(_MSC_VER) && defined(_WIN32)
+#elif defined(_MSC_VER) && \
+      defined(_WIN32)
+
 #include <nmmintrin.h>
 
-#define HAVE_POPCNT64
+#define HAVE_POPCNT
 
 inline uint64_t popcnt64(uint64_t x)
 {
@@ -57,7 +147,7 @@ inline uint64_t popcnt64(uint64_t x)
              (__GNUC__ > 4 || \
              (__GNUC__ == 4 && __GNUC_MINOR__> 1))
 
-#define HAVE_POPCNT64
+#define HAVE_POPCNT
 
 inline uint64_t popcnt64(uint64_t x)
 {
@@ -69,7 +159,7 @@ inline uint64_t popcnt64(uint64_t x)
              (__GNUC__ > 4 || \
              (__GNUC__ == 4 && __GNUC_MINOR__> 1))
 
-#define HAVE_POPCNT64
+#define HAVE_POPCNT
 
 inline uint64_t popcnt64(uint64_t x)
 {
@@ -161,7 +251,7 @@ static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 ///
 static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 {
-#if !defined(HAVE_POPCNT64)
+#if !defined(HAVE_POPCNT)
   return popcnt_harley_seal(data, size);
 #else
   if (size == 0)
@@ -188,7 +278,7 @@ static uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 #endif
 }
 
-#if defined(__AVX2__)
+#if defined(HAVE_AVX2)
 #include <immintrin.h>
 
 inline __m256i popcnt_m256i(const __m256i v)
@@ -263,7 +353,7 @@ static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
          (uint64_t) _mm256_extract_epi64(total, 3);
 }
 
-#endif /* __AVX2__ */
+#endif /* HAVE_AVX2 */
 
 static uint64_t popcnt(const void* data, uint64_t size)
 {
@@ -283,11 +373,12 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
   const uint64_t* data64 = (const uint64_t*) data8;
 
-#if defined(__AVX2__)
+#if defined(HAVE_AVX2)
 
-  // AVX2 popcount is faster than SSE4.2 POPCNT
+  // AVX2 popcount is faster than POPCNT
   // for array sizes >= 1 kilobyte
-  if (size >= 1024)
+  if (size >= 1024 &&
+      has_avx2())
   {
     uintptr_t align32 = (uintptr_t) data64 % 32;
     if (align32 > size)
@@ -306,7 +397,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
     size = size % 32;
   }
 
-#endif /* __AVX2__ */
+#endif /* HAVE_AVX2 */
 
   // process remaining 64-bit words
   total += popcnt64_unrolled(data64, size / 8);
