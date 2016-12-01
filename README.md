@@ -34,4 +34,7 @@ not support the ```POPCNT``` & ```AVX2``` instructions.
 ```bash
 # How to compile on x86 & x86_64 CPUs
 gcc -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 program.c
+
+# How to compile on IBM POWER8 CPUs
+gcc -mpopcntd -DHAVE_POPCNT program.c
 ```
