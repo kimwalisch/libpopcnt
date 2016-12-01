@@ -120,7 +120,7 @@ static int init_has_popcnt()
   unsigned int ecx = 0;
   unsigned int edx;
 
-  if (cpuid(&eax, &ebx, &ecx, &edx) != -1)
+  if (cpuid(&eax, &ebx, &ecx, &edx))
   {
     return (ecx & bit_POPCNT) != 0;
   }
@@ -156,7 +156,7 @@ static int init_has_avx2()
   unsigned int ecx = 0;
   unsigned int edx;
 
-  if (cpuid(&eax, &ebx, &ecx, &edx) != -1)
+  if (cpuid(&eax, &ebx, &ecx, &edx))
   {
     return (ebx & bit_AVX2) != 0;
   }
@@ -247,6 +247,9 @@ inline uint64_t popcnt_u64(uint64_t x)
 
 #endif
 
+/// Portable 64-bit popcount function, uses POPCNT if the CPU
+/// supports it, else a pure integer algorithm.
+///
 inline uint64_t popcount_u64(uint64_t x)
 {
 #if defined(HAVE_POPCNT)
