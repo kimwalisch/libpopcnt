@@ -1,0 +1,26 @@
+# Automated Windows (MSVC++) testing using appveyor.com
+# https://ci.appveyor.com/projects
+
+version: 1.0.{build}
+
+branches:
+  only:
+  - master
+
+platform:
+  - x86
+  - x64
+
+configuration:
+  - Debug
+
+before_build:
+  "\"C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\Bin\\SetEnv.cmd\" /%platform%"
+
+build_script:
+  # Build using highest warning level on x64
+  - if "%platform%" == "x64" sed -i 's#/W2#/W3 /WX /D HAVE_POPCNT#' Makefile.msvc
+  - nmake /f Makefile.msvc
+
+test_script:
+  - nmake /f Makefile.msvc check
