@@ -103,7 +103,7 @@ static int cpuid(unsigned int *eax,
 #endif
 }
 
-#endif
+#endif /* cpuid */
 
 #if defined(HAVE_POPCNT)
 
@@ -377,6 +377,12 @@ inline void CSA_m256i(__m256i& h,
   l = u ^ c;
 }
 
+/// AVX2 Harley-Seal popcount (4th iteration).
+/// The algorithm is based on the paper "Faster Population Counts
+/// using AVX2 Instructions" by Daniel Lemire, Nathan Kurz and
+/// Wojciech Mula (23 Nov 2016).
+/// @see https://arxiv.org/abs/1611.07612
+///
 static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
 {
   if (size == 0)
@@ -455,6 +461,10 @@ inline void align32(const uint64_t*& data,
   }
 }
 
+/// Count the number of 1 bits in the data array.
+/// @param data  An array
+/// @param size  Size of data in bytes
+///
 static uint64_t popcnt(const void* data,
                        uint64_t size)
 {
