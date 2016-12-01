@@ -1,6 +1,7 @@
 libpopcnt
 =========
 [![Build Status](https://travis-ci.org/kimwalisch/libpopcnt.svg)](https://travis-ci.org/kimwalisch/libpopcnt)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/kimwalisch/libpopcnt?branch=master&svg=true)](https://ci.appveyor.com/project/kimwalisch/libpopcnt)
 [![GitHub license](https://img.shields.io/badge/license-BSD%202-blue.svg)](https://github.com/kimwalisch/libpopcnt/blob/master/LICENSE)
 
 ```libpopcnt.h``` is a header only C/C++ library for counting the
@@ -34,6 +35,9 @@ not support the ```POPCNT``` & ```AVX2``` instructions.
 ```bash
 # How to compile on x86 & x86_64 CPUs
 gcc -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 program.c
+
+# How to compile using Microsoft Visual C++
+cl /O2 /EHsc /D HAVE_POPCNT /arch:AVX2 /D HAVE_AVX2 program.cpp
 
 # How to compile on IBM POWER8 CPUs
 gcc -mpopcntd -DHAVE_POPCNT program.c
