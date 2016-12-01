@@ -428,35 +428,47 @@ static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
 
 #endif /* HAVE_AVX2 */
 
-static uint64_t popcnt(const void* data, uint64_t size)
+/// Align data to 8 bytes boundary
+inline void align8(const uint8_t*& data,
+                   uint64_t* size,
+                   uint64_t* total)
+{
+  for (; *size > 0 && (uintptr_t) data % 8 != 0; data++)
+  {
+    *total += popcount_u64(*data);
+    *size -= 1;
+  }
+}
+
+/// Align data to 32 bytes boundary
+inline void align32(const uint64_t*& data,
+                    uint64_t* size,
+                    uint64_t* total)
+{
+  for (; *size >= 8 && (uintptr_t) data % 32 != 0; data++)
+  {
+    *total += popcount_u64(*data);
+    *size -= 8;
+  }
+}
+
+static uint64_t popcnt(const void* data,
+                       uint64_t size)
 {
   uint64_t total = 0;
+
   const uint8_t* data8 = (const uint8_t*) data;
-
-  // align memory to 32 bytes boundary
-  while (size > 0 && (uintptr_t) data8 % 8 != 0)
-  {
-    total += popcount_u64(*data8++);
-    size -= 1;
-  }
-
+  align8(data8, &size, &total);
   const uint64_t* data64 = (const uint64_t*) data8;
 
 #if defined(HAVE_AVX2)
 
-  // AVX2 popcount is faster than POPCNT
+  // AVX2 popcount is faster than POPCNT 
   // for array sizes >= 1 kilobyte
   if (size >= 1024 &&
       has_avx2())
   {
-    // align memory to 32 bytes boundary
-    while (size >= 8 && (uintptr_t) data64 % 32 != 0)
-    {
-      total += popcount_u64(*data64++);
-      size -= 8;
-    }
-
-    // process remaining 256-bit words
+    align32(data64, &size, &total);
     total += popcnt_harley_seal_avx2((const __m256i*) data64, size / 32);
     data64 += (size / 32) * 4;
     size = size % 32;
