@@ -113,7 +113,7 @@ static int cpuid(unsigned int *eax,
      defined(_WIN32) || \
      defined(_WIN64))
 
-static int init_has_popcnt()
+static int has_popcnt_cpuid()
 {
   unsigned int eax = 1;
   unsigned int ebx;
@@ -130,7 +130,7 @@ static int init_has_popcnt()
 
 static int has_popcnt()
 {
-  static int popcnt = init_has_popcnt();
+  static int popcnt = has_popcnt_cpuid();
   return popcnt;
 }
 
@@ -149,7 +149,7 @@ static int has_popcnt()
 
 #if defined(HAVE_AVX2)
 
-static int init_has_avx2()
+static int has_avx2_cpuid()
 {
   unsigned int eax = 7;
   unsigned int ebx;
@@ -166,7 +166,7 @@ static int init_has_avx2()
 
 static int has_avx2()
 {
-  static int avx2 = init_has_avx2();
+  static int avx2 = has_avx2_cpuid();
   return avx2 ;
 }
 
