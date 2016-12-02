@@ -267,9 +267,6 @@ inline uint64_t popcount_u64(uint64_t x)
 ///
 static uint64_t popcnt_u64_unrolled(const uint64_t* data, uint64_t size)
 {
-  if (size == 0)
-    return 0;
-
   uint64_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
   uint64_t limit = size - size % 4;
   uint64_t i = 0;
@@ -307,9 +304,6 @@ inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
 ///
 static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 {
-  if (size == 0)
-    return 0;
-
   uint64_t total = 0;
   uint64_t ones = 0, twos = 0, fours = 0, eights = 0, sixteens = 0;
   uint64_t twosA, twosB, foursA, foursB, eightsA, eightsB;
@@ -385,9 +379,6 @@ inline void CSA_m256i(__m256i& h,
 ///
 static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
 {
-  if (size == 0)
-    return 0;
-
   __m256i total = _mm256_setzero_si256();
   __m256i ones = _mm256_setzero_si256();
   __m256i twos = _mm256_setzero_si256();
