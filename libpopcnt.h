@@ -4,6 +4,7 @@
 //
 // Copyright (c) 2016, Kim Walisch
 // Copyright (c) 2016, Wojciech Muła
+//
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -347,6 +348,28 @@ static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 
 #include <immintrin.h>
 
+#if defined(_MSC_VER)
+
+/// Define missing & operator overload for __m256i type on MSVC compiler
+inline __m256i operator&(const __m256i a, const __m256i b)
+{
+  return _mm256_and_si256(a, b);
+}
+
+/// Define missing | operator overload for __m256i type on MSVC compiler
+inline __m256i operator|(const __m256i a, const __m256i b)
+{
+  return _mm256_or_si256(a, b);
+}
+
+/// Define missing ^ operator overload for __m256i type on MSVC compiler
+inline __m256i operator^(const __m256i a, const __m256i b)
+{
+  return _mm256_xor_si256(a, b);
+}
+
+#endif /* _MSC_VER */
+
 inline __m256i popcnt_m256i(const __m256i v)
 {
   __m256i m1 = _mm256_set1_epi8(0x55);
@@ -420,10 +443,12 @@ static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
   for(; i < size; i++)
     total = _mm256_add_epi64(total, popcnt_m256i(data[i]));
 
-  return (uint64_t) _mm256_extract_epi64(total, 0) +
-         (uint64_t) _mm256_extract_epi64(total, 1) +
-         (uint64_t) _mm256_extract_epi64(total, 2) +
-         (uint64_t) _mm256_extract_epi64(total, 3);
+  uint64_t* total64 = (uint64_t*) &total;
+
+  return total64[0] +
+         total64[1] +
+         total64[2] +
+         total64[3];
 }
 
 #endif /* HAVE_AVX2 */
