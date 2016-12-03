@@ -32,11 +32,7 @@
 
 #include <stdint.h>
 
-#if (defined(__i386__) || \
-     defined(__x86_64__) || \
-     defined(_WIN32) || \
-     defined(_WIN64)) && \
-     defined(HAVE_AVX2)
+#if defined(HAVE_AVX2)
 
 #if defined(_MSC_VER) && \
    (defined(_WIN32) || defined(_WIN64))
@@ -46,9 +42,6 @@
 
 // %ebx bit flags
 #define bit_AVX2 (1 << 5)
-
-// %ecx bit flags
-#define bit_POPCNT (1 << 23)
 
 /// Portable cpuid implementation for x86 and x86-64 CPUs
 /// (supports PIC and non-PIC code).
@@ -103,10 +96,6 @@ static int cpuid(unsigned int *eax,
   return 0;
 #endif
 }
-
-#endif /* cpuid */
-
-#if defined(HAVE_AVX2)
 
 static int has_avx2_cpuid()
 {
