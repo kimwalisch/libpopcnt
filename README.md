@@ -26,11 +26,7 @@ uint64_t popcnt(const void* data, uint64_t size);
 How to use it
 =============
 At compile time you need to specify if your compiler supports the
-```POPCNT``` & ```AVX2``` instructions. At runtime ```libpopcnt.h``` will then
-choose the fastest popcount algorithm by checking (using ```cpuid```)
-whether the current CPU supports ```POPCNT``` & ```AVX2```. Hence
-```libpopcnt.h``` is fast and portable, it also runs on CPUs that do
-not support the ```POPCNT``` & ```AVX2``` instructions.
+```POPCNT``` & ```AVX2``` instructions.
 
 ```bash
 # How to compile on x86 & x86_64 CPUs
