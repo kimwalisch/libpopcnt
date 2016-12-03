@@ -7,6 +7,8 @@ libpopcnt
 ```libpopcnt.h``` is a header only C/C++ library for counting the
 number of 1 bits (bit population count) in an array as quickly as
 possible using specialized CPU instructions e.g. POPCNT, AVX2.
+```libpopcnt.h``` has been tested successfully using the GCC,
+Clang and MSVC compilers.
 
 The algorithms used in ```libpopcnt.h``` are described in the paper
 [Faster Population Counts using AVX2 Instructions](https://arxiv.org/abs/1611.07612)
@@ -21,6 +23,9 @@ C/C++ API
 /// @param data  An array
 /// @param size  Size of data in bytes
 uint64_t popcnt(const void* data, uint64_t size);
+
+/// Count the number of 1 bits in x.
+uint64_t popcnt_u64(uint64_t x);
 ```
 
 How to use it
