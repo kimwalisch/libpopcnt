@@ -36,7 +36,7 @@
      defined(__x86_64__) || \
      defined(_WIN32) || \
      defined(_WIN64)) && \
-    (defined(HAVE_POPCNT) || defined(HAVE_AVX2))
+     defined(HAVE_AVX2)
 
 #if defined(_MSC_VER) && \
    (defined(_WIN32) || defined(_WIN64))
@@ -105,48 +105,6 @@ static int cpuid(unsigned int *eax,
 }
 
 #endif /* cpuid */
-
-#if defined(HAVE_POPCNT)
-
-// x86 & x86_64 CPUs
-#if (defined(__i386__) || \
-     defined(__x86_64__) || \
-     defined(_WIN32) || \
-     defined(_WIN64))
-
-static int has_popcnt_cpuid()
-{
-  unsigned int eax = 1;
-  unsigned int ebx;
-  unsigned int ecx = 0;
-  unsigned int edx;
-
-  if (cpuid(&eax, &ebx, &ecx, &edx))
-  {
-    return (ecx & bit_POPCNT) != 0;
-  }
-
-  return 0;
-}
-
-static int has_popcnt()
-{
-  static int popcnt = has_popcnt_cpuid();
-  return popcnt;
-}
-
-#else
-
-static int has_popcnt()
-{
-  // On non x86 CPUs use the POPCNT instruction
-  // without runtime check
-  return 1;
-}
-
-#endif
-
-#endif /* HAVE_POPCNT */
 
 #if defined(HAVE_AVX2)
 
@@ -248,25 +206,12 @@ inline uint64_t popcnt_u64(uint64_t x)
 
 #endif
 
-/// Portable 64-bit popcount function, uses POPCNT if the CPU
-/// supports it, else a pure integer algorithm.
-///
-inline uint64_t popcount_u64(uint64_t x)
-{
-#if defined(HAVE_POPCNT)
-  if (has_popcnt())
-    return popcnt_u64(x);
-  else
-#endif
-    return popcount64c(x);
-}
-
 #if defined(HAVE_POPCNT)
 
 /// Count the number of 1 bits in an array using the POPCNT
 /// instruction. On x86 CPUs this requires SSE4.2.
 ///
-static uint64_t popcnt_u64_unrolled(const uint64_t* data, uint64_t size)
+inline uint64_t popcnt_u64_unrolled(const uint64_t* data, uint64_t size)
 {
   uint64_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
   uint64_t limit = size - size % 4;
@@ -288,7 +233,7 @@ static uint64_t popcnt_u64_unrolled(const uint64_t* data, uint64_t size)
   return total;
 }
 
-#endif /* HAVE_POPCNT */
+#else
 
 inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
 {
@@ -303,7 +248,7 @@ inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
 /// This implementation uses only 5.69 instructions per 64-bit word.
 /// @see Chapter 5 in "Hacker's Delight" 2nd edition.
 ///
-static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
+inline uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 {
   uint64_t total = 0;
   uint64_t ones = 0, twos = 0, fours = 0, eights = 0, sixteens = 0;
@@ -343,6 +288,8 @@ static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 
   return total;
 }
+
+#endif /* popcnt_harley_seal */
 
 #if defined(HAVE_AVX2)
 
@@ -460,7 +407,7 @@ inline void align8(const uint8_t*& data,
 {
   for (; *size > 0 && (uintptr_t) data % 8 != 0; data++)
   {
-    *total += popcount_u64(*data);
+    *total += popcnt_u64(*data);
     *size -= 1;
   }
 }
@@ -472,7 +419,7 @@ inline void align32(const uint64_t*& data,
 {
   for (; *size >= 8 && (uintptr_t) data % 32 != 0; data++)
   {
-    *total += popcount_u64(*data);
+    *total += popcnt_u64(*data);
     *size -= 8;
   }
 }
@@ -506,12 +453,10 @@ static uint64_t popcnt(const void* data,
 #endif /* HAVE_AVX2 */
 
 #if defined(HAVE_POPCNT)
-  // process remaining 64-bit words
-  if (has_popcnt())
-    total += popcnt_u64_unrolled(data64, size / 8);
-  else
+  total += popcnt_u64_unrolled(data64, size / 8);
+#else
+  total += popcnt_harley_seal(data64, size / 8);
 #endif
-    total += popcnt_harley_seal(data64, size / 8);
 
   data64 += size / 8;
   size = size % 8;
@@ -519,7 +464,7 @@ static uint64_t popcnt(const void* data,
 
   // process remaining bytes
   for (uint64_t i = 0; i < size; i++)
-    total += popcount_u64(data8[i]);
+    total += popcnt_u64(data8[i]);
 
   return total;
 }
