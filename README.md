@@ -27,7 +27,7 @@ is used.
 * For array sizes ≥ 1 kilobyte an ```AVX2``` algorithm is used if
 the CPU supports AVX2.
 * For CPUs without ```POPCNT``` instruction a portable 
-integer popcount algorithm is used.
+integer algorithm is used.
 
 The GitHub repository
 [WojciechMula/sse-popcount](https://github.com/WojciechMula/sse-popcount/tree/master/results)
