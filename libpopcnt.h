@@ -287,19 +287,19 @@ inline uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 #if defined(_MSC_VER)
 
 /// Define missing & operator overload for __m256i type on MSVC compiler
-inline __m256i operator&(const __m256i a, const __m256i b)
+inline __m256i operator&(__m256i a, __m256i b)
 {
   return _mm256_and_si256(a, b);
 }
 
 /// Define missing | operator overload for __m256i type on MSVC compiler
-inline __m256i operator|(const __m256i a, const __m256i b)
+inline __m256i operator|(__m256i a, __m256i b)
 {
   return _mm256_or_si256(a, b);
 }
 
 /// Define missing ^ operator overload for __m256i type on MSVC compiler
-inline __m256i operator^(const __m256i a, const __m256i b)
+inline __m256i operator^(__m256i a, __m256i b)
 {
   return _mm256_xor_si256(a, b);
 }
