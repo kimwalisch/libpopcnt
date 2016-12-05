@@ -68,25 +68,25 @@ static int cpuid(unsigned int *eax,
      "cpuid;"
      "xchg %%ebx, %%esi;"
      : "+a" (*eax), 
-       "+S" (*ebx),
+       "=S" (*ebx),
        "+c" (*ecx),
-       "+d" (*edx));
+       "=d" (*edx));
   #else
     __asm__ __volatile__ (
      "cpuid;"
      : "+a" (*eax), 
-       "+b" (*ebx),
+       "=b" (*ebx),
        "+c" (*ecx),
-       "+d" (*edx));
+       "=d" (*edx));
   #endif
   return 1;
 #elif defined(__x86_64__)
   __asm__ __volatile__ (
    "cpuid;"
    : "+a" (*eax), 
-     "+b" (*ebx),
+     "=b" (*ebx),
      "+c" (*ecx),
-     "+d" (*edx));
+     "=d" (*edx));
   return 1;
 #else
   (void) eax;
