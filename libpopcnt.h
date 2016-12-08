@@ -125,7 +125,7 @@ static int has_avx2()
 /// It uses 12 arithmetic operations, one of which is a multiply.
 /// http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
 ///
-inline uint64_t popcount64c(uint64_t x)
+static inline uint64_t popcount64c(uint64_t x)
 {
   const uint64_t m1 = 0x5555555555555555ll;
   const uint64_t m2 = 0x3333333333333333ll;
@@ -145,7 +145,7 @@ inline uint64_t popcount64c(uint64_t x)
 
 #include <nmmintrin.h>
 
-inline uint64_t popcnt_u64(uint64_t x)
+static inline uint64_t popcnt_u64(uint64_t x)
 {
   return _mm_popcnt_u64(x);
 }
@@ -156,7 +156,7 @@ inline uint64_t popcnt_u64(uint64_t x)
 
 #include <nmmintrin.h>
 
-inline uint64_t popcnt_u64(uint64_t x)
+static inline uint64_t popcnt_u64(uint64_t x)
 {
   return _mm_popcnt_u32((uint32_t) x) + 
          _mm_popcnt_u32((uint32_t)(x >> 32));
@@ -168,7 +168,7 @@ inline uint64_t popcnt_u64(uint64_t x)
              (__GNUC__ > 4 || \
              (__GNUC__ == 4 && __GNUC_MINOR__> 1))
 
-inline uint64_t popcnt_u64(uint64_t x)
+static inline uint64_t popcnt_u64(uint64_t x)
 {
   return __builtin_popcount((uint32_t) x) +
          __builtin_popcount((uint32_t)(x >> 32));
@@ -179,14 +179,14 @@ inline uint64_t popcnt_u64(uint64_t x)
              (__GNUC__ > 4 || \
              (__GNUC__ == 4 && __GNUC_MINOR__> 1))
 
-inline uint64_t popcnt_u64(uint64_t x)
+static inline uint64_t popcnt_u64(uint64_t x)
 {
   return __builtin_popcountll(x);
 }
 
 #else
 
-inline uint64_t popcnt_u64(uint64_t x)
+static inline uint64_t popcnt_u64(uint64_t x)
 {
   // fallback popcount implementation if the POPCNT
   // instruction is not available
@@ -200,7 +200,7 @@ inline uint64_t popcnt_u64(uint64_t x)
 /// Count the number of 1 bits in an array using the POPCNT
 /// instruction. On x86 CPUs this requires SSE4.2.
 ///
-inline uint64_t popcnt_u64_unrolled(const uint64_t* data, uint64_t size)
+static inline uint64_t popcnt_u64_unrolled(const uint64_t* data, uint64_t size)
 {
   uint64_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
   uint64_t limit = size - size % 4;
@@ -224,7 +224,7 @@ inline uint64_t popcnt_u64_unrolled(const uint64_t* data, uint64_t size)
 
 #else
 
-inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
+static inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
 {
   uint64_t u = a ^ b; 
   h = (a & b) | (u & c);
@@ -237,7 +237,7 @@ inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
 /// This implementation uses only 5.69 instructions per 64-bit word.
 /// @see Chapter 5 in "Hacker's Delight" 2nd edition.
 ///
-inline uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
+static uint64_t popcnt_harley_seal(const uint64_t* data, uint64_t size)
 {
   uint64_t total = 0;
   uint64_t ones = 0, twos = 0, fours = 0, eights = 0, sixteens = 0;
@@ -306,7 +306,7 @@ inline __m256i operator^(__m256i a, __m256i b)
 
 #endif /* _MSC_VER */
 
-inline __m256i popcnt_m256i(const __m256i v)
+static inline __m256i popcnt_m256i(const __m256i v)
 {
   __m256i m1 = _mm256_set1_epi8(0x55);
   __m256i m2 = _mm256_set1_epi8(0x33);
@@ -319,11 +319,7 @@ inline __m256i popcnt_m256i(const __m256i v)
   return _mm256_sad_epu8(t3, _mm256_setzero_si256());
 }
 
-inline void CSA_m256i(__m256i& h,
-                      __m256i& l,
-                      __m256i a,
-                      __m256i b,
-                      __m256i c)
+static inline void CSA_m256i(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
 {
   __m256i u = a ^ b;
   h = (a & b) | (u & c);
@@ -389,10 +385,8 @@ static uint64_t popcnt_harley_seal_avx2(const __m256i* data, uint64_t size)
 
 #endif /* HAVE_AVX2 */
 
-/// Align data to 8 bytes boundary
-inline void align8(const uint8_t*& data,
-                   uint64_t* size,
-                   uint64_t* total)
+/// Align memory to 8 bytes boundary
+static inline void align8(const uint8_t*& data, uint64_t* size, uint64_t* total)
 {
   for (; *size > 0 && (uintptr_t) data % 8 != 0; data++)
   {
@@ -401,10 +395,8 @@ inline void align8(const uint8_t*& data,
   }
 }
 
-/// Align data to 32 bytes boundary
-inline void align32(const uint64_t*& data,
-                    uint64_t* size,
-                    uint64_t* total)
+/// Align memory to 32 bytes boundary
+static inline void align32(const uint64_t*& data, uint64_t* size, uint64_t* total)
 {
   for (; *size >= 8 && (uintptr_t) data % 32 != 0; data++)
   {
@@ -417,8 +409,7 @@ inline void align32(const uint64_t*& data,
 /// @param data  An array
 /// @param size  Size of data in bytes
 ///
-static uint64_t popcnt(const void* data,
-                       uint64_t size)
+static uint64_t popcnt(const void* data, uint64_t size)
 {
   uint64_t total = 0;
 
