@@ -115,7 +115,7 @@ static int has_avx2_cpuid()
 static int has_avx2()
 {
   static int avx2 = has_avx2_cpuid();
-  return avx2 ;
+  return avx2;
 }
 
 #endif /* HAVE_AVX2 */
