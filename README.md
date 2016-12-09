@@ -48,7 +48,7 @@ uint64_t popcnt(const void* data, uint64_t size);
 /// Count the number of 1 bits in the data array.
 /// @param data  A 64-bit array
 /// @param size  Length of data array
-uint64_t popcnt64(const uint64_t* data, uint64_t size)
+uint64_t popcnt64(const uint64_t* data, uint64_t size);
 
 /// Count the number of 1 bits in x.
 uint64_t popcnt64(uint64_t x);
