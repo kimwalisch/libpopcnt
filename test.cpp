@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     uint64_t bits_verify = 0;
 
     for (int i = 0; i < size; i++)
-      bits_verify += popcnt_u64(data[i]);
+      bits_verify += popcnt64(data[i]);
 
     if (bits != bits_verify)
     {
