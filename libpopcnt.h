@@ -398,7 +398,7 @@ static inline void align8(const uint8_t*& data, uint64_t* size, uint64_t* total)
 /// Align memory to 32 bytes boundary
 static inline void align32(const uint64_t*& data, uint64_t* size, uint64_t* total)
 {
-  for (; *size > 0 && (uintptr_t) data % 4 != 0; data++)
+  for (; *size > 0 && (uintptr_t) data % 32 != 0; data++)
   {
     *total += popcnt64(*data);
     *size -= 1;
