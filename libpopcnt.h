@@ -306,7 +306,7 @@ inline __m256i operator^(__m256i a, __m256i b)
 
 #endif /* _MSC_VER */
 
-static inline __m256i popcnt_m256i(const __m256i v)
+static inline __m256i popcnt256(const __m256i v)
 {
   __m256i m1 = _mm256_set1_epi8(0x55);
   __m256i m2 = _mm256_set1_epi8(0x33);
@@ -319,7 +319,7 @@ static inline __m256i popcnt_m256i(const __m256i v)
   return _mm256_sad_epu8(t3, _mm256_setzero_si256());
 }
 
-static inline void CSA_m256i(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
+static inline void CSA256(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
 {
   __m256i u = a ^ b;
   h = (a & b) | (u & c);
@@ -347,33 +347,33 @@ static inline uint64_t popcnt_avx2_harley_seal(const __m256i* data, uint64_t siz
 
   for(; i < limit; i += 16)
   {
-    CSA_m256i(twosA, ones, ones, data[i+0], data[i+1]);
-    CSA_m256i(twosB, ones, ones, data[i+2], data[i+3]);
-    CSA_m256i(foursA, twos, twos, twosA, twosB);
-    CSA_m256i(twosA, ones, ones, data[i+4], data[i+5]);
-    CSA_m256i(twosB, ones, ones, data[i+6], data[i+7]);
-    CSA_m256i(foursB, twos, twos, twosA, twosB);
-    CSA_m256i(eightsA,fours, fours, foursA, foursB);
-    CSA_m256i(twosA, ones, ones, data[i+8], data[i+9]);
-    CSA_m256i(twosB, ones, ones, data[i+10], data[i+11]);
-    CSA_m256i(foursA, twos, twos, twosA, twosB);
-    CSA_m256i(twosA, ones, ones, data[i+12], data[i+13]);
-    CSA_m256i(twosB, ones, ones, data[i+14], data[i+15]);
-    CSA_m256i(foursB, twos, twos, twosA, twosB);
-    CSA_m256i(eightsB, fours, fours, foursA, foursB);
-    CSA_m256i(sixteens, eights, eights, eightsA, eightsB);
+    CSA256(twosA, ones, ones, data[i+0], data[i+1]);
+    CSA256(twosB, ones, ones, data[i+2], data[i+3]);
+    CSA256(foursA, twos, twos, twosA, twosB);
+    CSA256(twosA, ones, ones, data[i+4], data[i+5]);
+    CSA256(twosB, ones, ones, data[i+6], data[i+7]);
+    CSA256(foursB, twos, twos, twosA, twosB);
+    CSA256(eightsA,fours, fours, foursA, foursB);
+    CSA256(twosA, ones, ones, data[i+8], data[i+9]);
+    CSA256(twosB, ones, ones, data[i+10], data[i+11]);
+    CSA256(foursA, twos, twos, twosA, twosB);
+    CSA256(twosA, ones, ones, data[i+12], data[i+13]);
+    CSA256(twosB, ones, ones, data[i+14], data[i+15]);
+    CSA256(foursB, twos, twos, twosA, twosB);
+    CSA256(eightsB, fours, fours, foursA, foursB);
+    CSA256(sixteens, eights, eights, eightsA, eightsB);
 
-    total = _mm256_add_epi64(total, popcnt_m256i(sixteens));
+    total = _mm256_add_epi64(total, popcnt256(sixteens));
   }
 
   total = _mm256_slli_epi64(total, 4);
-  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt_m256i(eights), 3));
-  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt_m256i(fours), 2));
-  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt_m256i(twos), 1));
-  total = _mm256_add_epi64(total, popcnt_m256i(ones));
+  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt256(eights), 3));
+  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt256(fours), 2));
+  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt256(twos), 1));
+  total = _mm256_add_epi64(total, popcnt256(ones));
 
   for(; i < size; i++)
-    total = _mm256_add_epi64(total, popcnt_m256i(data[i]));
+    total = _mm256_add_epi64(total, popcnt256(data[i]));
 
   uint64_t* total64 = (uint64_t*) &total;
 
