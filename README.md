@@ -4,7 +4,7 @@ libpopcnt
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/kimwalisch/libpopcnt?branch=master&svg=true)](https://ci.appveyor.com/project/kimwalisch/libpopcnt)
 [![GitHub license](https://img.shields.io/badge/license-BSD%202-blue.svg)](https://github.com/kimwalisch/libpopcnt/blob/master/LICENSE)
 
-```libpopcnt.h``` is a header only C/C++ library for counting the
+```libpopcnt.h``` is a header only C++ library for counting the
 number of 1 bits (bit population count) in an array as quickly as
 possible using specialized CPU instructions e.g.
 [POPCNT](https://en.wikipedia.org/wiki/SSE4#POPCNT_and_LZCNT),
@@ -35,8 +35,8 @@ contains extensive benchmarks for the 3 algorithms used in
 ```libpopcnt.h```. The algorithm are named
 ```builtin-popcnt-unrolled```, ```avx2-harley-seal```, ```harley-seal```.
 
-C/C++ API
-=========
+C++ API
+=======
 ```C++
 #include "libpopcnt.h"
 
@@ -45,8 +45,13 @@ C/C++ API
 /// @param size  Size of data in bytes
 uint64_t popcnt(const void* data, uint64_t size);
 
+/// Count the number of 1 bits in the data array.
+/// @param data  A 64-bit array
+/// @param size  Length of data array
+uint64_t popcnt64(const uint64_t* data, uint64_t size)
+
 /// Count the number of 1 bits in x.
-uint64_t popcnt_u64(uint64_t x);
+uint64_t popcnt64(uint64_t x);
 ```
 
 How to compile
@@ -56,11 +61,11 @@ At compile time you need to specify if your compiler supports the
 
 ```bash
 # How to compile on x86_64 CPUs
-gcc -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 program.c
+g++ -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 program.c
 
 # How to compile using Microsoft Visual C++
 cl /O2 /EHsc /D HAVE_POPCNT /arch:AVX2 /D HAVE_AVX2 program.cpp
 
 # How to compile on IBM POWER8 CPUs
-gcc -mpopcntd -DHAVE_POPCNT program.c
+g++ -mpopcntd -DHAVE_POPCNT program.c
 ```
