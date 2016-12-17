@@ -4,7 +4,7 @@ libpopcnt
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/kimwalisch/libpopcnt?branch=master&svg=true)](https://ci.appveyor.com/project/kimwalisch/libpopcnt)
 [![GitHub license](https://img.shields.io/badge/license-BSD%202-blue.svg)](https://github.com/kimwalisch/libpopcnt/blob/master/LICENSE)
 
-```libpopcnt.h``` is a header only C++ library for counting the
+```libpopcnt.h``` is a header only C/C++ library for counting the
 number of 1 bits (bit population count) in an array as quickly as
 possible using specialized CPU instructions e.g.
 [POPCNT](https://en.wikipedia.org/wiki/SSE4#POPCNT_and_LZCNT),
@@ -24,8 +24,7 @@ size:
 
 * For array sizes < 1 kilobyte an unrolled ```POPCNT``` algorithm
 is used.
-* For array sizes ≥ 1 kilobyte an ```AVX2``` algorithm is used if
-the CPU supports AVX2.
+* For array sizes ≥ 1 kilobyte an ```AVX2``` algorithm is used.
 * For CPUs without ```POPCNT``` instruction a portable 
 integer algorithm is used.
 
@@ -44,11 +43,6 @@ C++ API
 /// @param data  An array
 /// @param size  Size of data in bytes
 uint64_t popcnt(const void* data, uint64_t size);
-
-/// Count the number of 1 bits in the data array.
-/// @param data  A 64-bit array
-/// @param size  Length of data array
-uint64_t popcnt64(const uint64_t* data, uint64_t size);
 
 /// Count the number of 1 bits in x.
 uint64_t popcnt64(uint64_t x);

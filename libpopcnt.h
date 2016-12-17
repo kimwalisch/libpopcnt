@@ -1,4 +1,4 @@
-// libpopcnt.h - C++ library for counting the number of 1 bits (bit
+// libpopcnt.h - C/C++ library for counting the number of 1 bits (bit
 // population count) in an array as quickly as possible using
 // specialized CPU instructions e.g. POPCNT, AVX2.
 //
@@ -31,94 +31,6 @@
 #define LIBPOPCNT_H
 
 #include <stdint.h>
-
-#if defined(HAVE_AVX2)
-
-#if defined(_MSC_VER) && \
-   (defined(_WIN32) || defined(_WIN64))
-  // __cpuidex()
-  #include <intrin.h>
-#endif
-
-// %ebx bit flags
-#define bit_AVX2 (1 << 5)
-
-/// Portable cpuid implementation for x86 and x86-64 CPUs
-/// (supports PIC and non-PIC code).
-/// Returns 1 if the CPU supports cpuid else 0.
-///
-static int cpuid(unsigned int *eax,
-                 unsigned int *ebx,
-                 unsigned int *ecx,
-                 unsigned int *edx)
-{
-#if defined(_MSC_VER) && \
-   (defined(_WIN32) || defined(_WIN64))
-  int regs[4];
-  __cpuidex(regs, *eax, *ecx);
-  *eax = regs[0];
-  *ebx = regs[1];
-  *ecx = regs[2];
-  *edx = regs[3];
-  return 1;
-#elif defined(__i386__)
-  #if defined(__PIC__)
-    __asm__ __volatile__ (
-     "mov %%ebx, %%esi;" // save %ebx PIC register
-     "cpuid;"
-     "xchg %%ebx, %%esi;"
-     : "+a" (*eax), 
-       "=S" (*ebx),
-       "+c" (*ecx),
-       "=d" (*edx));
-  #else
-    __asm__ __volatile__ (
-     "cpuid;"
-     : "+a" (*eax), 
-       "=b" (*ebx),
-       "+c" (*ecx),
-       "=d" (*edx));
-  #endif
-  return 1;
-#elif defined(__x86_64__)
-  __asm__ __volatile__ (
-   "cpuid;"
-   : "+a" (*eax), 
-     "=b" (*ebx),
-     "+c" (*ecx),
-     "=d" (*edx));
-  return 1;
-#else
-  (void) eax;
-  (void) ebx;
-  (void) ecx;
-  (void) edx;
-  return 0;
-#endif
-}
-
-static int has_avx2_cpuid()
-{
-  unsigned int eax = 7;
-  unsigned int ebx;
-  unsigned int ecx = 0;
-  unsigned int edx;
-
-  if (cpuid(&eax, &ebx, &ecx, &edx))
-  {
-    return (ebx & bit_AVX2) != 0;
-  }
-
-  return 0;
-}
-
-static int has_avx2()
-{
-  static int avx2 = has_avx2_cpuid();
-  return avx2;
-}
-
-#endif /* HAVE_AVX2 */
 
 /// This uses fewer arithmetic operations than any other known
 /// implementation on machines with fast multiplication.
@@ -409,7 +321,7 @@ static inline void align32(const uint64_t*& data, uint64_t* size, uint64_t* tota
 /// @param data  A 64-bit array
 /// @param size  Length of data array
 ///
-static uint64_t popcnt64(const uint64_t* data, uint64_t size)
+static uint64_t popcnt_u64(const uint64_t* data, uint64_t size)
 {
   uint64_t total = 0;
 
@@ -417,8 +329,7 @@ static uint64_t popcnt64(const uint64_t* data, uint64_t size)
 
   // AVX2 popcount is faster than POPCNT 
   // for array sizes >= 1 kilobyte
-  if (size >= 1024 &&
-      has_avx2())
+  if (size >= (1 << 10))
   {
     align32(data, &size, &total);
     total += popcnt_avx2_harley_seal((const __m256i*) data, size / 4);
@@ -448,7 +359,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
   const uint8_t* data8 = (const uint8_t*) data;
   align8(data8, &size, &total);
 
-  total += popcnt64((const uint64_t*) data8, size / 8);
+  total += popcnt_u64((const uint64_t*) data8, size / 8);
   data8 += size - size % 8;
   size = size % 8;
 
