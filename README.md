@@ -34,8 +34,8 @@ contains extensive benchmarks for the 3 algorithms used in
 ```libpopcnt.h```. The algorithm are named
 ```builtin-popcnt-unrolled```, ```avx2-harley-seal```, ```harley-seal```.
 
-C++ API
-=======
+C/C++ API
+=========
 ```C++
 #include "libpopcnt.h"
 
@@ -55,11 +55,11 @@ At compile time you need to specify if your compiler supports the
 
 ```bash
 # How to compile on x86_64 CPUs
-g++ -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 program.c
+gcc -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 program.c
 
 # How to compile using Microsoft Visual C++
 cl /O2 /EHsc /D HAVE_POPCNT /arch:AVX2 /D HAVE_AVX2 program.cpp
 
 # How to compile on IBM POWER8 CPUs
-g++ -mpopcntd -DHAVE_POPCNT program.c
+gcc -mpopcntd -DHAVE_POPCNT program.c
 ```
