@@ -50,7 +50,7 @@ uint64_t popcnt64(uint64_t x);
 
 How to compile
 ==============
-At compile time you need to specify if your compiler supports the
+At compile time you need to specify if your CPU supports the
 ```POPCNT``` & ```AVX2``` instructions.
 
 ```bash
