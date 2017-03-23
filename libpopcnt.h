@@ -32,6 +32,17 @@
 
 #include <stdint.h>
 
+// GCC >= 4.9 & Clang >= 3.7 have __attribute__((target))
+#define HAVE__attribute__target \
+  ((defined(__GNUC__) && \
+            (__GNUC__ > 4 || \
+            (__GNUC__ == 4 && \
+             __GNUC_MINOR__ >= 9))) || \
+    (defined(__clang__) && \
+            (__clang_major__ > 3 || \
+            (__clang_major__ == 3 && \
+             __clang_minor__ >= 7))))
+
 /// This uses fewer arithmetic operations than any other known
 /// implementation on machines with fast multiplication.
 /// It uses 12 arithmetic operations, one of which is a multiply.
@@ -123,17 +134,9 @@ static inline uint64_t popcnt64(uint64_t x)
 
 #endif
 
-#define HAVE__attribute__target \
-    (defined(__GNUC__) && \
-            (__GNUC__ > 4 || \
-            (__GNUC__ == 4 && __GNUC_MINOR__ >= 9))) || \
-    (defined(__clang__) && \
-            (__clang_major__ > 3 || \
-            (__clang_major__ == 3 && __clang_minor__ >= 7)))
-
 // non x64 CPUs or
 // compiler does not support __attribute__((target))
-#if !defined(HAVE__attribute__target) || \
+#if !HAVE__attribute__target || \
     (!defined(__x86_64__) && \
      !defined(_M_X64))
 
