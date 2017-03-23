@@ -51,9 +51,8 @@ static inline uint64_t popcount64c(uint64_t x)
   return (x * h01) >> 56;
 }
 
-#if defined(HAVE_POPCNT) && \
-    defined(_MSC_VER) && \
-    defined(_WIN64)
+#if defined(_MSC_VER) && \
+    defined(_M_X64)
 
 #include <nmmintrin.h>
 
@@ -62,9 +61,8 @@ static inline uint64_t popcnt64(uint64_t x)
   return _mm_popcnt_u64(x);
 }
 
-#elif defined(HAVE_POPCNT) && \
-      defined(_MSC_VER) && \
-      defined(_WIN32)
+#elif defined(_MSC_VER) && \
+      defined(_M_IX86)
 
 #include <nmmintrin.h>
 
@@ -74,34 +72,52 @@ static inline uint64_t popcnt64(uint64_t x)
          _mm_popcnt_u32((uint32_t)(x >> 32));
 }
 
-#elif defined(HAVE_POPCNT) && \
-      defined(__i386__) && \
+// GCC, Clang, icpc: x64 CPUs
+#elif defined(__x86_64__) && \
       defined(__GNUC__) && \
              (__GNUC__ > 4 || \
-             (__GNUC__ == 4 && __GNUC_MINOR__> 1))
+             (__GNUC__ == 4 && __GNUC_MINOR__ > 1))
 
 static inline uint64_t popcnt64(uint64_t x)
 {
-  return __builtin_popcount((uint32_t) x) +
-         __builtin_popcount((uint32_t)(x >> 32));
+  __asm__ ("popcnt %1, %0" : "=r" (x) : "0" (x));
+  return x;
 }
 
-#elif defined(HAVE_POPCNT) && \
+// GCC, Clang, icpc: x86 CPUs
+#elif defined(__i386__) && \
       defined(__GNUC__) && \
              (__GNUC__ > 4 || \
-             (__GNUC__ == 4 && __GNUC_MINOR__> 1))
+             (__GNUC__ == 4 && __GNUC_MINOR__ > 1))
+
+static inline uint32_t popcnt32(uint32_t x)
+{
+  __asm__ ("popcnt %1, %0" : "=r" (x) : "0" (x));
+  return x;
+}
+
+static inline uint64_t popcnt64(uint64_t x)
+{
+  return popcnt32((uint32_t) x) +
+         popcnt32((uint32_t)(x >> 32));
+}
+
+// GCC & Clang: non x86 CPUs
+#elif defined(__GNUC__) && \
+             (__GNUC__ > 4 || \
+             (__GNUC__ == 4 && __GNUC_MINOR__ > 1))
 
 static inline uint64_t popcnt64(uint64_t x)
 {
   return __builtin_popcountll(x);
 }
 
+// no hardware POPCNT,
+// use integer popcnt64 implementation
 #else
 
 static inline uint64_t popcnt64(uint64_t x)
 {
-  // fallback popcount implementation if the POPCNT
-  // instruction is not available
   return popcount64c(x);
 }
 
