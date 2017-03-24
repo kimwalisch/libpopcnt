@@ -6,7 +6,7 @@ compiler:
   - clang
 
 install:
-  - sudo apt-get install -y cppcheck valgrind lib32stdc++-5-dev
+  - sudo apt-get install -y cppcheck valgrind lib32stdc++-6-dev
 
 script:
   # Test x64 CPU
