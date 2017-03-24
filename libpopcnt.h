@@ -173,12 +173,12 @@ static inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
       defined(__i386__)))
 
 /// Align memory to 8 bytes boundary
-static inline void align8(const uint8_t*& data, uint64_t* size, uint64_t* total)
+static inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& total)
 {
-  for (; *size > 0 && (uintptr_t) data % 8 != 0; data++)
+  for (; size > 0 && (uintptr_t) p % 8 != 0; p++)
   {
-    *total += popcnt64(*data);
-    *size -= 1;
+    total += popcnt64(*p);
+    size -= 1;
   }
 }
 
