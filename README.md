@@ -133,3 +133,8 @@ the fastest algorithm for the given array size.
     <td><b>13.66</b></td>
   </tr>
 </table>
+
+This benchmark was run on an Intel Skylake i7-6700 CPU with GCC 5.3.
+
+More benchmarks are available at
+[WojciechMula/sse-popcount](https://github.com/WojciechMula/sse-popcount/tree/master/results).
