@@ -154,10 +154,10 @@ static inline uint64_t popcnt64(uint64_t x)
 // %ebx bit flags
 #define bit_AVX2   (1 << 5)
 
-static inline void run_cpuid(uint32_t eax, uint32_t ecx, uint32_t* abcd)
+static inline void run_cpuid(int eax, int ecx, int* abcd)
 {
-  uint32_t ebx = 0;
-  uint32_t edx = 0;
+  int ebx = 0;
+  int edx = 0;
 
 #if defined(_MSC_VER)
   __cpuidex(abcd, eax, ecx);
@@ -189,18 +189,18 @@ static inline void run_cpuid(uint32_t eax, uint32_t ecx, uint32_t* abcd)
 
 static inline int check_xcr0_ymm()
 {
-  uint32_t xcr0;
+  int xcr0;
   __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
   return ((xcr0 & 6) == 6);
 }
 
 static inline int has_AVX2()
 {
-  uint32_t abcd[4];
-  uint32_t osxsave_mask = (1 << 27);
+  int abcd[4];
+  int osxsave_mask = (1 << 27);
 
   // must ensure OS supports extended processor state management
-  run_cpuid( 1, 0, abcd );
+  run_cpuid(1, 0, abcd);
   if ((abcd[2] & osxsave_mask) != osxsave_mask)
     return 0;
 
@@ -219,7 +219,7 @@ static inline int has_AVX2()
 
 static inline int has_POPCNT()
 {
-  uint32_t abcd[4];
+  int abcd[4];
 
   run_cpuid(1, 0, abcd);
   if ((abcd[2] & bit_POPCNT) != bit_POPCNT)
