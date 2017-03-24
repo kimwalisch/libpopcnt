@@ -140,13 +140,22 @@ static inline uint64_t popcnt64(uint64_t x)
 
 #endif
 
+// x86 cpuid
 #if defined(__x86_64__) || \
     defined(__i386__)
+
+#if defined(_MSC_VER)
+  #include <intrin.h>
+#endif
 
 static inline void run_cpuid(uint32_t eax, uint32_t ecx, uint32_t* abcd)
 {
   uint32_t ebx = 0;
   uint32_t edx = 0;
+
+#if defined(_MSC_VER)
+  __cpuidex(abcd, eax, ecx);
+#else
 
 #if defined(__i386__) &&  \
     defined(__PIC__)
@@ -162,12 +171,15 @@ static inline void run_cpuid(uint32_t eax, uint32_t ecx, uint32_t* abcd)
              "+a" (eax),
              "+c" (ecx),
              "=d" (edx));
+#endif
 
   abcd[0] = eax;
   abcd[1] = ebx;
   abcd[2] = ecx;
   abcd[3] = edx;
 }
+
+#if !defined(_MSC_VER)
 
 static inline int check_xcr0_ymm()
 {
@@ -189,6 +201,8 @@ static inline int has_AVX2()
 
   return bit_AVX2;
 }
+
+#endif /* !_MSC_VER */
 
 static inline int has_POPCNT()
 {
@@ -288,7 +302,9 @@ static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
 
 // non x86 CPUs
 #if !defined(__x86_64__) && \
-    !defined(__i386__)
+    !defined(__i386__) && \
+    !defined(_M_X64) && \
+    !defined(_M_IX86)
 
 /// Align memory to 8 bytes boundary
 static inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& total)
@@ -323,10 +339,12 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
 #endif
 
-// x86 CPUs, old GCC/Clang
+// x86 CPUs, no avx2
 #if !HAVE__attribute__target && \
     (defined(__x86_64__) || \
-     defined(__i386__))
+     defined(__i386__) || \
+     defined(_M_X64) || \
+     defined(_M_IX86))
 
 /// Count the number of 1 bits in the data array.
 /// @param data  An array
@@ -364,7 +382,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
   return total;
 }
 
-#endif /* x86 CPUs */
+#endif
 
 // x86 CPUs, compiler supports (target ("avx2"))
 #if HAVE__attribute__target && \
