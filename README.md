@@ -73,12 +73,12 @@ Speedup
 
 The benchmark below shows the speedup of the 3 algorithms
 used in ```libpopcnt.h``` compared to a basic ```lookup-8```
-popcount algorithm. ```libpopcnt.h``` automatically picks the
-fastest popcount algorithm for the given array size.
+popcount algorithm. ```libpopcnt.h``` automatically **picks**
+the fastest popcount algorithm for the given array size.
 
 <table>
   <tr align="center">
-    <td><b>procedure<b></td>
+    <td><b>procedure</b></td>
     <td><b>32 B</b></td>
     <td><b>64 B</b></td>
     <td><b>128 B</b></td>
@@ -112,11 +112,11 @@ fastest popcount algorithm for the given array size.
   </tr>
   <tr>
     <td>builtin-popcnt-unrolled</td> 
-    <td>4.75</td>
-    <td>6.36</td>
-    <td>8.58</td>
-    <td>8.55</td>
-    <td>6.72</td>
+    <td><b>4.75</b></td>
+    <td><b>6.36</b></td>
+    <td><b>8.58</b></td>
+    <td><b>8.55</b></td>
+    <td><b>6.72</b></td>
     <td>7.60</td>
     <td>7.88</td>
     <td>7.94</td>
@@ -128,8 +128,8 @@ fastest popcount algorithm for the given array size.
     <td>3.22</td>
     <td>4.17</td>
     <td>8.46</td>
-    <td>10.74</td>
-    <td>12.52</td>
-    <td>13.66</td>
+    <td><b>10.74</b></td>
+    <td><b>12.52</b></td>
+    <td><b>13.66</b></td>
   </tr>
 </table>
