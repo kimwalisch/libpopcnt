@@ -12,9 +12,9 @@ script:
   # Test x64 CPU
   - cppcheck . --error-exitcode=1 --quiet
   - make
-  - make check
+  - ./test
   - valgrind --error-exitcode=1 ./test 10000
   # Test x86 CPU (32-bit)
   - make CXXFLAGS="-m32 -g -O2 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
-  - make check
+  - ./test
   - valgrind --error-exitcode=1 ./test 10000
