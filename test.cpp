@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     uint64_t bits_verify = 0;
 
     for (int i = 0; i < size; i++)
-      bits_verify += popcnt64(data[i]);
+      bits_verify += popcount64c(data[i]);
 
     if (bits != bits_verify)
     {
@@ -37,8 +37,7 @@ int main(int argc, char** argv)
     }
   }
 
-  std::cout << "\rStatus: 100%" << std::flush;
-  std::cout << std::endl;
+  std::cout << "\rStatus: 100%" << std::endl;
   std::cout << "libpopcnt tested successfully!" << std::endl;
 
   return 0;
