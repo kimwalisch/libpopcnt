@@ -89,8 +89,8 @@ popcount algorithm for the given array size.
     <td><b>2048 B</b></td>
     <td><b>4096 B</b></td>
   </tr>
-  <tr align="right">
-    <td><b>lookup-8</b></td> 
+  <tr>
+    <td>lookup-8</td> 
     <td>1.00</td>
     <td>1.00</td>
     <td>1.00</td>
@@ -100,8 +100,8 @@ popcount algorithm for the given array size.
     <td>1.00</td>
     <td>1.00</td>
   </tr>
-  <tr align="right">
-    <td><b>harley-seal</b></td> 
+  <tr>
+    <td>harley-seal</td> 
     <td>1.27</td>
     <td>1.43</td>
     <td>2.41</td>
@@ -111,8 +111,8 @@ popcount algorithm for the given array size.
     <td>3.41</td>
     <td>3.47</td>
   </tr>
-  <tr align="right">
-    <td><b>builtin-popcnt-unrolled</b></td> 
+  <tr>
+    <td>builtin-popcnt-unrolled</td> 
     <td>4.75</td>
     <td>6.36</td>
     <td>8.58</td>
@@ -122,8 +122,8 @@ popcount algorithm for the given array size.
     <td>7.88</td>
     <td>7.94</td>
   </tr>
-  <tr align="right">
-    <td><b>avx2-harley-seal</b></td> 
+  <tr>
+    <td>avx2-harley-seal</td> 
     <td>1.15</td>
     <td>1.85</td>
     <td>3.22</td>
