@@ -6,10 +6,15 @@ compiler:
   - clang
 
 install:
-  - sudo apt-get install -y cppcheck valgrind
+  - sudo apt-get install -y cppcheck valgrind lib32stdc++-5-dev
 
 script:
+  # Test x64 CPU
   - cppcheck . --error-exitcode=1 --quiet
   - make
+  - make check
+  - valgrind --error-exitcode=1 ./test 10000
+  # Test x86 CPU (32-bit)
+  - make CXXFLAGS="-m32 -g -O2 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
   - make check
   - valgrind --error-exitcode=1 ./test 10000
