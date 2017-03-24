@@ -1,0 +1,8 @@
+2017-03-24 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 1.2 released.
+
+  * Add cpuid check for x86 CPUs.
+  * Compiles without -mpopcnt, -mavx2 flags.
+  * Add ChangeLog.
+  * Update README.md.
