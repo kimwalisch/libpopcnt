@@ -1,5 +1,6 @@
 libpopcnt
 =========
+
 [![Build Status](https://travis-ci.org/kimwalisch/libpopcnt.svg)](https://travis-ci.org/kimwalisch/libpopcnt)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/kimwalisch/libpopcnt?branch=master&svg=true)](https://ci.appveyor.com/project/kimwalisch/libpopcnt)
 [![GitHub license](https://img.shields.io/badge/license-BSD%202-blue.svg)](https://github.com/kimwalisch/libpopcnt/blob/master/LICENSE)
@@ -17,7 +18,8 @@ The algorithms used in ```libpopcnt.h``` are described in the paper
 by Daniel Lemire, Nathan Kurz and Wojciech Mula (23 Nov 2016).
 
 How it works
-============
+------------
+
 ```libpopcnt.h``` uses a combination of 3 different bit population
 count algorithms based on the CPU architecture and the input array
 size:
@@ -32,10 +34,11 @@ The GitHub repository
 [WojciechMula/sse-popcount](https://github.com/WojciechMula/sse-popcount/tree/master/results)
 contains extensive benchmarks for the 3 algorithms used in
 ```libpopcnt.h```. The algorithm are named
-```builtin-popcnt-unrolled```, ```avx2-harley-seal```, ```harley-seal```.
+```harley-seal```, ```avx2-harley-seal```, ```builtin-popcnt-unrolled```.
 
 C/C++ API
-=========
+---------
+
 ```C++
 #include "libpopcnt.h"
 
@@ -46,7 +49,8 @@ uint64_t popcnt(const void* data, uint64_t size);
 ```
 
 How to compile
-==============
+--------------
+
 Compilation does not require any special compiler flags (like
 ```-mpopcnt```, ```-mavx2```)! Also on x86 CPUs ```libpopcnt.h```
 checks using ```cpuid``` if the CPU supports POPCNT/AVX2
@@ -63,3 +67,70 @@ clang -O2 program.c
 # How to compile using Microsoft Visual C++
 cl /O2 program.cpp
 ```
+
+Speedup
+-------
+
+The benchmark below shows the speedup of the 3 algorithms
+(```harley-seal```, ```avx2-harley-seal```, ```builtin-popcnt-unrolled```)
+used in ```libpopcnt.h``` compared to a basic lookup popcount
+algorithm. ```libpopcnt.h``` automatically picks the fastest
+popcount algorithm for the given array size.
+
+<table>
+  <tr align="center">
+    <td><b>procedure<b></td>
+    <td><b>32 B</b></td>
+    <td><b>64 B</b></td>
+    <td><b>128 B</b></td>
+    <td><b>256 B</b></td>
+    <td><b>512 B</b></td>
+    <td><b>1024 B</b></td>
+    <td><b>2048 B</b></td>
+    <td><b>4096 B</b></td>
+  </tr>
+  <tr align="right">
+    <td><b>lookup-8</b></td> 
+    <td>1.00</td>
+    <td>1.00</td>
+    <td>1.00</td>
+    <td>1.00</td>
+    <td>1.00</td>
+    <td>1.00</td>
+    <td>1.00</td>
+    <td>1.00</td>
+  </tr>
+  <tr align="right">
+    <td><b>harley-seal</b></td> 
+    <td>1.27</td>
+    <td>1.43</td>
+    <td>2.41</td>
+    <td>2.82</td>
+    <td>3.12</td>
+    <td>3.31</td>
+    <td>3.41</td>
+    <td>3.47</td>
+  </tr>
+  <tr align="right">
+    <td><b>builtin-popcnt-unrolled</b></td> 
+    <td>4.75</td>
+    <td>6.36</td>
+    <td>8.58</td>
+    <td>8.55</td>
+    <td>6.72</td>
+    <td>7.60</td>
+    <td>7.88</td>
+    <td>7.94</td>
+  </tr>
+  <tr align="right">
+    <td><b>avx2-harley-seal</b></td> 
+    <td>1.15</td>
+    <td>1.85</td>
+    <td>3.22</td>
+    <td>4.17</td>
+    <td>8.46</td>
+    <td>10.74</td>
+    <td>12.52</td>
+    <td>13.66</td>
+  </tr>
+</table>
