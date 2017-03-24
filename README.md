@@ -74,7 +74,7 @@ Speedup
 The benchmark below shows the speedup of the 3 algorithms
 used in ```libpopcnt.h``` compared to a basic ```lookup-8```
 popcount algorithm. ```libpopcnt.h``` automatically **picks**
-the fastest popcount algorithm for the given array size.
+the fastest algorithm for the given array size.
 
 <table>
   <tr align="center">
