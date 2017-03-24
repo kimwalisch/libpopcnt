@@ -32,9 +32,11 @@
 
 #include <stdint.h>
 
-// GCC >= 4.9 & Clang >= 3.8 have __attribute__((target))
-#define HAVE__attribute__target \
-  ((defined(__GNUC__) && \
+// x86 CPUs & GCC >= 4.9, Clang >= 3.8
+#define TARGET_AVX2 \
+  ((defined(__x86_64__) || \
+    defined(__i386__)) && \
+   (defined(__GNUC__) && \
            (__GNUC__ > 4 || \
            (__GNUC__ == 4 && \
             __GNUC_MINOR__ >= 9))) || \
@@ -185,6 +187,8 @@ static inline void run_cpuid(int eax, int ecx, int* abcd)
   abcd[3] = edx;
 }
 
+// AVX2 currently not supported for MSVC because
+// MSVC requires /arch:AVX2 compiler flag
 #if !defined(_MSC_VER)
 
 static inline int check_xcr0_ymm()
@@ -353,7 +357,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
 #endif
 
 // x86 CPUs, no avx2
-#if !HAVE__attribute__target && \
+#if !TARGET_AVX2 && \
     (defined(__x86_64__) || \
      defined(__i386__) || \
      defined(_M_X64) || \
@@ -397,10 +401,8 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
 #endif
 
-// x86 CPUs, compiler supports (target ("avx2"))
-#if HAVE__attribute__target && \
-    (defined(__x86_64__) || \
-     defined(__i386__))
+// x86 CPUs & avx2
+#if TARGET_AVX2
 
 #include <immintrin.h>
 
