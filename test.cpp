@@ -8,15 +8,20 @@
 
 int main(int argc, char** argv)
 {
-  srand((unsigned int) time(0));
+  srand(time(0));
   int max_size = 100000;
+
+  if (argv[1])
+    max_size = std::atoi(argv[1]);
 
   // Generate vectors with random data and compute the bit
   // population count using 2 different algorithms and
   // check that the results match
+  //
   for (int size = 0; size < max_size; size++)
   {
     double percent = (100.0 * size) / max_size;
+
     std::cout << "\rStatus: " << (int) percent << "%" << std::flush;
     std::vector<uint8_t> data(size);
 

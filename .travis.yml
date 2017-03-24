@@ -5,6 +5,11 @@ compiler:
   - gcc
   - clang
 
+install:
+  - sudo apt-get install -y cppcheck valgrind
+
 script:
+  - cppcheck . --error-exitcode=1 --quiet
   - make
   - make check
+  - valgrind --error-exitcode=1 ./test 10000
