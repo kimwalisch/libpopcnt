@@ -8,8 +8,8 @@
 
 int main(int argc, char** argv)
 {
-  srand(time(0));
   int max_size = 100000;
+  srand((unsigned) time(0));
 
   if (argv[1])
     max_size = std::atoi(argv[1]);
