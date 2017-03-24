@@ -72,10 +72,9 @@ Speedup
 -------
 
 The benchmark below shows the speedup of the 3 algorithms
-(```harley-seal```, ```avx2-harley-seal```, ```builtin-popcnt-unrolled```)
-used in ```libpopcnt.h``` compared to a basic lookup popcount
-algorithm. ```libpopcnt.h``` automatically picks the fastest
-popcount algorithm for the given array size.
+used in ```libpopcnt.h``` compared to a basic ```lookup-8```
+popcount algorithm. ```libpopcnt.h``` automatically picks the
+fastest popcount algorithm for the given array size.
 
 <table>
   <tr align="center">
