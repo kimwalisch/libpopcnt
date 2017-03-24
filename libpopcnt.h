@@ -191,7 +191,14 @@ static inline int check_xcr0_ymm()
 static inline int has_AVX2()
 {
   uint32_t abcd[4];
+  uint32_t osxsave_mask = (1 << 27);
 
+  // must ensure OS supports extended processor state management
+  run_cpuid( 1, 0, abcd );
+  if ((abcd[2] & osxsave_mask) != osxsave_mask)
+    return 0;
+
+  // must ensure OS supports ZMM registers (and YMM, and XMM)
   if (!check_xcr0_ymm())
     return 0;
 
