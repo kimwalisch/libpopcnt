@@ -32,22 +32,20 @@
 
 #include <stdint.h>
 
-// %ecx bit flags
-#define bit_POPCNT (1 << 23)
-
-// %ebx bit flags
-#define bit_AVX2   (1 << 5)
-
 // GCC >= 4.9 & Clang >= 3.8 have __attribute__((target))
 #define HAVE__attribute__target \
   ((defined(__GNUC__) && \
-            (__GNUC__ > 4 || \
-            (__GNUC__ == 4 && \
-             __GNUC_MINOR__ >= 9))) || \
-    (defined(__clang__) && \
-            (__clang_major__ > 3 || \
-            (__clang_major__ == 3 && \
-             __clang_minor__ >= 8))))
+           (__GNUC__ > 4 || \
+           (__GNUC__ == 4 && \
+            __GNUC_MINOR__ >= 9))) || \
+   (defined(__clang__) && \
+    defined(__apple_build_version__) && \
+    __apple_build_version__ >= 8000000) || \
+   (defined(__clang__) && \
+   !defined(__apple_build_version__) && \
+           (__clang_major__ > 3 || \
+           (__clang_major__ == 3 && \
+            __clang_minor__ >= 8))))
 
 /// This uses fewer arithmetic operations than any other known
 /// implementation on machines with fast multiplication.
@@ -147,6 +145,12 @@ static inline uint64_t popcnt64(uint64_t x)
 #if defined(_MSC_VER)
   #include <intrin.h>
 #endif
+
+// %ecx bit flags
+#define bit_POPCNT (1 << 23)
+
+// %ebx bit flags
+#define bit_AVX2   (1 << 5)
 
 static inline void run_cpuid(uint32_t eax, uint32_t ecx, uint32_t* abcd)
 {
