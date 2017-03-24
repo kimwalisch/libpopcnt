@@ -43,23 +43,23 @@ C/C++ API
 /// @param data  An array
 /// @param size  Size of data in bytes
 uint64_t popcnt(const void* data, uint64_t size);
-
-/// Count the number of 1 bits in x.
-uint64_t popcnt64(uint64_t x);
 ```
 
 How to compile
 ==============
-At compile time you need to specify if your CPU supports the
-```POPCNT``` & ```AVX2``` instructions.
+Compilation does not require any special compiler flags (like
+```-mpopcnt```, ```-mavx2```)! Also on x86 CPUs ```libpopcnt.h```
+checks using ```cpuid``` if the CPU supports POPCNT/AVX2
+before using it.
+
 
 ```bash
-# How to compile on x86_64 CPUs
-gcc -mpopcnt -DHAVE_POPCNT -mavx2 -DHAVE_AVX2 program.c
+# How to compile using GCC
+gcc -O2 program.c
+
+# How to compile using Clang
+clang -O2 program.c
 
 # How to compile using Microsoft Visual C++
-cl /O2 /EHsc /D HAVE_POPCNT /arch:AVX2 /D HAVE_AVX2 program.cpp
-
-# How to compile on IBM POWER8 CPUs
-gcc -mpopcntd -DHAVE_POPCNT program.c
+cl /O2 program.cpp
 ```
