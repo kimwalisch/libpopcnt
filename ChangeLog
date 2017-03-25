@@ -1,8 +1,9 @@
-2017-03-24 Kim Walisch  <kim.walisch@gmail.com>
+2017-03-25 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 1.2 released.
 
   * Add cpuid check for x86 CPUs.
   * Compiles without -mpopcnt, -mavx2 flags.
+  * Tested successfully on IBM POWER8 (generates popcntd, GCC 5.4)
   * Add ChangeLog.
   * Update README.md.
