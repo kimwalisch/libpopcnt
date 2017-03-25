@@ -236,28 +236,22 @@ static inline int has_POPCNT()
 
 static inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 {
-  uint64_t sum0 = 0;
-  uint64_t sum1 = 0;
-  uint64_t sum2 = 0;
-  uint64_t sum3 = 0;
-
   uint64_t i = 0;
   uint64_t limit = size - size % 4;
+  uint64_t cnt = 0;
 
   for (; i < limit; i += 4)
   {
-    sum0 += popcnt64(data[i+0]);
-    sum1 += popcnt64(data[i+1]);
-    sum2 += popcnt64(data[i+2]);
-    sum3 += popcnt64(data[i+3]);
+    cnt += popcnt64(data[i+0]);
+    cnt += popcnt64(data[i+1]);
+    cnt += popcnt64(data[i+2]);
+    cnt += popcnt64(data[i+3]);
   }
 
-  uint64_t total = sum0 + sum1 + sum2 + sum3;
-
   for (; i < size; i++)
-    total += popcnt64(data[i]);
+    cnt += popcnt64(data[i]);
 
-  return total;
+  return cnt;
 }
 
 /// Carry-save adder (CSA).
@@ -278,7 +272,7 @@ static inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_
 ///
 static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
 {
-  uint64_t total = 0;
+  uint64_t cnt = 0;
   uint64_t ones = 0, twos = 0, fours = 0, eights = 0, sixteens = 0;
   uint64_t twosA, twosB, foursA, foursB, eightsA, eightsB;
   uint64_t limit = size - size % 16;
@@ -302,19 +296,19 @@ static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
     CSA(eightsB, fours, fours, foursA, foursB);
     CSA(sixteens, eights, eights, eightsA, eightsB);
 
-    total += popcount64c(sixteens);
+    cnt += popcount64c(sixteens);
   }
 
-  total *= 16;
-  total += 8 * popcount64c(eights);
-  total += 4 * popcount64c(fours);
-  total += 2 * popcount64c(twos);
-  total += 1 * popcount64c(ones);
+  cnt *= 16;
+  cnt += 8 * popcount64c(eights);
+  cnt += 4 * popcount64c(fours);
+  cnt += 2 * popcount64c(twos);
+  cnt += 1 * popcount64c(ones);
 
   for(; i < size; i++)
-    total += popcount64c(data[i]);
+    cnt += popcount64c(data[i]);
 
-  return total;
+  return cnt;
 }
 
 // non x86 CPUs
@@ -324,11 +318,11 @@ static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
     !defined(_M_IX86)
 
 /// Align memory to 8 bytes boundary
-static inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& total)
+static inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& cnt)
 {
   for (; size > 0 && (uintptr_t) p % 8; p++)
   {
-    total += popcnt64(*p);
+    cnt += popcnt64(*p);
     size -= 1;
   }
 }
@@ -339,19 +333,19 @@ static inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& total)
 ///
 static uint64_t popcnt(const void* data, uint64_t size)
 {
-  uint64_t total = 0;
+  uint64_t cnt = 0;
 
   const uint8_t* data8 = (const uint8_t*) data;
-  align8(data8, size, total);
+  align8(data8, size, cnt);
 
-  total += popcnt64_unrolled((const uint64_t*) data8, size / 8);
+  cnt += popcnt64_unrolled((const uint64_t*) data8, size / 8);
   data8 += size - size % 8;
   size = size % 8;
 
   for (uint64_t i = 0; i < size; i++)
-    total += popcnt64(data8[i]);
+    cnt += popcnt64(data8[i]);
 
-  return total;
+  return cnt;
 }
 
 #endif
@@ -371,32 +365,32 @@ static uint64_t popcnt(const void* data, uint64_t size)
 {
   static const int cpuid = has_POPCNT();
 
-  uint64_t total = 0;
+  uint64_t cnt = 0;
   const uint8_t* data8 = (const uint8_t*) data;
 
   if (cpuid & bit_POPCNT)
   {
     const uint64_t* data64 = (const uint64_t*) data8;
     uint64_t size64 = size / 8;
-    total += popcnt64_unrolled(data64, size64);
+    cnt += popcnt64_unrolled(data64, size64);
     data8 += size - size % 8;
     size = size % 8;
     for (uint64_t i = 0; i < size; i++)
-      total += popcnt64(data8[i]);
+      cnt += popcnt64(data8[i]);
 
-    return total;
+    return cnt;
   }
 
   // pure integer algorithm
   const uint64_t* data64 = (const uint64_t*) data8;
   uint64_t size64 = size / 8;
-  total += popcnt64_hs(data64, size64);
+  cnt += popcnt64_hs(data64, size64);
   data8 += size - size % 8;
   size = size % 8;
   for (uint64_t i = 0; i < size; i++)
-    total += popcount64c(data8[i]);
+    cnt += popcount64c(data8[i]);
 
-  return total;
+  return cnt;
 }
 
 #endif
@@ -449,7 +443,7 @@ static inline __m256i popcnt256(__m256i v)
 __attribute__ ((target ("avx2")))
 static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
 {
-  __m256i total = _mm256_setzero_si256();
+  __m256i cnt = _mm256_setzero_si256();
   __m256i ones = _mm256_setzero_si256();
   __m256i twos = _mm256_setzero_si256();
   __m256i fours = _mm256_setzero_si256();
@@ -478,37 +472,37 @@ static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
     CSA256(eightsB, fours, fours, foursA, foursB);
     CSA256(sixteens, eights, eights, eightsA, eightsB);
 
-    total = _mm256_add_epi64(total, popcnt256(sixteens));
+    cnt = _mm256_add_epi64(cnt, popcnt256(sixteens));
   }
 
-  total = _mm256_slli_epi64(total, 4);
-  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt256(eights), 3));
-  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt256(fours), 2));
-  total = _mm256_add_epi64(total, _mm256_slli_epi64(popcnt256(twos), 1));
-  total = _mm256_add_epi64(total, popcnt256(ones));
+  cnt = _mm256_slli_epi64(cnt, 4);
+  cnt = _mm256_add_epi64(cnt, _mm256_slli_epi64(popcnt256(eights), 3));
+  cnt = _mm256_add_epi64(cnt, _mm256_slli_epi64(popcnt256(fours), 2));
+  cnt = _mm256_add_epi64(cnt, _mm256_slli_epi64(popcnt256(twos), 1));
+  cnt = _mm256_add_epi64(cnt, popcnt256(ones));
 
   for(; i < size; i++)
-    total = _mm256_add_epi64(total, popcnt256(data[i]));
+    cnt = _mm256_add_epi64(cnt, popcnt256(data[i]));
 
-  uint64_t* total64 = (uint64_t*) &total;
+  uint64_t* cnt64 = (uint64_t*) &cnt;
 
-  return total64[0] +
-         total64[1] +
-         total64[2] +
-         total64[3];
+  return cnt64[0] +
+         cnt64[1] +
+         cnt64[2] +
+         cnt64[3];
 }
 
 /// Align memory to 32 bytes boundary
-static inline void align_avx2(const uint8_t*& p, uint64_t& size, uint64_t& total)
+static inline void align_avx2(const uint8_t*& p, uint64_t& size, uint64_t& cnt)
 {
   for (; (uintptr_t) p % 8; p++)
   {
-    total += popcnt64(*p);
+    cnt += popcnt64(*p);
     size -= 1;
   }
   for (; (uintptr_t) p % 32; p += 8)
   {
-    total += popcnt64(
+    cnt += popcnt64(
         *(const uint64_t*) p);
     size -= 8;
   }
@@ -523,7 +517,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
   static const int cpuid =
       has_POPCNT() | has_AVX2();
 
-  uint64_t total = 0;
+  uint64_t cnt = 0;
   const uint8_t* data8 = (const uint8_t*) data;
 
   // AVX2 is faster than POPCNT for
@@ -531,10 +525,10 @@ static uint64_t popcnt(const void* data, uint64_t size)
   if ((cpuid & bit_AVX2) &&
       size >= 1024)
   {
-    align_avx2(data8, size, total);
+    align_avx2(data8, size, cnt);
     const __m256i* data32 = (const __m256i*) data8;
     uint64_t size32 = size / 32;
-    total += popcnt_avx2(data32, size32);
+    cnt += popcnt_avx2(data32, size32);
     data8 += size - size % 32;
     size = size % 32;
   }
@@ -543,25 +537,25 @@ static uint64_t popcnt(const void* data, uint64_t size)
   {
     const uint64_t* data64 = (const uint64_t*) data8;
     uint64_t size64 = size / 8;
-    total += popcnt64_unrolled(data64, size64);
+    cnt += popcnt64_unrolled(data64, size64);
     data8 += size - size % 8;
     size = size % 8;
     for (uint64_t i = 0; i < size; i++)
-      total += popcnt64(data8[i]);
+      cnt += popcnt64(data8[i]);
 
-    return total;
+    return cnt;
   }
 
   // pure integer algorithm
   const uint64_t* data64 = (const uint64_t*) data8;
   uint64_t size64 = size / 8;
-  total += popcnt64_hs(data64, size64);
+  cnt += popcnt64_hs(data64, size64);
   data8 += size - size % 8;
   size = size % 8;
   for (uint64_t i = 0; i < size; i++)
-    total += popcount64c(data8[i]);
+    cnt += popcount64c(data8[i]);
 
-  return total;
+  return cnt;
 }
 
 #endif /* avx2 */
