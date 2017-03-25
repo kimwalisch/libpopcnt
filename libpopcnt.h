@@ -154,7 +154,7 @@ static inline uint64_t popcnt64(uint64_t x)
 #define bit_POPCNT (1 << 23)
 
 // %ebx bit flags
-#define bit_AVX2   (1 << 5)
+#define bit_AVX2 (1 << 5)
 
 static inline void run_cpuid(int eax, int ecx, int* abcd)
 {
@@ -326,7 +326,7 @@ static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
 /// Align memory to 8 bytes boundary
 static inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& total)
 {
-  for (; size > 0 && (uintptr_t) p % 8 != 0; p++)
+  for (; size > 0 && (uintptr_t) p % 8; p++)
   {
     total += popcnt64(*p);
     size -= 1;
