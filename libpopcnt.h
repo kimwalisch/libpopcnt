@@ -32,7 +32,23 @@
 
 #include <stdint.h>
 
-// x86 CPUs & GCC >= 4.9, Clang >= 3.8
+#ifndef __has_builtin
+  #define __has_builtin(x) 0
+#endif
+
+// GCC, Clang, icpc
+#define HAS_x86_POPCNT \
+  (__GNUC__ > 4 || \
+  (__GNUC__ == 4 && \
+   __GNUC_MINOR__ >= 2))
+
+#define HAS_BUILTIN_POPCOUNT \
+   __has_builtin(__builtin_popcount) || \
+  (__GNUC__ > 4 || \
+  (__GNUC__ == 4 && \
+   __GNUC_MINOR__ >= 2))
+
+// GCC >= 4.9, Clang >= 3.8, Apple Clang >= 8.0.0
 #define TARGET_AVX2 \
   ((defined(__x86_64__) || \
     defined(__i386__)) && \
@@ -41,13 +57,13 @@
            (__GNUC__ == 4 && \
             __GNUC_MINOR__ >= 9))) || \
    (defined(__clang__) && \
-    defined(__apple_build_version__) && \
-    __apple_build_version__ >= 8000000) || \
-   (defined(__clang__) && \
    !defined(__apple_build_version__) && \
            (__clang_major__ > 3 || \
            (__clang_major__ == 3 && \
-            __clang_minor__ >= 8))))
+            __clang_minor__ >= 8))) || \
+   (defined(__clang__) && \
+    defined(__apple_build_version__) && \
+    __apple_build_version__ >= 8000000))
 
 /// This uses fewer arithmetic operations than any other known
 /// implementation on machines with fast multiplication.
@@ -89,11 +105,8 @@ static inline uint64_t popcnt64(uint64_t x)
          _mm_popcnt_u32((uint32_t)(x >> 32));
 }
 
-// GCC, Clang, icpc: x64 CPUs
-#elif defined(__x86_64__) && \
-      defined(__GNUC__) && \
-             (__GNUC__ > 4 || \
-             (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))
+#elif HAS_x86_POPCNT && \
+      defined(__x86_64__)
 
 static inline uint64_t popcnt64(uint64_t x)
 {
@@ -101,11 +114,8 @@ static inline uint64_t popcnt64(uint64_t x)
   return x;
 }
 
-// GCC, Clang, icpc: x86 CPUs
-#elif defined(__i386__) && \
-      defined(__GNUC__) && \
-             (__GNUC__ > 4 || \
-             (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))
+#elif HAS_x86_POPCNT && \
+      defined(__i386__)
 
 static inline uint32_t popcnt32(uint32_t x)
 {
@@ -119,10 +129,8 @@ static inline uint64_t popcnt64(uint64_t x)
          popcnt32((uint32_t)(x >> 32));
 }
 
-// GCC & Clang: non x86 CPUs
-#elif defined(__GNUC__) && \
-             (__GNUC__ > 4 || \
-             (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))
+// non x86 CPUs
+#elif HAS_BUILTIN_POPCOUNT
 
 static inline uint64_t popcnt64(uint64_t x)
 {
@@ -163,24 +171,24 @@ static inline void run_cpuid(int eax, int ecx, int* abcd)
 
 #if defined(_MSC_VER)
   __cpuidex(abcd, eax, ecx);
-#else
 
-#if defined(__i386__) &&  \
-    defined(__PIC__)
+#elif defined(__i386__) && \
+      defined(__PIC__)
   // in case of PIC under 32-bit EBX cannot be clobbered
   __asm__ ("movl %%ebx, %%edi;"
            "cpuid;"
            "xchgl %%ebx, %%edi;"
            : "=D" (ebx),
+             "+a" (eax),
+             "+c" (ecx),
+             "=d" (edx));
 #else
   __asm__ ("cpuid;"
            : "+b" (ebx),
-#endif
              "+a" (eax),
              "+c" (ecx),
              "=d" (edx));
 #endif
-
   abcd[0] = eax;
   abcd[1] = ebx;
   abcd[2] = ecx;
