@@ -43,10 +43,10 @@
    __GNUC_MINOR__ >= 2))
 
 #define HAS_BUILTIN_POPCOUNT \
-   __has_builtin(__builtin_popcount) || \
+  (__has_builtin(__builtin_popcount) || \
   (__GNUC__ > 4 || \
   (__GNUC__ == 4 && \
-   __GNUC_MINOR__ >= 2))
+   __GNUC_MINOR__ >= 2)))
 
 // GCC >= 4.9, Clang >= 3.8, Apple Clang >= 8.0.0
 #define TARGET_AVX2 \
