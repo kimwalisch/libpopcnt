@@ -33,7 +33,7 @@ integer algorithm is used.
 The GitHub repository
 [WojciechMula/sse-popcount](https://github.com/WojciechMula/sse-popcount/tree/master/results)
 contains extensive benchmarks for the 3 algorithms used in
-```libpopcnt.h```. The algorithm are named
+```libpopcnt.h```. The algorithms are named
 ```harley-seal```, ```avx2-harley-seal```, ```builtin-popcnt-unrolled```.
 
 C/C++ API
