@@ -75,6 +75,7 @@
 #if (defined(__x86_64__) || \
      defined(__i386__)) && \
      defined(__clang__) && \
+    !defined(_MSC_VER) && \
     !defined(__apple_build_version__) && \
             (__clang_major__ > 3 || \
             (__clang_major__ == 3 && \
@@ -110,29 +111,8 @@ static inline uint64_t popcount64c(uint64_t x)
   return (x * h01) >> 56;
 }
 
-#if defined(_MSC_VER) && \
-    defined(_M_X64)
-
-#include <nmmintrin.h>
-
-static inline uint64_t popcnt64(uint64_t x)
-{
-  return _mm_popcnt_u64(x);
-}
-
-#elif defined(_MSC_VER) && \
-      defined(_M_IX86)
-
-#include <nmmintrin.h>
-
-static inline uint64_t popcnt64(uint64_t x)
-{
-  return _mm_popcnt_u32((uint32_t) x) + 
-         _mm_popcnt_u32((uint32_t)(x >> 32));
-}
-
-#elif defined(HAS_ASM_POPCNT) && \
-      defined(__x86_64__)
+#if defined(HAS_ASM_POPCNT) && \
+    defined(__x86_64__)
 
 static inline uint64_t popcnt64(uint64_t x)
 {
@@ -153,6 +133,27 @@ static inline uint64_t popcnt64(uint64_t x)
 {
   return popcnt32((uint32_t) x) +
          popcnt32((uint32_t)(x >> 32));
+}
+
+#elif defined(_MSC_VER) && \
+      defined(_M_X64)
+
+#include <nmmintrin.h>
+
+static inline uint64_t popcnt64(uint64_t x)
+{
+  return _mm_popcnt_u64(x);
+}
+
+#elif defined(_MSC_VER) && \
+      defined(_M_IX86)
+
+#include <nmmintrin.h>
+
+static inline uint64_t popcnt64(uint64_t x)
+{
+  return _mm_popcnt_u32((uint32_t) x) + 
+         _mm_popcnt_u32((uint32_t)(x >> 32));
 }
 
 // non x86 CPUs
