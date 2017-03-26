@@ -36,34 +36,60 @@
   #define __has_builtin(x) 0
 #endif
 
-// GCC, Clang, icpc
-#define HAS_x86_POPCNT \
-  (__GNUC__ > 4 || \
-  (__GNUC__ == 4 && \
-   __GNUC_MINOR__ >= 2))
+// Clang & GCC >= 4.2
+#if __has_builtin(__builtin_popcount) || \
+    (defined(__GNUC__) && \
+            (__GNUC__ > 4 || \
+            (__GNUC__ == 4 && \
+             __GNUC_MINOR__ >= 2)))
+  #define HAS_BUILTIN_POPCOUNT
+#endif
 
-#define HAS_BUILTIN_POPCOUNT \
-  (__has_builtin(__builtin_popcount) || \
-  (__GNUC__ > 4 || \
-  (__GNUC__ == 4 && \
-   __GNUC_MINOR__ >= 2)))
-
-// GCC >= 4.9, Clang >= 3.8, Apple Clang >= 8.0.0
-#define HAS_AVX2 \
-  ((defined(__x86_64__) || \
-    defined(__i386__)) && \
-   (defined(__GNUC__) && \
+// GCC >= 4.2
+#if defined(__GNUC__) && \
            (__GNUC__ > 4 || \
            (__GNUC__ == 4 && \
-            __GNUC_MINOR__ >= 9))) || \
-   (defined(__clang__) && \
-   !defined(__apple_build_version__) && \
+            __GNUC_MINOR__ >= 2))
+  #define HAS_ASM_POPCNT
+#endif
+
+// Clang >= 3.0
+#if defined(__clang__) && \
            (__clang_major__ > 3 || \
            (__clang_major__ == 3 && \
-            __clang_minor__ >= 8))) || \
-   (defined(__clang__) && \
-    defined(__apple_build_version__) && \
-    __apple_build_version__ >= 8000000))
+            __clang_minor__ >= 0))
+  #define HAS_ASM_POPCNT
+#endif
+
+// GCC >= 4.9
+#if (defined(__x86_64__) || \
+     defined(__i386__)) && \
+     defined(__GNUC__) && \
+            (__GNUC__ > 4 || \
+            (__GNUC__ == 4 && \
+            __GNUC_MINOR__ >= 9))
+  #define HAS_AVX2
+#endif
+
+// Clang >= 3.8
+#if (defined(__x86_64__) || \
+     defined(__i386__)) && \
+     defined(__clang__) && \
+    !defined(__apple_build_version__) && \
+            (__clang_major__ > 3 || \
+            (__clang_major__ == 3 && \
+             __clang_minor__ >= 8))
+  #define HAS_AVX2
+#endif
+
+// Apple Clang >= 8.0.0
+#if (defined(__x86_64__) || \
+     defined(__i386__)) && \
+     defined(__clang__) && \
+     defined(__apple_build_version__) && \
+            (__apple_build_version__ >= 8000000)
+  #define HAS_AVX2
+#endif
 
 /// This uses fewer arithmetic operations than any other known
 /// implementation on machines with fast multiplication.
@@ -105,7 +131,7 @@ static inline uint64_t popcnt64(uint64_t x)
          _mm_popcnt_u32((uint32_t)(x >> 32));
 }
 
-#elif HAS_x86_POPCNT && \
+#elif defined(HAS_ASM_POPCNT) && \
       defined(__x86_64__)
 
 static inline uint64_t popcnt64(uint64_t x)
@@ -114,7 +140,7 @@ static inline uint64_t popcnt64(uint64_t x)
   return x;
 }
 
-#elif HAS_x86_POPCNT && \
+#elif defined(HAS_ASM_POPCNT) && \
       defined(__i386__)
 
 static inline uint32_t popcnt32(uint32_t x)
@@ -130,7 +156,7 @@ static inline uint64_t popcnt64(uint64_t x)
 }
 
 // non x86 CPUs
-#elif HAS_BUILTIN_POPCOUNT
+#elif defined(HAS_BUILTIN_POPCOUNT)
 
 static inline uint64_t popcnt64(uint64_t x)
 {
@@ -195,7 +221,7 @@ static inline void run_cpuid(int eax, int ecx, int* abcd)
   abcd[3] = edx;
 }
 
-#if HAS_AVX2
+#if defined(HAS_AVX2)
 
 static inline int check_xcr0_ymm()
 {
@@ -357,7 +383,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
 #endif
 
 // x86 CPUs, no avx2
-#if !HAS_AVX2 && \
+#if !defined(HAS_AVX2) && \
     (defined(__x86_64__) || \
      defined(__i386__) || \
      defined(_M_X64) || \
@@ -401,8 +427,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
 #endif
 
-// x86 CPUs & avx2
-#if HAS_AVX2
+#if defined(HAS_AVX2)
 
 #include <immintrin.h>
 
