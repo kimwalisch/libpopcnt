@@ -1,3 +1,11 @@
+2017-03-27 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 1.3 work in progress.
+
+  * Add benchmark.cpp.
+  * Use AVX2 for arrays >= 512 bytes (previously 1024).
+  * Improve Makefile.
+
 2017-03-26 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 1.2 released.
