@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
   init(v);
 
   for (uint64_t i = 0; i < v.size(); i++)
-    cnt += popcount64c(v[i]);
+    cnt += popcount64(v[i]);
 
   double seconds = get_seconds();
   uint64_t total = benchmark(v, iters);

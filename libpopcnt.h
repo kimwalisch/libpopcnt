@@ -97,7 +97,7 @@
 /// It uses 12 arithmetic operations, one of which is a multiply.
 /// http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
 ///
-static inline uint64_t popcount64c(uint64_t x)
+static inline uint64_t popcount64(uint64_t x)
 {
   uint64_t m1 = 0x5555555555555555ll;
   uint64_t m2 = 0x3333333333333333ll;
@@ -170,7 +170,7 @@ static inline uint64_t popcnt64(uint64_t x)
 
 static inline uint64_t popcnt64(uint64_t x)
 {
-  return popcount64c(x);
+  return popcount64(x);
 }
 
 #endif
@@ -329,17 +329,17 @@ static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
     CSA(eightsB, fours, fours, foursA, foursB);
     CSA(sixteens, eights, eights, eightsA, eightsB);
 
-    cnt += popcount64c(sixteens);
+    cnt += popcount64(sixteens);
   }
 
   cnt *= 16;
-  cnt += 8 * popcount64c(eights);
-  cnt += 4 * popcount64c(fours);
-  cnt += 2 * popcount64c(twos);
-  cnt += 1 * popcount64c(ones);
+  cnt += 8 * popcount64(eights);
+  cnt += 4 * popcount64(fours);
+  cnt += 2 * popcount64(twos);
+  cnt += 1 * popcount64(ones);
 
   for(; i < size; i++)
-    cnt += popcount64c(data[i]);
+    cnt += popcount64(data[i]);
 
   return cnt;
 }
@@ -421,7 +421,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
   data8 += size - size % 8;
   size = size % 8;
   for (uint64_t i = 0; i < size; i++)
-    cnt += popcount64c(data8[i]);
+    cnt += popcount64(data8[i]);
 
   return cnt;
 }
@@ -584,7 +584,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
   data8 += size - size % 8;
   size = size % 8;
   for (uint64_t i = 0; i < size; i++)
-    cnt += popcount64c(data8[i]);
+    cnt += popcount64(data8[i]);
 
   return cnt;
 }

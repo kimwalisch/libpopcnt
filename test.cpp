@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     uint64_t bits_verify = 0;
 
     for (int i = 0; i < size; i++)
-      bits_verify += popcount64c(data[i]);
+      bits_verify += popcount64(data[i]);
 
     if (bits != bits_verify)
     {
