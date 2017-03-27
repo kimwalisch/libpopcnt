@@ -552,10 +552,9 @@ static uint64_t popcnt(const void* data, uint64_t size)
   uint64_t cnt = 0;
   const uint8_t* data8 = (const uint8_t*) data;
 
-  // AVX2 is faster than POPCNT for
-  // array sizes >= 1 KB
+  // AVX2 requires arrays >= 512 bytes
   if ((cpuid & bit_AVX2) &&
-      size >= 1024)
+      size >= 512)
   {
     align_avx2(data8, size, cnt);
     const __m256i* data32 = (const __m256i*) data8;
