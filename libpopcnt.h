@@ -297,21 +297,21 @@ static inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_
   l = u ^ c;
 }
 
-/// Harley-Seal popcount (4th iteration).
+/// Harley-Seal popcount (3rd iteration).
 /// The Harley-Seal popcount algorithm is one of the fastest algorithms
 /// for counting 1 bits in an array using only integer operations.
-/// This implementation uses only 5.69 instructions per 64-bit word.
+/// This implementation uses only 6.38 instructions per 64-bit word.
 /// @see Chapter 5 in "Hacker's Delight" 2nd edition.
 ///
 static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
 {
   uint64_t cnt = 0;
-  uint64_t ones = 0, twos = 0, fours = 0, eights = 0, sixteens = 0;
-  uint64_t twosA, twosB, foursA, foursB, eightsA, eightsB;
-  uint64_t limit = size - size % 16;
+  uint64_t ones = 0, twos = 0, fours = 0, eights = 0;
+  uint64_t twosA, twosB, foursA, foursB;
+  uint64_t limit = size - size % 8;
   uint64_t i = 0;
 
-  for(; i < limit; i += 16)
+  for(; i < limit; i += 8)
   {
     CSA(twosA, ones, ones, data[i+0], data[i+1]);
     CSA(twosB, ones, ones, data[i+2], data[i+3]);
@@ -319,21 +319,12 @@ static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
     CSA(twosA, ones, ones, data[i+4], data[i+5]);
     CSA(twosB, ones, ones, data[i+6], data[i+7]);
     CSA(foursB, twos, twos, twosA, twosB);
-    CSA(eightsA,fours, fours, foursA, foursB);
-    CSA(twosA, ones, ones, data[i+8], data[i+9]);
-    CSA(twosB, ones, ones, data[i+10], data[i+11]);
-    CSA(foursA, twos, twos, twosA, twosB);
-    CSA(twosA, ones, ones, data[i+12], data[i+13]);
-    CSA(twosB, ones, ones, data[i+14], data[i+15]);
-    CSA(foursB, twos, twos, twosA, twosB);
-    CSA(eightsB, fours, fours, foursA, foursB);
-    CSA(sixteens, eights, eights, eightsA, eightsB);
+    CSA(eights, fours, fours, foursA, foursB);
 
-    cnt += popcount64(sixteens);
+    cnt += popcount64(eights);
   }
 
-  cnt *= 16;
-  cnt += 8 * popcount64(eights);
+  cnt *= 8;
   cnt += 4 * popcount64(fours);
   cnt += 2 * popcount64(twos);
   cnt += 1 * popcount64(ones);
