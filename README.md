@@ -24,9 +24,9 @@ How it works
 count algorithms based on the CPU architecture and the input array
 size:
 
-* For array sizes < 1 kilobyte an unrolled ```POPCNT``` algorithm
+* For array sizes < 512 bytes an unrolled ```POPCNT``` algorithm
 is used.
-* For array sizes ≥ 1 kilobyte an ```AVX2``` algorithm is used.
+* For array sizes ≥ 512 bytes an ```AVX2``` algorithm is used.
 * For CPUs without ```POPCNT``` instruction a portable 
 integer algorithm is used.
 
@@ -116,7 +116,7 @@ the fastest algorithm for the given array size.
     <td><b>6.36</b></td>
     <td><b>8.58</b></td>
     <td><b>8.55</b></td>
-    <td><b>6.72</b></td>
+    <td>6.72</td>
     <td>7.60</td>
     <td>7.88</td>
     <td>7.94</td>
@@ -127,8 +127,8 @@ the fastest algorithm for the given array size.
     <td>1.85</td>
     <td>3.22</td>
     <td>4.17</td>
-    <td>8.46</td>
-    <td><b>10.74</b></td>
+    <td><b>8.46</b></td>
+    <td><b>10.74</td>
     <td><b>12.52</b></td>
     <td><b>13.66</b></td>
   </tr>
