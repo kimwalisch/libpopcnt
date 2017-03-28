@@ -5,7 +5,7 @@ libpopcnt
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/kimwalisch/libpopcnt?branch=master&svg=true)](https://ci.appveyor.com/project/kimwalisch/libpopcnt)
 [![Github Releases](https://img.shields.io/github/release/kimwalisch/libpopcnt.svg)](https://github.com/kimwalisch/libpopcnt/releases)
 
-```libpopcnt.h``` is a header only C/C++ library for counting the
+```libpopcnt.h``` is a header-only C++ library for counting the
 number of 1 bits (bit population count) in an array as quickly as
 possible using specialized CPU instructions e.g.
 [POPCNT](https://en.wikipedia.org/wiki/SSE4#POPCNT_and_LZCNT),
@@ -36,8 +36,8 @@ contains extensive benchmarks for the 3 algorithms used in
 ```libpopcnt.h```. The algorithms are named
 ```harley-seal```, ```avx2-harley-seal```, ```builtin-popcnt-unrolled```.
 
-C/C++ API
----------
+C++ API
+-------
 
 ```C++
 #include "libpopcnt.h"

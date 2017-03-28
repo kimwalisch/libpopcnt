@@ -1,4 +1,4 @@
-// libpopcnt.h - C/C++ library for counting the number of 1 bits (bit
+// libpopcnt.h - C++ library for counting the number of 1 bits (bit
 // population count) in an array as quickly as possible using
 // specialized CPU instructions e.g. POPCNT, AVX2.
 //
@@ -434,27 +434,27 @@ static inline void CSA256(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i 
 __attribute__ ((target ("avx2")))
 static inline __m256i popcnt256(__m256i v)
 {
-    __m256i lookup1 = _mm256_setr_epi8(
-        4, 5, 5, 6, 5, 6, 6, 7,
-        5, 6, 6, 7, 6, 7, 7, 8,
-        4, 5, 5, 6, 5, 6, 6, 7,
-        5, 6, 6, 7, 6, 7, 7, 8
-    );
+  __m256i lookup1 = _mm256_setr_epi8(
+      4, 5, 5, 6, 5, 6, 6, 7,
+      5, 6, 6, 7, 6, 7, 7, 8,
+      4, 5, 5, 6, 5, 6, 6, 7,
+      5, 6, 6, 7, 6, 7, 7, 8
+  );
 
-    __m256i lookup2 = _mm256_setr_epi8(
-        4, 3, 3, 2, 3, 2, 2, 1,
-        3, 2, 2, 1, 2, 1, 1, 0,
-        4, 3, 3, 2, 3, 2, 2, 1,
-        3, 2, 2, 1, 2, 1, 1, 0
-    );
+  __m256i lookup2 = _mm256_setr_epi8(
+      4, 3, 3, 2, 3, 2, 2, 1,
+      3, 2, 2, 1, 2, 1, 1, 0,
+      4, 3, 3, 2, 3, 2, 2, 1,
+      3, 2, 2, 1, 2, 1, 1, 0
+  );
 
-    __m256i low_mask = _mm256_set1_epi8(0x0f);
-    __m256i lo = v & low_mask;
-    __m256i hi = _mm256_srli_epi16(v, 4) & low_mask;
-    __m256i popcnt1 = _mm256_shuffle_epi8(lookup1, lo);
-    __m256i popcnt2 = _mm256_shuffle_epi8(lookup2, hi);
+  __m256i low_mask = _mm256_set1_epi8(0x0f);
+  __m256i lo = v & low_mask;
+  __m256i hi = _mm256_srli_epi16(v, 4) & low_mask;
+  __m256i popcnt1 = _mm256_shuffle_epi8(lookup1, lo);
+  __m256i popcnt2 = _mm256_shuffle_epi8(lookup2, hi);
 
-    return _mm256_sad_epu8(popcnt1, popcnt2);
+  return _mm256_sad_epu8(popcnt1, popcnt2);
 }
 
 /// AVX2 Harley-Seal popcount (4th iteration).

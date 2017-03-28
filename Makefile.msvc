@@ -1,7 +1,3 @@
-######################################################################
-# Microsoft Visual C++ Makefile for the libpopcnt C/C++ library
-######################################################################
-
 CXX = cl /nologo
 CXXFLAGS = /W2 /O2 /EHsc
 LINK = link /nologo
