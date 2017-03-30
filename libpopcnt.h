@@ -311,7 +311,7 @@ inline int check_xcr0_ymm()
 {
   int xcr0;
 #if defined(_MSC_VER)
-  xcr0 = (uint32_t) _xgetbv(0);
+  xcr0 = (int) _xgetbv(0);
 #else
   __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
 #endif
