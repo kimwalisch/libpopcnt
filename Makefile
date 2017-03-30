@@ -1,6 +1,6 @@
 .PHONY: all check clean
 
-CXXFLAGS=-g -O2 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long
+CXXFLAGS=-g -O3 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long
 
 all: test benchmark
 
