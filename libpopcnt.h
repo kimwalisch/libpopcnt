@@ -445,8 +445,8 @@ inline void align_avx2(const uint8_t*& p, uint64_t& size, uint64_t& cnt)
   }
   for (; (uintptr_t) p % 32; p += 8)
   {
-    cnt += popcnt64(
-        *(const uint64_t*) p);
+    const uint64_t* p64 = (const uint64_t*) p;
+    cnt += popcnt64(*p64);
     size -= 8;
   }
 }
