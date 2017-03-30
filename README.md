@@ -56,13 +56,12 @@ Compilation does not require any special compiler flags (like
 checks using ```cpuid``` if the CPU supports POPCNT/AVX2
 before using it.
 
-
 ```bash
 # How to compile using GCC
-gcc -O2 program.c
+g++ -O3 program.cpp
 
 # How to compile using Clang
-clang -O2 program.c
+clang++ -O3 program.cpp
 
 # How to compile using Microsoft Visual C++
 cl /O2 program.cpp
