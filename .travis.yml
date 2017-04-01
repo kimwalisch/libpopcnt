@@ -7,14 +7,27 @@ compiler:
 
 install:
   - sudo apt-get install -y cppcheck valgrind g++-multilib
+  - wget --no-check-certificate http://cmake.org/files/v3.1/cmake-3.1.3-Linux-x86_64.tar.gz
+  - tar -xzf cmake-3.1.3-Linux-x86_64.tar.gz
+  - export CXXFLAGS="-Wall -Wextra -Werror -Wno-long-long -pedantic -O2"
+  - export PATH=$PWD/cmake-3.1.3-Linux-x86_64/bin:$PATH
 
 script:
   # Static code analysis
   - cppcheck . --error-exitcode=1 --quiet
   # Test x64 CPU
-  - make
-  - ./test
-  - valgrind --error-exitcode=1 ./test 10000
+  - mkkdir build
+  - cd build
+  - cmake .
+  - make VERBOSE=1
+  - ctest
+  - cd test
+  - valgrind --error-exitcode=1 ./test2
   # Test x86 CPU (32-bit)
-  - make CXXFLAGS="-m32 -g -O2 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
-  - ./test
+  - cd ../..
+  - mkkdir build
+  - cd build
+  - export CXXFLAGS="-m32 -g -O3 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
+  - cmake .
+  - make VERBOSE=1
+  - ctest
