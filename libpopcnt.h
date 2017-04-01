@@ -44,7 +44,7 @@
   #define GNUC_PREREQ(x, y) \
       (__GNUC__ > x || (__GNUC__ == x && __GNUC_MINOR__ >= y))
 #else
-  #define __GNUC_PREREQ__(x, y)	0
+  #define GNUC_PREREQ(x, y)	0
 #endif
 
 #ifdef __clang__
