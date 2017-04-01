@@ -1,5 +1,12 @@
 2017-04-01 Kim Walisch  <kim.walisch@gmail.com>
 
+  Version 1.5 work in progress.
+
+  * libpopcnt.h now supports C and C++!
+  * Use CMake build system.
+
+2017-04-01 Kim Walisch  <kim.walisch@gmail.com>
+
   Version 1.4 released.
 
   * libpopcnt.h: Fix compiler warning.
