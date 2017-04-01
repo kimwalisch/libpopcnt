@@ -453,45 +453,6 @@ inline void align_avx2(const uint8_t*& p, uint64_t& size, uint64_t& cnt)
 
 #endif /* avx2 */
 
-// non x86 CPUs
-#if !defined(__x86_64__) && \
-    !defined(__i386__) && \
-    !defined(_M_X64) && \
-    !defined(_M_IX86)
-
-/// Align memory to 8 bytes boundary
-inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& cnt)
-{
-  for (; size > 0 && (uintptr_t) p % 8; p++)
-  {
-    cnt += popcnt64(*p);
-    size -= 1;
-  }
-}
-
-/// Count the number of 1 bits in the data array.
-/// @param data  An array
-/// @param size  Size of data in bytes
-///
-uint64_t popcnt(const void* data, uint64_t size)
-{
-  uint64_t cnt = 0;
-
-  const uint8_t* data8 = (const uint8_t*) data;
-  align8(data8, size, cnt);
-
-  cnt += popcnt64_unrolled((const uint64_t*) data8, size / 8);
-  data8 += size - size % 8;
-  size = size % 8;
-
-  for (uint64_t i = 0; i < size; i++)
-    cnt += popcnt64(data8[i]);
-
-  return cnt;
-}
-
-#endif
-
 // x86 CPUs
 #if defined(__x86_64__) || \
     defined(__i386__) || \
@@ -502,7 +463,7 @@ uint64_t popcnt(const void* data, uint64_t size)
 /// @param data  An array
 /// @param size  Size of data in bytes
 ///
-uint64_t popcnt(const void* data, uint64_t size)
+inline uint64_t popcnt(const void* data, uint64_t size)
 {
   static const int cpuid =
       has_POPCNT() | has_AVX2();
@@ -551,7 +512,41 @@ uint64_t popcnt(const void* data, uint64_t size)
   return cnt;
 }
 
-#endif /* x86 */
+// non x86 CPUs
+#else
+
+/// Align memory to 8 bytes boundary
+inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& cnt)
+{
+  for (; size > 0 && (uintptr_t) p % 8; p++)
+  {
+    cnt += popcnt64(*p);
+    size -= 1;
+  }
+}
+
+/// Count the number of 1 bits in the data array.
+/// @param data  An array
+/// @param size  Size of data in bytes
+///
+inline uint64_t popcnt(const void* data, uint64_t size)
+{
+  uint64_t cnt = 0;
+
+  const uint8_t* data8 = (const uint8_t*) data;
+  align8(data8, size, cnt);
+
+  cnt += popcnt64_unrolled((const uint64_t*) data8, size / 8);
+  data8 += size - size % 8;
+  size = size % 8;
+
+  for (uint64_t i = 0; i < size; i++)
+    cnt += popcnt64(data8[i]);
+
+  return cnt;
+}
+
+#endif
 
 } // namespace
 
