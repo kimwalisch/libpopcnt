@@ -53,16 +53,16 @@ uint64_t popcnt(const void* data, uint64_t size);
 How to compile
 --------------
 
+Compilation does not require any special compiler flags (like
+```-mpopcnt```, ```-mavx2```)! Also on x86 CPUs ```libpopcnt.h```
+checks using ```cpuid``` if the CPU supports POPCNT/AVX2
+before using it.
+
 ```bash
-# C++ compilation
 c++ -O3 program.cpp
 
-# C compilation
-cc -O3 -march=native program.c
+cc -O3 program.c
 ```
-
-For C++ no special compiler flags (like ```-march=native```)
-are required!
 
 Speedup
 -------
