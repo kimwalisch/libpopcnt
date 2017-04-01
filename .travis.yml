@@ -14,7 +14,7 @@ install:
 
 script:
   # Static code analysis
-  - cppcheck . --error-exitcode=1 --quiet
+  - cppcheck . --error-exitcode=1 --quiet --force
   # Test x64 CPU
   - mkdir build
   - cd build
