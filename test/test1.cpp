@@ -18,6 +18,7 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
+#include <cstdlib>
 #include <stdint.h>
 
 int main()
