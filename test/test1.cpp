@@ -5,7 +5,7 @@
 ///        population count using 2 different algorithms and checks
 ///        that the results match.
 ///
-/// Usage: ./test1
+/// Usage: ./test1 [array bytes]
 ///
 /// Copyright (C) 2017 Kim Walisch, <kim.walisch@gmail.com>
 ///
@@ -21,9 +21,13 @@
 #include <cstdlib>
 #include <stdint.h>
 
-int main()
+int main(int argc, char* argv[])
 {
   int size = 100000;
+
+  if (argc > 1)
+    size = std::atoi(argv[1]);
+
   std::vector<uint8_t> data(size);
   srand((unsigned) time(0));
 
