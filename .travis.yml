@@ -25,9 +25,11 @@ script:
   - valgrind --error-exitcode=1 ./test2
   # Test x86 CPU (32-bit)
   - cd ../..
+  - rm -rf build
   - mkdir build
   - cd build
   - export CXXFLAGS="-m32 -g -O3 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
+  - export CFLAGS="-m32 -g -O3 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
   - cmake ..
   - make VERBOSE=1
   - ctest
