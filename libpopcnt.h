@@ -487,7 +487,7 @@ static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
     defined(_M_IX86)
 
 /*
- * Count the number of 1 bits in the data array.
+ * Count the number of 1 bits in the data array
  * @data: An array
  * @size: Size of data in bytes
  */
@@ -555,9 +555,9 @@ static inline void align(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 }
 
 /*
- * Count the number of 1 bits in the data array.
- * @data:  An array
- * @size:  Size of data in bytes
+ * Count the number of 1 bits in the data array
+ * @data: An array
+ * @size: Size of data in bytes
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {

@@ -43,7 +43,7 @@ C/C++ API
 #include "libpopcnt.h"
 
 /*
- * Count the number of 1 bits in the data array.
+ * Count the number of 1 bits in the data array
  * @data: An array
  * @size: Size of data in bytes
  */
