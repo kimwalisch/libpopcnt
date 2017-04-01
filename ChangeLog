@@ -1,3 +1,9 @@
+2017-04-01 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 1.4 released.
+
+  * libpopcnt.h: Fix compiler warning.
+
 2017-03-30 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 1.3 released.
