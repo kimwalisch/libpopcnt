@@ -18,7 +18,7 @@ script:
   # Test x64 CPU
   - mkdir build
   - cd build
-  - cmake .
+  - cmake ..
   - make VERBOSE=1
   - ctest
   - cd test
@@ -28,6 +28,6 @@ script:
   - mkdir build
   - cd build
   - export CXXFLAGS="-m32 -g -O3 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
-  - cmake .
+  - cmake ..
   - make VERBOSE=1
   - ctest
