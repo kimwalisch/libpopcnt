@@ -1,10 +1,10 @@
 /*
  * Simple C test program for libpopcnt.h.
- * Generates arrays with random data and computes the bit population
+ * Generates an array with random data and computes the bit population
  * count using 2 different algorithms and checks that the
  * results match.
  *
- * Usage: ./test
+ * Usage: ./test2
  *
  * Copyright (C) 2017 Kim Walisch, <kim.walisch@gmail.com>
  *
@@ -15,11 +15,10 @@
 #include <libpopcnt.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 #include <stdint.h>
 
-int main(int argc, char* argv[])
+int main()
 {
   int i, j;
   int size = 50000;
