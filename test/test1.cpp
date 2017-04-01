@@ -13,13 +13,13 @@
 /// file in the top level directory.
 ///
 
+#include <libpopcnt.h>
+
 #include <iostream>
 #include <vector>
 #include <cstdlib>
 #include <ctime>
 #include <stdint.h>
-
-#include "libpopcnt.h"
 
 int main(int argc, char* argv[])
 {
