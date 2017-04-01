@@ -32,63 +32,50 @@
 
 #include <stdint.h>
 
-// Clang & GCC >= 4.2
-#if (defined(__has_builtin) && \
-     __has_builtin(__builtin_popcount)) || \
-    (defined(__GNUC__) && \
-            (__GNUC__ > 4 || \
-            (__GNUC__ == 4 && \
-             __GNUC_MINOR__ >= 2)))
+#ifndef __has_builtin
+  #define __has_builtin(x) 0
+#endif
+
+#ifndef __has_attribute
+  #define __has_attribute(x) 0
+#endif
+
+#ifdef __GNUC__
+  #define GNUC_PREREQ(x, y) \
+      (__GNUC__ > x || (__GNUC__ == x && __GNUC_MINOR__ >= y))
+#else
+  #define __GNUC_PREREQ__(x, y)	0
+#endif
+
+#ifdef __clang__
+  #define CLANG_PREREQ(x, y) \
+      (__clang_major__ > x || (__clang_major__ == x && __clang_minor__ >= y))
+#else
+  #define CLANG_PREREQ(x, y)	0
+#endif
+
+#if GNUC_PREREQ(4, 2) || \
+    __has_builtin(__builtin_popcount)
   #define HAVE_BUILTIN_POPCOUNT
 #endif
 
-// GCC >= 4.2
-#if defined(__GNUC__) && \
-           (__GNUC__ > 4 || \
-           (__GNUC__ == 4 && \
-            __GNUC_MINOR__ >= 2))
+#if GNUC_PREREQ(4, 2) || \
+    CLANG_PREREQ(3, 0)
   #define HAVE_ASM_POPCNT
 #endif
 
-// Clang >= 3.0
-#if defined(__clang__) && \
-           (__clang_major__ > 3 || \
-           (__clang_major__ == 3 && \
-            __clang_minor__ >= 0))
-  #define HAVE_ASM_POPCNT
-#endif
-
-// GCC >= 4.9
-#if (defined(__x86_64__) || \
-     defined(__i386__)) && \
-     defined(__GNUC__) && \
-            (__GNUC__ > 4 || \
-            (__GNUC__ == 4 && \
-            __GNUC_MINOR__ >= 9))
+#if GNUC_PREREQ(4, 9) && \
+    (defined(__x86_64__) || \
+     defined(__i386__))
   #define HAVE_AVX2
 #endif
 
-// Clang >= 3.8
-#if (defined(__x86_64__) || \
+#if CLANG_PREREQ(3, 8) && \
+    (defined(__x86_64__) || \
      defined(__i386__)) && \
-     defined(__clang__) && \
-     defined(__has_attribute) && \
      __has_attribute(target) && \
-    !defined(__apple_build_version__) && \
-            (__clang_major__ > 3 || \
-            (__clang_major__ == 3 && \
-             __clang_minor__ >= 8))
-  #define HAS_AVX2
-#endif
-
-// Apple Clang >= 8.0.0
-#if (defined(__x86_64__) || \
-     defined(__i386__)) && \
-     defined(__clang__) && \
-     defined(__has_attribute) && \
-     __has_attribute(target) && \
-     defined(__apple_build_version__) && \
-            (__apple_build_version__ >= 8000000)
+    (!defined(__apple_build_version__) || \
+     __apple_build_version__ >= 8000000)
   #define HAVE_AVX2
 #endif
 
