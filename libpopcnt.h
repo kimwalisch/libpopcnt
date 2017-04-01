@@ -483,25 +483,25 @@ static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
+  uint64_t i;
+  uint64_t cnt = 0;
+  const uint8_t* buf = (const uint8_t*) data;
+
 #if defined(HAVE_CPUID)
   #if defined(__cplusplus)
-    /* C++11 Meyers Singelton */
+    /* C++11 thread-safe singelton */
     static const int cpuid =
         has_POPCNT() | has_AVX2();
   #else
     static int cpuid = -1;
+    int cpuid2;
     if (cpuid == -1)
     {
-      int thread_cpuid =
-          has_POPCNT() | has_AVX2();
-      __sync_val_compare_and_swap(&cpuid, -1, thread_cpuid);
+      cpuid2 = has_POPCNT() | has_AVX2();
+      __sync_val_compare_and_swap(&cpuid, -1, cpuid2);
     }
   #endif
 #endif
-
-  uint64_t i;
-  uint64_t cnt = 0;
-  const uint8_t* buf = (const uint8_t*) data;
 
 #if defined(HAVE_AVX2)
 
