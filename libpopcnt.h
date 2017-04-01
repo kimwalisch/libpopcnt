@@ -32,17 +32,14 @@
 
 #include <stdint.h>
 
-#ifndef __has_builtin
-  #define __has_builtin(x) 0
-#endif
-
 // Clang & GCC >= 4.2
-#if __has_builtin(__builtin_popcount) || \
+#if (defined(__has_builtin) && \
+     __has_builtin(__builtin_popcount)) || \
     (defined(__GNUC__) && \
             (__GNUC__ > 4 || \
             (__GNUC__ == 4 && \
              __GNUC_MINOR__ >= 2)))
-  #define HAS_BUILTIN_POPCOUNT
+  #define HAVE_BUILTIN_POPCOUNT
 #endif
 
 // GCC >= 4.2
@@ -50,7 +47,7 @@
            (__GNUC__ > 4 || \
            (__GNUC__ == 4 && \
             __GNUC_MINOR__ >= 2))
-  #define HAS_ASM_POPCNT
+  #define HAVE_ASM_POPCNT
 #endif
 
 // Clang >= 3.0
@@ -58,7 +55,7 @@
            (__clang_major__ > 3 || \
            (__clang_major__ == 3 && \
             __clang_minor__ >= 0))
-  #define HAS_ASM_POPCNT
+  #define HAVE_ASM_POPCNT
 #endif
 
 // GCC >= 4.9
@@ -68,14 +65,15 @@
             (__GNUC__ > 4 || \
             (__GNUC__ == 4 && \
             __GNUC_MINOR__ >= 9))
-  #define HAS_AVX2
+  #define HAVE_AVX2
 #endif
 
 // Clang >= 3.8
 #if (defined(__x86_64__) || \
      defined(__i386__)) && \
      defined(__clang__) && \
-    !defined(_MSC_VER) && \
+     defined(__has_attribute) && \
+     __has_attribute(target) && \
     !defined(__apple_build_version__) && \
             (__clang_major__ > 3 || \
             (__clang_major__ == 3 && \
@@ -87,12 +85,14 @@
 #if (defined(__x86_64__) || \
      defined(__i386__)) && \
      defined(__clang__) && \
+     defined(__has_attribute) && \
+     __has_attribute(target) && \
      defined(__apple_build_version__) && \
             (__apple_build_version__ >= 8000000)
-  #define HAS_AVX2
+  #define HAVE_AVX2
 #endif
 
-#if defined(HAS_AVX2)
+#if defined(HAVE_AVX2)
   #include <immintrin.h>
 #endif
 
@@ -126,7 +126,7 @@ inline uint64_t popcount64(uint64_t x)
   return (x * h01) >> 56;
 }
 
-#if defined(HAS_ASM_POPCNT) && \
+#if defined(HAVE_ASM_POPCNT) && \
     defined(__x86_64__)
 
 inline uint64_t popcnt64(uint64_t x)
@@ -135,7 +135,7 @@ inline uint64_t popcnt64(uint64_t x)
   return x;
 }
 
-#elif defined(HAS_ASM_POPCNT) && \
+#elif defined(HAVE_ASM_POPCNT) && \
       defined(__i386__)
 
 inline uint32_t popcnt32(uint32_t x)
@@ -168,7 +168,7 @@ inline uint64_t popcnt64(uint64_t x)
 }
 
 // non x86 CPUs
-#elif defined(HAS_BUILTIN_POPCOUNT)
+#elif defined(HAVE_BUILTIN_POPCOUNT)
 
 inline uint64_t popcnt64(uint64_t x)
 {
@@ -341,7 +341,7 @@ inline int has_AVX2()
 
 #endif /* cpuid */
 
-#if defined(HAS_AVX2)
+#if defined(HAVE_AVX2)
 
 __attribute__ ((target ("avx2")))
 inline void CSA256(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
@@ -471,7 +471,7 @@ inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t cnt = 0;
   const uint8_t* data8 = (const uint8_t*) data;
 
-#if defined(HAS_AVX2)
+#if defined(HAVE_AVX2)
 
   // AVX2 requires arrays >= 512 bytes
   if ((cpuid & bit_AVX2) &&
