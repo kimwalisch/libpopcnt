@@ -489,7 +489,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #if defined(HAVE_CPUID)
   #if defined(__cplusplus)
-    /* C++11 thread-safe singelton */
+    /* C++11 thread-safe singleton */
     static const int cpuid =
         has_POPCNT() | has_AVX2();
   #else
