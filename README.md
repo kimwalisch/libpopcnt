@@ -5,7 +5,7 @@ libpopcnt
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/kimwalisch/libpopcnt?branch=master&svg=true)](https://ci.appveyor.com/project/kimwalisch/libpopcnt)
 [![Github Releases](https://img.shields.io/github/release/kimwalisch/libpopcnt.svg)](https://github.com/kimwalisch/libpopcnt/releases)
 
-```libpopcnt.h``` is a header-only C++ library for counting the
+```libpopcnt.h``` is a header-only C/C++ library for counting the
 number of 1 bits (bit population count) in an array as quickly as
 possible using specialized CPU instructions e.g.
 [POPCNT](https://en.wikipedia.org/wiki/SSE4#POPCNT_and_LZCNT),
@@ -36,36 +36,33 @@ contains extensive benchmarks for the 3 algorithms used in
 ```libpopcnt.h```. The algorithms are named
 ```harley-seal```, ```avx2-harley-seal```, ```builtin-popcnt-unrolled```.
 
-C++ API
--------
+C/C++ API
+---------
 
-```C++
+```C
 #include "libpopcnt.h"
 
-/// Count the number of 1 bits in the data array.
-/// @param data  An array
-/// @param size  Size of data in bytes
+/*
+ * Count the number of 1 bits in the data array.
+ * @data: An array
+ * @size: Size of data in bytes
+ */
 uint64_t popcnt(const void* data, uint64_t size);
 ```
 
 How to compile
 --------------
 
-Compilation does not require any special compiler flags (like
-```-mpopcnt```, ```-mavx2```)! Also on x86 CPUs ```libpopcnt.h```
-checks using ```cpuid``` if the CPU supports POPCNT/AVX2
-before using it.
-
 ```bash
-# How to compile using GCC
-g++ -O3 program.cpp
+# C++ compilation
+c++ -O3 program.cpp
 
-# How to compile using Clang
-clang++ -O3 program.cpp
-
-# How to compile using Microsoft Visual C++
-cl /O2 program.cpp
+# C compilation
+cc -O3 -march=native program.c
 ```
+
+For C++ no special compiler flags (like ```-march=native```)
+are required!
 
 Speedup
 -------
