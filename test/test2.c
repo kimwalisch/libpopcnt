@@ -44,6 +44,7 @@ int main()
     if (bits != bits_verify)
     {
       printf("\nlibpopcnt test failed!\n");
+      free(data);
       return 1;
     }
   }
