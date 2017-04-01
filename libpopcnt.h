@@ -1,31 +1,33 @@
-// libpopcnt.h - C++ library for counting the number of 1 bits (bit
-// population count) in an array as quickly as possible using
-// specialized CPU instructions e.g. POPCNT, AVX2.
-//
-// Copyright (c) 2016 - 2017, Kim Walisch
-// Copyright (c) 2016 - 2017, Wojciech Muła
-//
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-//    list of conditions and the following disclaimer.
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-//    this list of conditions and the following disclaimer in the documentation
-//    and/or other materials provided with the distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/*
+ * libpopcnt.h - C++ library for counting the number of 1 bits (bit
+ * population count) in an array as quickly as possible using
+ * specialized CPU instructions e.g. POPCNT, AVX2.
+ *
+ * Copyright (c) 2016 - 2017, Kim Walisch
+ * Copyright (c) 2016 - 2017, Wojciech Muła
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef LIBPOPCNT_H
 #define LIBPOPCNT_H
@@ -59,6 +61,21 @@
   #define HAVE_BUILTIN_POPCOUNT
 #endif
 
+/* x86 cpuid only enabled for C++ */
+#if __cplusplus && \
+   (defined(__x86_64__) || \
+    defined(__i386__) || \
+    defined(_M_X64) || \
+    defined(_M_IX86))
+  #define HAVE_CPUID
+#endif
+
+#if defined(HAVE_CPUID)
+  #define CPUID_CHECK(flag) (cpuid & (flag))
+#else
+  #define CPUID_CHECK(flag) 1
+#endif
+
 #if GNUC_PREREQ(4, 2) || \
     CLANG_PREREQ(3, 0)
   #define HAVE_ASM_POPCNT
@@ -83,7 +100,6 @@
   #include <immintrin.h>
 #endif
 
-// MSVC, x86
 #if defined(_MSC_VER) && \
    (defined(_M_X64) || \
     defined(_M_IX86))
@@ -92,14 +108,13 @@
   #include <nmmintrin.h>
 #endif
 
-namespace {
-
-/// This uses fewer arithmetic operations than any other known
-/// implementation on machines with fast multiplication.
-/// It uses 12 arithmetic operations, one of which is a multiply.
-/// http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
-///
-inline uint64_t popcount64(uint64_t x)
+/*
+ * This uses fewer arithmetic operations than any other known
+ * implementation on machines with fast multiplication.
+ * It uses 12 arithmetic operations, one of which is a multiply.
+ * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
+ */
+static inline uint64_t popcount64(uint64_t x)
 {
   uint64_t m1 = 0x5555555555555555ll;
   uint64_t m2 = 0x3333333333333333ll;
@@ -116,7 +131,7 @@ inline uint64_t popcount64(uint64_t x)
 #if defined(HAVE_ASM_POPCNT) && \
     defined(__x86_64__)
 
-inline uint64_t popcnt64(uint64_t x)
+static inline uint64_t popcnt64(uint64_t x)
 {
   __asm__ ("popcnt %1, %0" : "=r" (x) : "0" (x));
   return x;
@@ -125,13 +140,13 @@ inline uint64_t popcnt64(uint64_t x)
 #elif defined(HAVE_ASM_POPCNT) && \
       defined(__i386__)
 
-inline uint32_t popcnt32(uint32_t x)
+static inline uint32_t popcnt32(uint32_t x)
 {
   __asm__ ("popcnt %1, %0" : "=r" (x) : "0" (x));
   return x;
 }
 
-inline uint64_t popcnt64(uint64_t x)
+static inline uint64_t popcnt64(uint64_t x)
 {
   return popcnt32((uint32_t) x) +
          popcnt32((uint32_t)(x >> 32));
@@ -140,7 +155,7 @@ inline uint64_t popcnt64(uint64_t x)
 #elif defined(_MSC_VER) && \
       defined(_M_X64)
 
-inline uint64_t popcnt64(uint64_t x)
+static inline uint64_t popcnt64(uint64_t x)
 {
   return _mm_popcnt_u64(x);
 }
@@ -148,32 +163,32 @@ inline uint64_t popcnt64(uint64_t x)
 #elif defined(_MSC_VER) && \
       defined(_M_IX86)
 
-inline uint64_t popcnt64(uint64_t x)
+static inline uint64_t popcnt64(uint64_t x)
 {
   return _mm_popcnt_u32((uint32_t) x) + 
          _mm_popcnt_u32((uint32_t)(x >> 32));
 }
 
-// non x86 CPUs
+/* non x86 CPUs */
 #elif defined(HAVE_BUILTIN_POPCOUNT)
 
-inline uint64_t popcnt64(uint64_t x)
+static inline uint64_t popcnt64(uint64_t x)
 {
   return __builtin_popcountll(x);
 }
 
-// no hardware POPCNT,
-// use integer popcnt64 implementation
+/* no hardware POPCNT,
+ * use pure integer algorithm */
 #else
 
-inline uint64_t popcnt64(uint64_t x)
+static inline uint64_t popcnt64(uint64_t x)
 {
   return popcount64(x);
 }
 
 #endif
 
-inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
+static inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 {
   uint64_t i = 0;
   uint64_t limit = size - size % 4;
@@ -193,23 +208,25 @@ inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
   return cnt;
 }
 
-/// Carry-save adder (CSA).
-/// @see Chapter 5 in "Hacker's Delight".
-///
-inline void CSA(uint64_t& h, uint64_t& l, uint64_t a, uint64_t b, uint64_t c)
+/*
+ * Carry-save adder (CSA).
+ * @see Chapter 5 in "Hacker's Delight".
+ */
+static inline void CSA(uint64_t* h, uint64_t* l, uint64_t a, uint64_t b, uint64_t c)
 {
   uint64_t u = a ^ b; 
-  h = (a & b) | (u & c);
-  l = u ^ c;
+  *h = (a & b) | (u & c);
+  *l = u ^ c;
 }
 
-/// Harley-Seal popcount (3rd iteration).
-/// The Harley-Seal popcount algorithm is one of the fastest algorithms
-/// for counting 1 bits in an array using only integer operations.
-/// This implementation uses only 6.38 instructions per 64-bit word.
-/// @see Chapter 5 in "Hacker's Delight" 2nd edition.
-///
-inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
+/*
+ * Harley-Seal popcount (3rd iteration).
+ * The Harley-Seal popcount algorithm is one of the fastest algorithms
+ * for counting 1 bits in an array using only integer operations.
+ * This implementation uses only 6.38 instructions per 64-bit word.
+ * @see Chapter 5 in "Hacker's Delight" 2nd edition.
+ */
+static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
 {
   uint64_t cnt = 0;
   uint64_t ones = 0, twos = 0, fours = 0, eights = 0;
@@ -219,13 +236,13 @@ inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
 
   for(; i < limit; i += 8)
   {
-    CSA(twosA, ones, ones, data[i+0], data[i+1]);
-    CSA(twosB, ones, ones, data[i+2], data[i+3]);
-    CSA(foursA, twos, twos, twosA, twosB);
-    CSA(twosA, ones, ones, data[i+4], data[i+5]);
-    CSA(twosB, ones, ones, data[i+6], data[i+7]);
-    CSA(foursB, twos, twos, twosA, twosB);
-    CSA(eights, fours, fours, foursA, foursB);
+    CSA(&twosA, &ones, ones, data[i+0], data[i+1]);
+    CSA(&twosB, &ones, ones, data[i+2], data[i+3]);
+    CSA(&foursA, &twos, twos, twosA, twosB);
+    CSA(&twosA, &ones, ones, data[i+4], data[i+5]);
+    CSA(&twosB, &ones, ones, data[i+6], data[i+7]);
+    CSA(&foursB, &twos, twos, twosA, twosB);
+    CSA(&eights, &fours, fours, foursA, foursB);
 
     cnt += popcount64(eights);
   }
@@ -241,19 +258,15 @@ inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
   return cnt;
 }
 
-// x86 cpuid
-#if defined(__x86_64__) || \
-    defined(__i386__) || \
-    defined(_M_X64) || \
-    defined(_M_IX86)
+#if defined(HAVE_CPUID)
 
-// %ecx bit flags
+/* %ecx bit flags */
 #define bit_POPCNT (1 << 23)
 
-// %ebx bit flags
+/* %ebx bit flags */
 #define bit_AVX2 (1 << 5)
 
-inline void run_cpuid(int eax, int ecx, int* abcd)
+static inline void run_cpuid(int eax, int ecx, int* abcd)
 {
   int ebx = 0;
   int edx = 0;
@@ -262,7 +275,7 @@ inline void run_cpuid(int eax, int ecx, int* abcd)
   __cpuidex(abcd, eax, ecx);
 #elif defined(__i386__) && \
       defined(__PIC__)
-  // in case of PIC under 32-bit EBX cannot be clobbered
+  /* in case of PIC under 32-bit EBX cannot be clobbered */
   __asm__ ("movl %%ebx, %%edi;"
            "cpuid;"
            "xchgl %%ebx, %%edi;"
@@ -283,7 +296,7 @@ inline void run_cpuid(int eax, int ecx, int* abcd)
   abcd[3] = edx;
 }
 
-inline int has_POPCNT()
+static inline int has_POPCNT()
 {
   int abcd[4];
 
@@ -294,7 +307,7 @@ inline int has_POPCNT()
   return bit_POPCNT;
 }
 
-inline int check_xcr0_ymm()
+static inline int check_xcr0_ymm()
 {
   int xcr0;
 #if defined(_MSC_VER)
@@ -305,17 +318,17 @@ inline int check_xcr0_ymm()
   return (xcr0 & 6) == 6;
 }
 
-inline int has_AVX2()
+static inline int has_AVX2()
 {
   int abcd[4];
   int osxsave_mask = (1 << 27);
 
-  // must ensure OS supports extended processor state management
+  /* ensure OS supports extended processor state management */
   run_cpuid(1, 0, abcd);
   if ((abcd[2] & osxsave_mask) != osxsave_mask)
     return 0;
 
-  // must ensure OS supports ZMM registers (and YMM, and XMM)
+  /* ensure OS supports ZMM registers (and YMM, and XMM) */
   if (!check_xcr0_ymm())
     return 0;
 
@@ -331,15 +344,15 @@ inline int has_AVX2()
 #if defined(HAVE_AVX2)
 
 __attribute__ ((target ("avx2")))
-inline void CSA256(__m256i& h, __m256i& l, __m256i a, __m256i b, __m256i c)
+static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i c)
 {
   __m256i u = a ^ b;
-  h = (a & b) | (u & c);
-  l = u ^ c;
+  *h = (a & b) | (u & c);
+  *l = u ^ c;
 }
 
 __attribute__ ((target ("avx2")))
-inline __m256i popcnt256(__m256i v)
+static inline __m256i popcnt256(__m256i v)
 {
   __m256i lookup1 = _mm256_setr_epi8(
       4, 5, 5, 6, 5, 6, 6, 7,
@@ -364,14 +377,15 @@ inline __m256i popcnt256(__m256i v)
   return _mm256_sad_epu8(popcnt1, popcnt2);
 }
 
-/// AVX2 Harley-Seal popcount (4th iteration).
-/// The algorithm is based on the paper "Faster Population Counts
-/// using AVX2 Instructions" by Daniel Lemire, Nathan Kurz and
-/// Wojciech Mula (23 Nov 2016).
-/// @see https://arxiv.org/abs/1611.07612
-///
+/*
+ * AVX2 Harley-Seal popcount (4th iteration).
+ * The algorithm is based on the paper "Faster Population Counts
+ * using AVX2 Instructions" by Daniel Lemire, Nathan Kurz and
+ * Wojciech Mula (23 Nov 2016).
+ * @see https://arxiv.org/abs/1611.07612
+ */
 __attribute__ ((target ("avx2")))
-inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
+static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
 {
   __m256i cnt = _mm256_setzero_si256();
   __m256i ones = _mm256_setzero_si256();
@@ -386,21 +400,21 @@ inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
 
   for(; i < limit; i += 16)
   {
-    CSA256(twosA, ones, ones, data[i+0], data[i+1]);
-    CSA256(twosB, ones, ones, data[i+2], data[i+3]);
-    CSA256(foursA, twos, twos, twosA, twosB);
-    CSA256(twosA, ones, ones, data[i+4], data[i+5]);
-    CSA256(twosB, ones, ones, data[i+6], data[i+7]);
-    CSA256(foursB, twos, twos, twosA, twosB);
-    CSA256(eightsA,fours, fours, foursA, foursB);
-    CSA256(twosA, ones, ones, data[i+8], data[i+9]);
-    CSA256(twosB, ones, ones, data[i+10], data[i+11]);
-    CSA256(foursA, twos, twos, twosA, twosB);
-    CSA256(twosA, ones, ones, data[i+12], data[i+13]);
-    CSA256(twosB, ones, ones, data[i+14], data[i+15]);
-    CSA256(foursB, twos, twos, twosA, twosB);
-    CSA256(eightsB, fours, fours, foursA, foursB);
-    CSA256(sixteens, eights, eights, eightsA, eightsB);
+    CSA256(&twosA, &ones, ones, data[i+0], data[i+1]);
+    CSA256(&twosB, &ones, ones, data[i+2], data[i+3]);
+    CSA256(&foursA, &twos, twos, twosA, twosB);
+    CSA256(&twosA, &ones, ones, data[i+4], data[i+5]);
+    CSA256(&twosB, &ones, ones, data[i+6], data[i+7]);
+    CSA256(&foursB, &twos, twos, twosA, twosB);
+    CSA256(&eightsA, &fours, fours, foursA, foursB);
+    CSA256(&twosA, &ones, ones, data[i+8], data[i+9]);
+    CSA256(&twosB, &ones, ones, data[i+10], data[i+11]);
+    CSA256(&foursA, &twos, twos, twosA, twosB);
+    CSA256(&twosA, &ones, ones, data[i+12], data[i+13]);
+    CSA256(&twosB, &ones, ones, data[i+14], data[i+15]);
+    CSA256(&foursB, &twos, twos, twosA, twosB);
+    CSA256(&eightsB, &fours, fours, foursA, foursB);
+    CSA256(&sixteens, &eights, eights, eightsA, eightsB);
 
     cnt = _mm256_add_epi64(cnt, popcnt256(sixteens));
   }
@@ -414,127 +428,123 @@ inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
   for(; i < size; i++)
     cnt = _mm256_add_epi64(cnt, popcnt256(data[i]));
 
-  uint64_t* cnt64 = (uint64_t*) &cnt;
-
-  return cnt64[0] +
-         cnt64[1] +
-         cnt64[2] +
-         cnt64[3];
+  return ((uint64_t*) &cnt)[0] +
+         ((uint64_t*) &cnt)[1] +
+         ((uint64_t*) &cnt)[2] +
+         ((uint64_t*) &cnt)[3];
 }
 
-/// Align memory to 32 bytes boundary
-inline void align_avx2(const uint8_t*& p, uint64_t& size, uint64_t& cnt)
+/* Align memory to 32 bytes boundary */
+static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 {
-  for (; (uintptr_t) p % 8; p++)
+  for (; (uintptr_t) *p % 8; (*p)++)
   {
-    cnt += popcnt64(*p);
-    size -= 1;
+    *cnt += popcnt64(**p);
+    *size -= 1;
   }
-  for (; (uintptr_t) p % 32; p += 8)
+  for (; (uintptr_t) *p % 32; (*p) += 8)
   {
-    const uint64_t* p64 = (const uint64_t*) p;
-    cnt += popcnt64(*p64);
-    size -= 8;
+    const uint64_t* p64 = (const uint64_t*) *p;
+    *cnt += popcnt64(*p64);
+    *size -= 8;
   }
 }
 
 #endif /* avx2 */
 
-// x86 CPUs
+/* x86 CPUs */
 #if defined(__x86_64__) || \
     defined(__i386__) || \
     defined(_M_X64) || \
     defined(_M_IX86)
 
-/// Count the number of 1 bits in the data array.
-/// @param data  An array
-/// @param size  Size of data in bytes
-///
-inline uint64_t popcnt(const void* data, uint64_t size)
+/*
+ * Count the number of 1 bits in the data array.
+ * @param data  An array
+ * @param size  Size of data in bytes
+ */
+static inline uint64_t popcnt(const void* data, uint64_t size)
 {
+#if defined(HAVE_CPUID)
   static const int cpuid =
       has_POPCNT() | has_AVX2();
+#endif
 
+  uint64_t i;
   uint64_t cnt = 0;
-  const uint8_t* data8 = (const uint8_t*) data;
+  const uint8_t* buf = (const uint8_t*) data;
 
 #if defined(HAVE_AVX2)
 
-  // AVX2 requires arrays >= 512 bytes
-  if ((cpuid & bit_AVX2) &&
+  /* AVX2 requires arrays >= 512 bytes */
+  if (CPUID_CHECK(bit_AVX2) &&
       size >= 512)
   {
-    align_avx2(data8, size, cnt);
-    const __m256i* data32 = (const __m256i*) data8;
-    uint64_t size32 = size / 32;
-    cnt += popcnt_avx2(data32, size32);
-    data8 += size - size % 32;
+    align_avx2(&buf, &size, &cnt);
+    cnt += popcnt_avx2((const __m256i*) buf, size / 32);
+    buf += size - size % 32;
     size = size % 32;
   }
 
 #endif
 
-  if (cpuid & bit_POPCNT)
+  if (CPUID_CHECK(bit_POPCNT))
   {
-    const uint64_t* data64 = (const uint64_t*) data8;
-    uint64_t size64 = size / 8;
-    cnt += popcnt64_unrolled(data64, size64);
-    data8 += size - size % 8;
+    cnt += popcnt64_unrolled((const uint64_t*) buf, size / 8);
+    buf += size - size % 8;
     size = size % 8;
-    for (uint64_t i = 0; i < size; i++)
-      cnt += popcnt64(data8[i]);
+    for (i = 0; i < size; i++)
+      cnt += popcnt64(buf[i]);
 
     return cnt;
   }
 
-  // pure integer algorithm
-  const uint64_t* data64 = (const uint64_t*) data8;
-  uint64_t size64 = size / 8;
-  cnt += popcnt64_hs(data64, size64);
-  data8 += size - size % 8;
+  /* pure integer algorithm */
+  cnt += popcnt64_hs((const uint64_t*) buf, size / 8);
+  buf += size - size % 8;
   size = size % 8;
-  for (uint64_t i = 0; i < size; i++)
-    cnt += popcount64(data8[i]);
+  for (i = 0; i < size; i++)
+    cnt += popcount64(buf[i]);
 
   return cnt;
 }
 
-// non x86 CPUs
+/* non x86 CPUs */
 #else
 
-/// Align memory to 8 bytes boundary
-inline void align8(const uint8_t*& p, uint64_t& size, uint64_t& cnt)
+/* Align memory to 8 bytes boundary */
+static inline void align(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 {
-  for (; size > 0 && (uintptr_t) p % 8; p++)
+  for (; *size > 0 && (uintptr_t) *p % 8; (*p)++)
   {
-    cnt += popcnt64(*p);
-    size -= 1;
+    *cnt += popcnt64(**p);
+    *size -= 1;
   }
 }
 
-/// Count the number of 1 bits in the data array.
-/// @param data  An array
-/// @param size  Size of data in bytes
-///
-inline uint64_t popcnt(const void* data, uint64_t size)
+/*
+ * Count the number of 1 bits in the data array.
+ * @param data  An array
+ * @param size  Size of data in bytes
+ */
+static inline uint64_t popcnt(const void* data, uint64_t size)
 {
+  uint64_t i;
   uint64_t cnt = 0;
 
-  const uint8_t* data8 = (const uint8_t*) data;
-  align8(data8, size, cnt);
+  const uint8_t* buf = (const uint8_t*) data;
+  align(&buf, &size, &cnt);
 
-  cnt += popcnt64_unrolled((const uint64_t*) data8, size / 8);
-  data8 += size - size % 8;
+  cnt += popcnt64_unrolled((const uint64_t*) buf, size / 8);
+  buf += size - size % 8;
   size = size % 8;
 
-  for (uint64_t i = 0; i < size; i++)
-    cnt += popcnt64(data8[i]);
+  for (i = 0; i < size; i++)
+    cnt += popcnt64(buf[i]);
 
   return cnt;
 }
 
 #endif
-
-} // namespace
 
 #endif /* LIBPOPCNT_H */
