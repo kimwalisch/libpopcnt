@@ -1,5 +1,5 @@
 /*
- * libpopcnt.h - C++ library for counting the number of 1 bits (bit
+ * libpopcnt.h - C/C++ library for counting the number of 1 bits (bit
  * population count) in an array as quickly as possible using
  * specialized CPU instructions e.g. POPCNT, AVX2.
  *
@@ -70,6 +70,11 @@
   #define HAVE_CPUID
 #endif
 
+#if defined(__POPCNT__) || \
+    defined(HAVE_CPUID)
+  #define HAVE_POPCNT
+#endif
+
 #if defined(HAVE_CPUID)
   #define CPUID_CHECK(flag) (cpuid & (flag))
 #else
@@ -93,6 +98,10 @@
      __has_attribute(target) && \
     (!defined(__apple_build_version__) || \
      __apple_build_version__ >= 8000000)
+  #define HAVE_AVX2
+#endif
+
+#if defined(__AVX2__)
   #define HAVE_AVX2
 #endif
 
@@ -343,6 +352,25 @@ static inline int has_AVX2()
 
 #if defined(HAVE_AVX2)
 
+#if defined(_MSC_VER)
+
+static inline __m256i operator&(__m256i a, __m256i b)
+{
+  return _mm256_and_si256(a, b);
+}
+
+static inline __m256i operator|(__m256i a, __m256i b)
+{
+  return _mm256_or_si256(a, b);
+}
+
+static inline __m256i operator^(__m256i a, __m256i b)
+{
+  return _mm256_xor_si256(a, b);
+}
+
+#endif /* _MSC_VER */
+
 __attribute__ ((target ("avx2")))
 static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i c)
 {
@@ -460,8 +488,8 @@ static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 
 /*
  * Count the number of 1 bits in the data array.
- * @param data  An array
- * @param size  Size of data in bytes
+ * @data: An array
+ * @size: Size of data in bytes
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
@@ -488,6 +516,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #endif
 
+#if defined(HAVE_POPCNT)
+
   if (CPUID_CHECK(bit_POPCNT))
   {
     cnt += popcnt64_unrolled((const uint64_t*) buf, size / 8);
@@ -498,6 +528,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
     return cnt;
   }
+
+#endif
 
   /* pure integer algorithm */
   cnt += popcnt64_hs((const uint64_t*) buf, size / 8);
@@ -524,8 +556,8 @@ static inline void align(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 
 /*
  * Count the number of 1 bits in the data array.
- * @param data  An array
- * @param size  Size of data in bytes
+ * @data:  An array
+ * @size:  Size of data in bytes
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
