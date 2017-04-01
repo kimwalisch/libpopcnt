@@ -1,35 +1,21 @@
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
+.*
+*~
+!/.gitignore
+!/.travis.yml
 *.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-test
-benchmark
-
-# Debug files
-*.dSYM/
-*.su
+*.tar.gz
+*.zip
+*.obj
+*.lib
+*.o
+*.pc
+*.dSYM
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+/benchmark
+build
