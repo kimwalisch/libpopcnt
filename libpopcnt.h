@@ -56,29 +56,23 @@
   #define CLANG_PREREQ(x, y)	0
 #endif
 
-#if GNUC_PREREQ(4, 2) || \
-    __has_builtin(__builtin_popcount)
-  #define HAVE_BUILTIN_POPCOUNT
+#if (defined(__i386__) || \
+     defined(__x86_64__) || \
+     defined(_M_IX86) || \
+     defined(_M_X64))
+  #define X86_OR_X64
 #endif
 
-/* x86 cpuid only enabled for C++ */
-#if __cplusplus && \
-   (defined(__x86_64__) || \
-    defined(__i386__) || \
-    defined(_M_X64) || \
-    defined(_M_IX86))
+#if defined(X86_OR_X64) && \
+   (defined(__cplusplus) || \
+   (GNUC_PREREQ(4, 2) || \
+    __has_builtin(__sync_val_compare_and_swap)))
   #define HAVE_CPUID
 #endif
 
-#if defined(__POPCNT__) || \
-    defined(HAVE_CPUID)
-  #define HAVE_POPCNT
-#endif
-
-#if defined(HAVE_CPUID)
-  #define CPUID_CHECK(flag) (cpuid & (flag))
-#else
-  #define CPUID_CHECK(flag) 1
+#if GNUC_PREREQ(4, 2) || \
+    __has_builtin(__builtin_popcount)
+  #define HAVE_BUILTIN_POPCOUNT
 #endif
 
 #if GNUC_PREREQ(4, 2) || \
@@ -86,22 +80,22 @@
   #define HAVE_ASM_POPCNT
 #endif
 
-#if GNUC_PREREQ(4, 9) && \
-    (defined(__x86_64__) || \
-     defined(__i386__))
+#if defined(HAVE_CPUID) && \
+   (defined(HAVE_ASM_POPCNT) || \
+    defined(_MSC_VER))
+  #define HAVE_POPCNT
+#endif
+
+#if defined(HAVE_CPUID) && \
+    GNUC_PREREQ(4, 9)
   #define HAVE_AVX2
 #endif
 
-#if CLANG_PREREQ(3, 8) && \
-    (defined(__x86_64__) || \
-     defined(__i386__)) && \
-     __has_attribute(target) && \
-    (!defined(__apple_build_version__) || \
-     __apple_build_version__ >= 8000000)
-  #define HAVE_AVX2
-#endif
-
-#if defined(__AVX2__)
+#if defined(HAVE_CPUID) && \
+    CLANG_PREREQ(3, 8) && \
+    __has_attribute(target) && \
+  (!defined(__apple_build_version__) || \
+    __apple_build_version__ >= 8000000)
   #define HAVE_AVX2
 #endif
 
@@ -110,8 +104,7 @@
 #endif
 
 #if defined(_MSC_VER) && \
-   (defined(_M_X64) || \
-    defined(_M_IX86))
+    defined(X86_OR_X64)
   #include <intrin.h>
   #include <immintrin.h>
   #include <nmmintrin.h>
@@ -481,10 +474,7 @@ static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 #endif /* avx2 */
 
 /* x86 CPUs */
-#if defined(__x86_64__) || \
-    defined(__i386__) || \
-    defined(_M_X64) || \
-    defined(_M_IX86)
+#if defined(X86_OR_X64)
 
 /*
  * Count the number of 1 bits in the data array
@@ -494,8 +484,19 @@ static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
 #if defined(HAVE_CPUID)
-  static const int cpuid =
-      has_POPCNT() | has_AVX2();
+  #if defined(__cplusplus)
+    /* C++11 Meyers Singelton */
+    static const int cpuid =
+        has_POPCNT() | has_AVX2();
+  #else
+    static int cpuid = -1;
+    if (cpuid == -1)
+    {
+      int thread_cpuid =
+          has_POPCNT() | has_AVX2();
+      __sync_val_compare_and_swap(&cpuid, -1, thread_cpuid);
+    }
+  #endif
 #endif
 
   uint64_t i;
@@ -505,7 +506,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #if defined(HAVE_AVX2)
 
   /* AVX2 requires arrays >= 512 bytes */
-  if (CPUID_CHECK(bit_AVX2) &&
+  if ((cpuid & bit_AVX2) &&
       size >= 512)
   {
     align_avx2(&buf, &size, &cnt);
@@ -518,7 +519,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #if defined(HAVE_POPCNT)
 
-  if (CPUID_CHECK(bit_POPCNT))
+  if (cpuid & bit_POPCNT)
   {
     cnt += popcnt64_unrolled((const uint64_t*) buf, size / 8);
     buf += size - size % 8;
