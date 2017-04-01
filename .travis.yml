@@ -22,7 +22,7 @@ script:
   - make VERBOSE=1
   - ctest
   - cd test
-  - valgrind --error-exitcode=1 ./test2
+  - valgrind --error-exitcode=1 ./test1 30000
   # Test x86 CPU (32-bit)
   - cd ../..
   - rm -rf build
