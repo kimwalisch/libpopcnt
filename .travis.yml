@@ -16,7 +16,7 @@ script:
   # Static code analysis
   - cppcheck . --error-exitcode=1 --quiet
   # Test x64 CPU
-  - mkkdir build
+  - mkdir build
   - cd build
   - cmake .
   - make VERBOSE=1
@@ -25,7 +25,7 @@ script:
   - valgrind --error-exitcode=1 ./test2
   # Test x86 CPU (32-bit)
   - cd ../..
-  - mkkdir build
+  - mkdir build
   - cd build
   - export CXXFLAGS="-m32 -g -O3 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
   - cmake .
