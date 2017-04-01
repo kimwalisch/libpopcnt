@@ -1,11 +1,11 @@
 ///
-/// @file  test.cpp
-/// @brief Simple test program for libpopcnt.h.
-///        Generates arrays with random data and computes the bit
+/// @file  test1.cpp
+/// @brief Simple C++ test program for libpopcnt.h.
+///        Generates an array with random data and computes the bit
 ///        population count using 2 different algorithms and checks
 ///        that the results match.
 ///
-/// Usage: ./test [max size]
+/// Usage: ./test1
 ///
 /// Copyright (C) 2017 Kim Walisch, <kim.walisch@gmail.com>
 ///
@@ -17,33 +17,28 @@
 
 #include <iostream>
 #include <vector>
-#include <cstdlib>
 #include <ctime>
 #include <stdint.h>
 
-int main(int argc, char* argv[])
+int main()
 {
-  int max = 100000;
+  int size = 100000;
+  std::vector<uint8_t> data(size);
   srand((unsigned) time(0));
 
-  if (argc > 1)
-    max = std::atoi(argv[1]);
+  for (int i = 0; i < size; i++)
+    data[i] = (uint8_t) rand();
 
-  for (int size = 1; size < max; size++)
+  for (int i = 0; i < size; i++)
   {
-    double percent = (100.0 * size) / max;
-
+    double percent = (100.0 * i) / size;
     std::cout << "\rStatus: " << (int) percent << "%" << std::flush;
-    std::vector<uint8_t> data(size);
 
-    for (int i = 0; i < size; i++)
-      data[i] = (uint8_t) rand();
-
-    uint64_t bits = popcnt(&data[0], size);
+    uint64_t bits = popcnt(&data[i], size - i);
     uint64_t bits_verify = 0;
 
-    for (int i = 0; i < size; i++)
-      bits_verify += popcount64(data[i]);
+    for (int j = i; j < size; j++)
+      bits_verify += popcount64(data[j]);
 
     if (bits != bits_verify)
     {
