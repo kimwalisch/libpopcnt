@@ -1,9 +1,11 @@
-2017-04-01 Kim Walisch  <kim.walisch@gmail.com>
+2017-04-02 Kim Walisch  <kim.walisch@gmail.com>
 
-  Version 1.5 work in progress.
+  Version 1.5 released.
 
   * libpopcnt.h now supports C and C++!
   * Use CMake build system.
+  * test2.c: Add C test.
+  * Fix clang-cl bug on Windows.
 
 2017-04-01 Kim Walisch  <kim.walisch@gmail.com>
 
