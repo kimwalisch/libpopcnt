@@ -418,6 +418,7 @@ static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
 
   uint64_t i = 0;
   uint64_t limit = size - size % 16;
+  uint64_t* cnt64;
 
   for(; i < limit; i += 16)
   {
@@ -449,10 +450,12 @@ static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
   for(; i < size; i++)
     cnt = _mm256_add_epi64(cnt, popcnt256(data[i]));
 
-  return ((uint64_t*) &cnt)[0] +
-         ((uint64_t*) &cnt)[1] +
-         ((uint64_t*) &cnt)[2] +
-         ((uint64_t*) &cnt)[3];
+  cnt64 = (uint64_t*) &cnt;
+
+  return cnt64[0] +
+         cnt64[1] +
+         cnt64[2] +
+         cnt64[3];
 }
 
 /* Align memory to 32 bytes boundary */
