@@ -89,6 +89,7 @@
 #if defined(HAVE_CPUID) && \
     GNUC_PREREQ(4, 9)
   #define HAVE_AVX2
+  #include <immintrin.h>
 #endif
 
 #if defined(HAVE_CPUID) && \
@@ -97,9 +98,6 @@
   (!defined(__apple_build_version__) || \
     __apple_build_version__ >= 8000000)
   #define HAVE_AVX2
-#endif
-
-#if defined(HAVE_AVX2)
   #include <immintrin.h>
 #endif
 
@@ -344,25 +342,6 @@ static inline int has_AVX2()
 #endif /* cpuid */
 
 #if defined(HAVE_AVX2)
-
-#if defined(_MSC_VER)
-
-static inline __m256i operator&(__m256i a, __m256i b)
-{
-  return _mm256_and_si256(a, b);
-}
-
-static inline __m256i operator|(__m256i a, __m256i b)
-{
-  return _mm256_or_si256(a, b);
-}
-
-static inline __m256i operator^(__m256i a, __m256i b)
-{
-  return _mm256_xor_si256(a, b);
-}
-
-#endif /* _MSC_VER */
 
 __attribute__ ((target ("avx2")))
 static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i c)
