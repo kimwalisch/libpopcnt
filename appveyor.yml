@@ -19,4 +19,4 @@ build_script:
   - cmake --build . --config Release
 
 test_script:
-  - ctest
+  - ctest -C Release
