@@ -4,23 +4,19 @@
 version: 1.0.{build}
 
 branches:
-  only:
-  - master
+  except:
+    - gh-pages
+
+os: Visual Studio 2017
 
 platform:
   - x86
   - x64
 
-configuration:
-  - Debug
-
-before_build:
-  "\"C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\Bin\\SetEnv.cmd\" /%platform%"
-
 build_script:
-  # Build using highest warning level on x64
-  - if "%platform%" == "x64" sed -i 's#/W2#/W3 /WX /D HAVE_POPCNT#' Makefile.msvc
-  - nmake /f Makefile.msvc
+  - if "%platform%" == "x86" cmake -G "Visual Studio 15 2017" .
+  - if "%platform%" == "x64" cmake -G "Visual Studio 15 2017 Win64" .
+  - cmake --build .
 
 test_script:
-  - nmake /f Makefile.msvc check
+  - ctest -C Debug
