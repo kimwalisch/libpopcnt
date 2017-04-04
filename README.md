@@ -20,9 +20,8 @@ by Daniel Lemire, Nathan Kurz and Wojciech Mula (23 Nov 2016).
 How it works
 ------------
 
-```libpopcnt.h``` uses a combination of 3 different bit population
-count algorithms based on the CPU architecture and the input array
-size:
+On x86 CPUs ```libpopcnt.h``` uses a combination of 3 different bit
+population count algorithms:
 
 * For array sizes < 512 bytes an unrolled ```POPCNT``` algorithm
 is used.
@@ -37,9 +36,9 @@ contains extensive benchmarks for the 3 algorithms used in
 avx2-harley-seal, builtin-popcnt-unrolled.
 
 CPU architectures
----------------------
+-----------------
 
-```libpopcnt.h``` uses hardware accelerated popcount algorithms on
+```libpopcnt.h``` has hardware accelerated popcount algorithms for
 the following CPU architectures:
 
 <table>
