@@ -469,7 +469,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 {
   uint64_t i;
   uint64_t cnt = 0;
-  const uint8_t* buf = (const uint8_t*) data;
+  const uint8_t* ptr = (const uint8_t*) data;
 
 #if defined(HAVE_CPUID)
   #if defined(__cplusplus)
@@ -493,9 +493,9 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if ((cpuid & bit_AVX2) &&
       size >= 512)
   {
-    align_avx2(&buf, &size, &cnt);
-    cnt += popcnt_avx2((const __m256i*) buf, size / 32);
-    buf += size - size % 32;
+    align_avx2(&ptr, &size, &cnt);
+    cnt += popcnt_avx2((const __m256i*) ptr, size / 32);
+    ptr += size - size % 32;
     size = size % 32;
   }
 
@@ -505,11 +505,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (cpuid & bit_POPCNT)
   {
-    cnt += popcnt64_unrolled((const uint64_t*) buf, size / 8);
-    buf += size - size % 8;
+    cnt += popcnt64_unrolled((const uint64_t*) ptr, size / 8);
+    ptr += size - size % 8;
     size = size % 8;
     for (i = 0; i < size; i++)
-      cnt += popcnt64(buf[i]);
+      cnt += popcnt64(ptr[i]);
 
     return cnt;
   }
@@ -517,11 +517,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #endif
 
   /* pure integer algorithm */
-  cnt += popcnt64_hs((const uint64_t*) buf, size / 8);
-  buf += size - size % 8;
+  cnt += popcnt64_hs((const uint64_t*) ptr, size / 8);
+  ptr += size - size % 8;
   size = size % 8;
   for (i = 0; i < size; i++)
-    cnt += popcount64(buf[i]);
+    cnt += popcount64(ptr[i]);
 
   return cnt;
 }
@@ -623,15 +623,15 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t i;
   uint64_t cnt = 0;
 
-  const uint8_t* buf = (const uint8_t*) data;
-  align(&buf, &size, &cnt);
+  const uint8_t* ptr = (const uint8_t*) data;
+  align(&ptr, &size, &cnt);
 
-  cnt += popcnt64_unrolled((const uint64_t*) buf, size / 8);
-  buf += size - size % 8;
+  cnt += popcnt64_unrolled((const uint64_t*) ptr, size / 8);
+  ptr += size - size % 8;
   size = size % 8;
 
   for (i = 0; i < size; i++)
-    cnt += popcnt64(buf[i]);
+    cnt += popcnt64(ptr[i]);
 
   return cnt;
 }
