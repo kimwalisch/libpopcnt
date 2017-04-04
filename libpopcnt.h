@@ -537,7 +537,6 @@ static inline uint64_t popcnt_neon(const uint8_t* ptr, uint64_t size)
   uint64_t cnt = 0;
   uint64_t chunk_size = 128;
   uint64_t n = size / chunk_size;
-  uint64_t k = size % chunk_size;
   uint64_t i;
 
   uint8x16_t t0;
@@ -569,10 +568,11 @@ static inline uint64_t popcnt_neon(const uint8_t* ptr, uint64_t size)
   for (i = 0; i < 4; i++)
     cnt += tmp[i];
 
-  for (i = 0; i < k - k % 8; i += 8)
-    cnt += popcnt64(*(const uint64_t*) &ptr[i]);
-
-  for (; i < k; i++)
+  size %= chunk_size;
+  cnt += popcnt64_unrolled((const uint64_t*) ptr, size / 8);
+  ptr += size - size % 8;
+  size = size % 8;
+  for (i = 0; i < size; i++)
     cnt += popcnt64(ptr[i]);
 
   return cnt;
