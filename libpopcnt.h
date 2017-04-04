@@ -531,11 +531,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #include <arm_neon.h>
 
-static inline uint32_t popcnt_neon(const uint8_t* ptr, uint64_t size)
+static inline uint64_t popcnt_neon(const uint8_t* ptr, uint64_t size)
 {
-  uint32_t cnt = 0;
   uint32_t tmp[4];
-  uint64_t chunk_size = 16 * 4 * 2;
+  uint64_t cnt = 0;
+  uint64_t chunk_size = 128;
   uint64_t n = size / chunk_size;
   uint64_t k = size % chunk_size;
   uint64_t i;
@@ -549,8 +549,8 @@ static inline uint32_t popcnt_neon(const uint8_t* ptr, uint64_t size)
 
   for (i = 0; i < n; i++, ptr += chunk_size)
   {
-    input0 = vld4q_u8(ptr + 0 * 16 * 4);
-    input1 = vld4q_u8(ptr + 1 * 16 * 4);
+    input0 = vld4q_u8(ptr);
+    input1 = vld4q_u8(ptr + 64);
 
     t0 = vcntq_u8(input0.val[0]);
     t0 = vaddq_u8(t0, vcntq_u8(input0.val[1]));
@@ -569,7 +569,10 @@ static inline uint32_t popcnt_neon(const uint8_t* ptr, uint64_t size)
   for (i = 0; i < 4; i++)
     cnt += tmp[i];
 
-  for (i = 0; i < k; i++)
+  for (i = 0; i < k - k % 8; i += 8)
+    cnt += popcount64(*(const uint64_t*) &ptr[i]);
+
+  for (; i < k; i++)
     cnt += popcount64(ptr[i]);
 
   return cnt;
@@ -582,7 +585,7 @@ static inline uint32_t popcnt_neon(const uint8_t* ptr, uint64_t size)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
-  uint8_t* ptr = (uint8_t*) data;
+  const uint8_t* ptr = (const uint8_t*) data;
   uint64_t uint32_max = (1ull << 32) - 1;
   uint64_t cnt = 0;
   uint64_t bytes;
