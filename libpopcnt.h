@@ -89,7 +89,6 @@
 #if defined(HAVE_CPUID) && \
     GNUC_PREREQ(4, 9)
   #define HAVE_AVX2
-  #include <immintrin.h>
 #endif
 
 #if defined(HAVE_CPUID) && \
@@ -98,14 +97,6 @@
    (!defined(_MSC_VER) || defined(__AVX2__)) && \
    (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
   #define HAVE_AVX2
-  #include <immintrin.h>
-#endif
-
-#if defined(_MSC_VER) && \
-    defined(X86_OR_X64)
-  #include <intrin.h>
-  #include <immintrin.h>
-  #include <nmmintrin.h>
 #endif
 
 /*
@@ -155,6 +146,8 @@ static inline uint64_t popcnt64(uint64_t x)
 #elif defined(_MSC_VER) && \
       defined(_M_X64)
 
+#include <nmmintrin.h>
+
 static inline uint64_t popcnt64(uint64_t x)
 {
   return _mm_popcnt_u64(x);
@@ -162,6 +155,8 @@ static inline uint64_t popcnt64(uint64_t x)
 
 #elif defined(_MSC_VER) && \
       defined(_M_IX86)
+
+#include <nmmintrin.h>
 
 static inline uint64_t popcnt64(uint64_t x)
 {
@@ -260,6 +255,11 @@ static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
 
 #if defined(HAVE_CPUID)
 
+#if defined(_MSC_VER)
+  #include <intrin.h>
+  #include <immintrin.h>
+#endif
+
 /* %ecx bit flags */
 #define bit_POPCNT (1 << 23)
 
@@ -342,6 +342,8 @@ static inline int has_AVX2()
 #endif /* cpuid */
 
 #if defined(HAVE_AVX2)
+
+#include <immintrin.h>
 
 __attribute__ ((target ("avx2")))
 static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i c)
@@ -524,7 +526,78 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   return cnt;
 }
 
-/* non x86 CPUs */
+#elif defined(__ARM_NEON) || \
+      defined(__aarch64__)
+
+#include <arm_neon.h>
+
+static inline uint32_t popcnt_neon(const uint8_t* ptr, uint64_t size)
+{
+  uint32_t cnt = 0;
+  uint32_t tmp[4];
+  uint64_t chunk_size = 16 * 4 * 2;
+  uint64_t n = size / chunk_size;
+  uint64_t k = size % chunk_size;
+  uint64_t i;
+
+  uint8x16_t t0;
+  uint16x8_t t1;
+  uint8x16x4_t input0;
+  uint8x16x4_t input1;
+
+  uint32x4_t sum = vcombine_u32(vcreate_u32(0), vcreate_u32(0));
+
+  for (i = 0; i < n; i++, ptr += chunk_size)
+  {
+    input0 = vld4q_u8(ptr + 0 * 16 * 4);
+    input1 = vld4q_u8(ptr + 1 * 16 * 4);
+
+    t0 = vcntq_u8(input0.val[0]);
+    t0 = vaddq_u8(t0, vcntq_u8(input0.val[1]));
+    t0 = vaddq_u8(t0, vcntq_u8(input0.val[2]));
+    t0 = vaddq_u8(t0, vcntq_u8(input0.val[3]));
+    t0 = vaddq_u8(t0, vcntq_u8(input1.val[0]));
+    t0 = vaddq_u8(t0, vcntq_u8(input1.val[1]));
+    t0 = vaddq_u8(t0, vcntq_u8(input1.val[2]));
+    t0 = vaddq_u8(t0, vcntq_u8(input1.val[3]));
+    t1 = vpaddlq_u8(t0);
+
+    sum = vpadalq_u16(sum, t1);
+  }
+
+  vst1q_u32(tmp, sum);
+  for (i = 0; i < 4; i++)
+    cnt += tmp[i];
+
+  for (i = 0; i < k; i++)
+    cnt += popcount64(ptr[i]);
+
+  return cnt;
+}
+
+/*
+ * Count the number of 1 bits in the data array
+ * @data: An array
+ * @size: Size of data in bytes
+ */
+static inline uint64_t popcnt(const void* data, uint64_t size)
+{
+  uint8_t* ptr = (uint8_t*) data;
+  uint64_t uint32_max = (1ull << 32) - 1;
+  uint64_t cnt = 0;
+  uint64_t bytes;
+
+  for (; size > 0; size -= bytes)
+  {
+    bytes = (size < uint32_max) ? size : uint32_max;
+    cnt += popcnt_neon(ptr, bytes);
+    ptr += bytes;
+  }
+
+  return cnt;
+}
+
+/* all other CPUs */
 #else
 
 /* Align memory to 8 bytes boundary */
