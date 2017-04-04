@@ -570,10 +570,10 @@ static inline uint64_t popcnt_neon(const uint8_t* ptr, uint64_t size)
     cnt += tmp[i];
 
   for (i = 0; i < k - k % 8; i += 8)
-    cnt += popcount64(*(const uint64_t*) &ptr[i]);
+    cnt += popcnt64(*(const uint64_t*) &ptr[i]);
 
   for (; i < k; i++)
-    cnt += popcount64(ptr[i]);
+    cnt += popcnt64(ptr[i]);
 
   return cnt;
 }
