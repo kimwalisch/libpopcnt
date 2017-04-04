@@ -33,8 +33,35 @@ integer algorithm is used.
 The GitHub repository
 [WojciechMula/sse-popcount](https://github.com/WojciechMula/sse-popcount/tree/master/results)
 contains extensive benchmarks for the 3 algorithms used in
-```libpopcnt.h```. The algorithms are named
-```harley-seal```, ```avx2-harley-seal```, ```builtin-popcnt-unrolled```.
+```libpopcnt.h```. The algorithms are named harley-seal,
+avx2-harley-seal, builtin-popcnt-unrolled.
+
+CPU architectures
+---------------------
+
+```libpopcnt.h``` uses hardware accelerated popcount algorithms on
+the following CPU architectures:
+
+<table>
+  <tr>
+    <td><b>x86</b></td>
+    <td><code>POPCNT</code>, <code>AVX2</code></td> 
+  </tr>
+  <tr>
+    <td><b>x86-64</b></td>
+    <td><code>POPCNT</code>, <code>AVX2</code></td>
+  </tr>
+  <tr>
+    <td><b>ARM</b></td>
+    <td><code>NEON</code></td> 
+  </tr>
+  <tr>
+    <td><b>IBM POWER</b></td>
+    <td><code>POPCNTD</code></td>
+  </tr>
+</table>
+
+For other CPU architectures a fast integer popcount algorithm is used.
 
 C/C++ API
 ---------
