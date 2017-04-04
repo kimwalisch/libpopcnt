@@ -586,13 +586,13 @@ static inline uint64_t popcnt_neon(const uint8_t* ptr, uint64_t size)
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
   const uint8_t* ptr = (const uint8_t*) data;
-  uint64_t uint32_max = (1ull << 32) - 1;
+  uint64_t max_size = (1ull << 32) / 8;
   uint64_t cnt = 0;
   uint64_t bytes;
 
   for (; size > 0; size -= bytes)
   {
-    bytes = (size < uint32_max) ? size : uint32_max;
+    bytes = (size < max_size) ? size : max_size;
     cnt += popcnt_neon(ptr, bytes);
     ptr += bytes;
   }
