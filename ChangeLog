@@ -1,8 +1,9 @@
 2017-04-04 Kim Walisch  <kim.walisch@gmail.com>
 
-  Version 1.6 work in progress.
+  Version 1.6 released.
 
   * Add ARM NEON popcount algorithm.
+  * Fix x86 segmentation fault for CPUs without POPCNT.
 
 2017-04-02 Kim Walisch  <kim.walisch@gmail.com>
 
