@@ -203,56 +203,6 @@ static inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
   return cnt;
 }
 
-/*
- * Carry-save adder (CSA).
- * @see Chapter 5 in "Hacker's Delight".
- */
-static inline void CSA(uint64_t* h, uint64_t* l, uint64_t a, uint64_t b, uint64_t c)
-{
-  uint64_t u = a ^ b; 
-  *h = (a & b) | (u & c);
-  *l = u ^ c;
-}
-
-/*
- * Harley-Seal popcount (3rd iteration).
- * The Harley-Seal popcount algorithm is one of the fastest algorithms
- * for counting 1 bits in an array using only integer operations.
- * This implementation uses only 6.38 instructions per 64-bit word.
- * @see Chapter 5 in "Hacker's Delight" 2nd edition.
- */
-static inline uint64_t popcnt64_hs(const uint64_t* data, uint64_t size)
-{
-  uint64_t cnt = 0;
-  uint64_t ones = 0, twos = 0, fours = 0, eights = 0;
-  uint64_t twosA, twosB, foursA, foursB;
-  uint64_t limit = size - size % 8;
-  uint64_t i = 0;
-
-  for(; i < limit; i += 8)
-  {
-    CSA(&twosA, &ones, ones, data[i+0], data[i+1]);
-    CSA(&twosB, &ones, ones, data[i+2], data[i+3]);
-    CSA(&foursA, &twos, twos, twosA, twosB);
-    CSA(&twosA, &ones, ones, data[i+4], data[i+5]);
-    CSA(&twosB, &ones, ones, data[i+6], data[i+7]);
-    CSA(&foursB, &twos, twos, twosA, twosB);
-    CSA(&eights, &fours, fours, foursA, foursB);
-
-    cnt += popcount64(eights);
-  }
-
-  cnt *= 8;
-  cnt += 4 * popcount64(fours);
-  cnt += 2 * popcount64(twos);
-  cnt += 1 * popcount64(ones);
-
-  for(; i < size; i++)
-    cnt += popcount64(data[i]);
-
-  return cnt;
-}
-
 #if defined(HAVE_CPUID)
 
 #if defined(_MSC_VER)
@@ -328,7 +278,7 @@ static inline int has_AVX2()
   if ((abcd[2] & osxsave_mask) != osxsave_mask)
     return 0;
 
-  /* ensure OS supports ZMM registers (and YMM, and XMM) */
+  /* ensure OS supports YMM registers (and XMM) */
   if (!check_xcr0_ymm())
     return 0;
 
@@ -467,9 +417,9 @@ static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
-  uint64_t i;
-  uint64_t cnt = 0;
   const uint8_t* ptr = (const uint8_t*) data;
+  uint64_t cnt = 0;
+  uint64_t i;
 
 #if defined(HAVE_CPUID)
   #if defined(__cplusplus)
@@ -516,10 +466,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #endif
 
-  /* pure integer algorithm */
-  cnt += popcnt64_hs((const uint64_t*) ptr, size / 8);
-  ptr += size - size % 8;
-  size = size % 8;
+  /* pure integer popcount algorithm */
   for (i = 0; i < size; i++)
     cnt += popcount64(ptr[i]);
 
@@ -620,8 +567,8 @@ static inline void align(const uint8_t** p, uint64_t* size, uint64_t* cnt)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
-  uint64_t i;
   uint64_t cnt = 0;
+  uint64_t i;
 
   const uint8_t* ptr = (const uint8_t*) data;
   align(&ptr, &size, &cnt);
