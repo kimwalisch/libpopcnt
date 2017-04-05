@@ -216,6 +216,10 @@ static inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 /* %ebx bit flags */
 #define bit_AVX2 (1 << 5)
 
+/* xgetbv bit flags */
+#define XSTATE_SSE (1 << 1)
+#define XSTATE_YMM (1 << 2)
+
 static inline void run_cpuid(int eax, int ecx, int* abcd)
 {
   int ebx = 0;
@@ -260,12 +264,13 @@ static inline int has_POPCNT()
 static inline int check_xcr0_ymm()
 {
   int xcr0;
+  int mask = XSTATE_SSE | XSTATE_YMM;
 #if defined(_MSC_VER)
   xcr0 = (int) _xgetbv(0);
 #else
   __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
 #endif
-  return (xcr0 & 6) == 6;
+  return (xcr0 & mask) == mask;
 }
 
 static inline int has_AVX2()
@@ -567,16 +572,14 @@ static inline void align(const uint8_t** p, uint64_t* size, uint64_t* cnt)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
+  const uint8_t* ptr = (const uint8_t*) data;
   uint64_t cnt = 0;
   uint64_t i;
 
-  const uint8_t* ptr = (const uint8_t*) data;
   align(&ptr, &size, &cnt);
-
   cnt += popcnt64_unrolled((const uint64_t*) ptr, size / 8);
   ptr += size - size % 8;
   size = size % 8;
-
   for (i = 0; i < size; i++)
     cnt += popcnt64(ptr[i]);
 
