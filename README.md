@@ -55,7 +55,7 @@ the following CPU architectures:
     <td><code>NEON</code></td> 
   </tr>
   <tr>
-    <td><b>IBM POWER</b></td>
+    <td><b>PPC64</b></td>
     <td><code>POPCNTD</code></td>
   </tr>
 </table>
