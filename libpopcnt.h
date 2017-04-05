@@ -427,12 +427,12 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     static const int cpuid =
         has_POPCNT() | has_AVX2();
   #else
-    static int cpuid = -1;
-    int cpuid2;
+    static int cpuid_ = -1;
+    int cpuid = cpuid_;
     if (cpuid == -1)
     {
-      cpuid2 = has_POPCNT() | has_AVX2();
-      __sync_val_compare_and_swap(&cpuid, -1, cpuid2);
+      cpuid = has_POPCNT() | has_AVX2();
+      __sync_val_compare_and_swap(&cpuid_, -1, cpuid);
     }
   #endif
 #endif
