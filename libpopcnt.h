@@ -483,20 +483,26 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #include <arm_neon.h>
 
-static inline uint64_t popcnt_neon(const uint8_t* ptr, uint64_t size)
+/*
+ * Count the number of 1 bits in the data array
+ * @data: An array
+ * @size: Size of data in bytes
+ */
+static inline uint64_t popcnt(const void* data, uint64_t size)
 {
-  uint32_t tmp[4];
+  const uint8_t* ptr = (const uint8_t*) data;
   uint64_t cnt = 0;
+  uint64_t tmp[2];
   uint64_t chunk_size = 128;
   uint64_t n = size / chunk_size;
   uint64_t i;
 
-  uint8x16_t t0;
-  uint16x8_t t1;
   uint8x16x4_t input0;
   uint8x16x4_t input1;
+  uint8x16_t t0;
+  uint32x4_t t1;
 
-  uint32x4_t sum = vcombine_u32(vcreate_u32(0), vcreate_u32(0));
+  uint64x2_t sum = vcombine_u64(vcreate_u64(0), vcreate_u64(0));
 
   for (i = 0; i < n; i++, ptr += chunk_size)
   {
@@ -511,13 +517,13 @@ static inline uint64_t popcnt_neon(const uint8_t* ptr, uint64_t size)
     t0 = vaddq_u8(t0, vcntq_u8(input1.val[1]));
     t0 = vaddq_u8(t0, vcntq_u8(input1.val[2]));
     t0 = vaddq_u8(t0, vcntq_u8(input1.val[3]));
-    t1 = vpaddlq_u8(t0);
+    t1 = vpaddlq_u16(vpaddlq_u8(t0));
 
-    sum = vpadalq_u16(sum, t1);
+    sum = vpadalq_u32(sum, t1);
   }
 
-  vst1q_u32(tmp, sum);
-  for (i = 0; i < 4; i++)
+  vst1q_u64(tmp, sum);
+  for (i = 0; i < 2; i++)
     cnt += tmp[i];
 
   size %= chunk_size;
@@ -526,28 +532,6 @@ static inline uint64_t popcnt_neon(const uint8_t* ptr, uint64_t size)
   size = size % 8;
   for (i = 0; i < size; i++)
     cnt += popcnt64(ptr[i]);
-
-  return cnt;
-}
-
-/*
- * Count the number of 1 bits in the data array
- * @data: An array
- * @size: Size of data in bytes
- */
-static inline uint64_t popcnt(const void* data, uint64_t size)
-{
-  const uint8_t* ptr = (const uint8_t*) data;
-  uint64_t max_size = (1ull << 32) / 8;
-  uint64_t cnt = 0;
-  uint64_t bytes;
-
-  for (; size > 0; size -= bytes)
-  {
-    bytes = (size < max_size) ? size : max_size;
-    cnt += popcnt_neon(ptr, bytes);
-    ptr += bytes;
-  }
 
   return cnt;
 }
