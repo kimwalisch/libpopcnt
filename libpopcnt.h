@@ -46,14 +46,14 @@
   #define GNUC_PREREQ(x, y) \
       (__GNUC__ > x || (__GNUC__ == x && __GNUC_MINOR__ >= y))
 #else
-  #define GNUC_PREREQ(x, y)	0
+  #define GNUC_PREREQ(x, y) 0
 #endif
 
 #ifdef __clang__
   #define CLANG_PREREQ(x, y) \
       (__clang_major__ > x || (__clang_major__ == x && __clang_minor__ >= y))
 #else
-  #define CLANG_PREREQ(x, y)	0
+  #define CLANG_PREREQ(x, y) 0
 #endif
 
 #if (defined(__i386__) || \
