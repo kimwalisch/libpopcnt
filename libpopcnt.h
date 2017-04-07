@@ -294,7 +294,7 @@ static inline int has_AVX2()
   return bit_AVX2;
 }
 
-#endif /* cpuid */
+#endif
 
 #if defined(HAVE_AVX2)
 
@@ -410,7 +410,7 @@ static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
   }
 }
 
-#endif /* avx2 */
+#endif
 
 /* x86 CPUs */
 #if defined(X86_OR_X64)
