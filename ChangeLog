@@ -1,3 +1,10 @@
+2017-04-23 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 1.8 released.
+
+  * Fixed "illegal instruction" runtime crash with GCC 4.4.7.
+  * Reduce CMake minimum version to 2.8.
+
 2017-04-08 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 1.7 released.
