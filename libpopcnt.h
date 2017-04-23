@@ -261,6 +261,8 @@ static inline int has_POPCNT()
   return bit_POPCNT;
 }
 
+#if defined(HAVE_AVX2)
+
 static inline int check_xcr0_ymm()
 {
   int xcr0;
@@ -292,6 +294,17 @@ static inline int has_AVX2()
     return 0;
 
   return bit_AVX2;
+}
+
+#endif /* has_AVX2 */
+
+static inline int get_cpuid()
+{
+#if defined(HAVE_AVX2)
+  return has_POPCNT() | has_AVX2();
+#else
+  return has_POPCNT();
+#endif
 }
 
 #endif
@@ -429,14 +442,13 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #if defined(HAVE_CPUID)
   #if defined(__cplusplus)
     /* C++11 thread-safe singleton */
-    static const int cpuid =
-        has_POPCNT() | has_AVX2();
+    static const int cpuid = get_cpuid();
   #else
     static int cpuid_ = -1;
     int cpuid = cpuid_;
     if (cpuid == -1)
     {
-      cpuid = has_POPCNT() | has_AVX2();
+      cpuid = get_cpuid();
       __sync_val_compare_and_swap(&cpuid_, -1, cpuid);
     }
   #endif
