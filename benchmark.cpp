@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <stdint.h>
+#include <string>
 
 double get_seconds()
 {
