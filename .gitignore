@@ -18,4 +18,6 @@ cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
 /benchmark
+/test/test1
+/test/test2
 build
