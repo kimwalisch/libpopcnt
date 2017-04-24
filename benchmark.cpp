@@ -14,6 +14,7 @@
 #include <libpopcnt.h>
 
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <cstdlib>
 #include <ctime>
@@ -66,7 +67,7 @@ void verify(uint64_t cnt, uint64_t total, int iters)
 
 int main(int argc, char* argv[])
 {
-  int bytes = (1 << 10) * 32;
+  int bytes = (1 << 10) * 16;
   int iters = 10000000;
 
   if (argc > 1)
@@ -76,7 +77,28 @@ int main(int argc, char* argv[])
 
   uint64_t cnt = 0;
   std::vector<uint8_t> v(bytes);
+  std::string algo;
   init(v);
+
+#if defined(X86_OR_X64)
+  #if defined(HAVE_CPUID)
+    int cpuid = get_cpuid();
+    if ((cpuid & bit_AVX2) && bytes >= 512)
+      algo = "AVX2";
+    else if (cpuid & bit_POPCNT)
+      algo = "POPCNT";
+  #endif
+#elif defined(__ARM_NEON) || \
+      defined(__aarch64__)
+  algo = "NEON";
+#elif defined(__PPC64__)
+  algo = "POPCNTD";
+#endif
+
+  if (algo.empty())
+    algo = "integer popcount";
+
+  std::cout << "Algorithm: " << algo << std::endl;
 
   for (uint64_t i = 0; i < v.size(); i++)
     cnt += popcount64(v[i]);
@@ -86,7 +108,13 @@ int main(int argc, char* argv[])
   seconds = get_seconds() - seconds;
 
   std::cout << "\rStatus: 100%" << std::endl;
-  std::cout << "Seconds: " << seconds << std::endl;
+  std::cout << "Seconds: " << std::fixed << std::setprecision(2) << seconds << std::endl;
+
+  double total_bytes = (double) bytes * (double) iters;
+  double GB = total_bytes / 1e9;
+  double GBs = GB / seconds;
+
+  std::cout << std::fixed << std::setprecision(1) << GBs << " GB/s" << std::endl;
   verify(cnt, total, iters);
 
   return 0;
