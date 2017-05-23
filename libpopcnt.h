@@ -511,11 +511,14 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   uint8x16x4_t input0;
   uint8x16x4_t input1;
-  uint8x16_t t0;
+  uint8x16_t t0, t1, t2, t3;
 
   uint64x2_t sum = vcombine_u64(vcreate_u64(0), vcreate_u64(0));
   
   t0 = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
+  t1 = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
+  t2 = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
+  t3 = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
 
   for (i = 0; i < n; i++, ptr += chunk_size)
   {
@@ -523,24 +526,34 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     input1 = vld4q_u8(ptr + 64);
 
     t0 = vaddq_u8(t0, vcntq_u8(input0.val[0]));
-    t0 = vaddq_u8(t0, vcntq_u8(input0.val[1]));
-    t0 = vaddq_u8(t0, vcntq_u8(input0.val[2]));
-    t0 = vaddq_u8(t0, vcntq_u8(input0.val[3]));
+    t1 = vaddq_u8(t1, vcntq_u8(input0.val[1]));
+    t2 = vaddq_u8(t2, vcntq_u8(input0.val[2]));
+    t3 = vaddq_u8(t3, vcntq_u8(input0.val[3]));
     t0 = vaddq_u8(t0, vcntq_u8(input1.val[0]));
-    t0 = vaddq_u8(t0, vcntq_u8(input1.val[1]));
-    t0 = vaddq_u8(t0, vcntq_u8(input1.val[2]));
-    t0 = vaddq_u8(t0, vcntq_u8(input1.val[3]));
+    t1 = vaddq_u8(t1, vcntq_u8(input1.val[1]));
+    t2 = vaddq_u8(t2, vcntq_u8(input1.val[2]));
+    t3 = vaddq_u8(t3, vcntq_u8(input1.val[3]));
     
-    /* each iteration can increment each 8-bit accumulator by at most 64 
-     * (8 popcounts of an 8-bit number). up to 3 iters is safe, since 3*64 = 192 < 255.
-     *  sum and clear the accumulators every third iteration before they overflow.
+    /* each iteration can increment each 8-bit accumulator by at most 16 
+     * (2 popcounts of an 8-bit number). up to 15 iters is safe, since 15*16 = 240 < 255.
+     *  sum and clear the accumulators every 15th iteration before they overflow.
+     * since 15 = (2^4)-1, can use bitwise AND to calculate modulo.
      */
-    if((i & 0x3L) == 3L) {
+    if((i & 15L) == 15L) {
       sum = vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t0)));
+      sum = vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t1)));
+      sum = vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t2)));
+      sum = vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t3)));      
       t0 = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
+      t1 = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
+      t2 = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
+      t3 = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
     }
   }
   sum = vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t0)));
+  sum = vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t1)));
+  sum = vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t2)));
+  sum = vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t3)));
   vst1q_u64(tmp, sum);
   for (i = 0; i < 2; i++)
     cnt += tmp[i];
