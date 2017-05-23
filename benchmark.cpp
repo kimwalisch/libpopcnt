@@ -28,7 +28,7 @@ double get_seconds()
 
 // init vector with random data
 template <typename T>
-void init(std::vector<T> v)
+void init(std::vector<T> & v)
 {
   std::srand((unsigned) std::time(0));
 
