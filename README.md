@@ -85,9 +85,8 @@ checks using ```cpuid``` if the CPU supports POPCNT/AVX2
 before using it.
 
 ```bash
-c++ -O3 program.cpp
-
 cc  -O3 program.c
+c++ -O3 program.cpp
 ```
 
 Development
