@@ -28,7 +28,7 @@ double get_seconds()
 
 // init vector with random data
 template <typename T>
-void init(std::vector<T> & v)
+void init(std::vector<T>& v)
 {
   std::srand((unsigned) std::time(0));
 
@@ -80,6 +80,15 @@ int main(int argc, char* argv[])
   std::vector<uint8_t> v(bytes);
   std::string algo;
   init(v);
+
+  std::cout << "Iters: " << iters << std::endl;
+
+  if (bytes < 1024)
+    std::cout << "Array size: " << bytes << " bytes" << std::endl;
+  else if (bytes < 1024 * 1024)
+    std::cout << "Array size: " << std::fixed << std::setprecision(2) << bytes / 1024.0 << " KB" << std::endl;
+  else
+    std::cout << "Array size: " << std::fixed << std::setprecision(2) << bytes / (1024.0 * 1024.0) << " MB" << std::endl;
 
 #if defined(X86_OR_X64)
   #if defined(HAVE_CPUID)
