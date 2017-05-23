@@ -87,7 +87,31 @@ before using it.
 ```bash
 c++ -O3 program.cpp
 
-cc -O3 program.c
+cc  -O3 program.c
+```
+
+Development
+-----------
+
+```bash
+cmake .
+make -j
+make test
+```
+
+The above commands also build the ```benchmark``` program which is
+useful for benchmarking ```libpopcnt.h``` code changes. Below is a
+usage example run on a 4th generation Intel Core i7 CPU:
+
+```bash
+# Usage: ./benchmark [array bytes] [iters]
+./benchmark
+Iters: 10000000
+Array size: 16.00 KB
+Algorithm: AVX2
+Status: 100%
+Seconds: 3.42
+47.9 GB/s
 ```
 
 Speedup
@@ -150,7 +174,7 @@ the fastest algorithm for the given array size.
     <td>3.22</td>
     <td>4.17</td>
     <td><b>8.46</b></td>
-    <td><b>10.74</td>
+    <td><b>10.74</b></td>
     <td><b>12.52</b></td>
     <td><b>13.66</b></td>
   </tr>
