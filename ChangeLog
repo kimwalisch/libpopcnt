@@ -1,3 +1,9 @@
+2017-09-09 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 1.9 released.
+
+  * libpopcnt.h: Fix MSVC POPCNT detection.
+
 2017-04-24 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 1.8 released.

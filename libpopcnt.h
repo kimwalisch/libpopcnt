@@ -222,32 +222,35 @@ static inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
 
 static inline void run_cpuid(int eax, int ecx, int* abcd)
 {
+#if defined(_MSC_VER)
+  __cpuidex(abcd, eax, ecx);
+#else
   int ebx = 0;
   int edx = 0;
 
-#if defined(_MSC_VER)
-  __cpuidex(abcd, eax, ecx);
-#elif defined(__i386__) && \
+  #if defined(__i386__) && \
       defined(__PIC__)
-  /* in case of PIC under 32-bit EBX cannot be clobbered */
-  __asm__ ("movl %%ebx, %%edi;"
-           "cpuid;"
-           "xchgl %%ebx, %%edi;"
-           : "=D" (ebx),
-             "+a" (eax),
-             "+c" (ecx),
-             "=d" (edx));
-#else
-  __asm__ ("cpuid;"
-           : "+b" (ebx),
-             "+a" (eax),
-             "+c" (ecx),
-             "=d" (edx));
-#endif
+    /* in case of PIC under 32-bit EBX cannot be clobbered */
+    __asm__ ("movl %%ebx, %%edi;"
+             "cpuid;"
+             "xchgl %%ebx, %%edi;"
+             : "=D" (ebx),
+               "+a" (eax),
+               "+c" (ecx),
+               "=d" (edx));
+  #else
+    __asm__ ("cpuid;"
+             : "+b" (ebx),
+               "+a" (eax),
+               "+c" (ecx),
+               "=d" (edx));
+  #endif
+
   abcd[0] = eax;
   abcd[1] = ebx;
   abcd[2] = ecx;
   abcd[3] = edx;
+#endif
 }
 
 static inline int has_POPCNT()
