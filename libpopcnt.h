@@ -57,8 +57,8 @@
 #endif
 
 #if (_MSC_VER < 1900) && \
-   !defined(__cplusplus)
-#define inline __inline
+    !defined(__cplusplus)
+  #define inline __inline
 #endif
 
 #if (defined(__i386__) || \
@@ -70,10 +70,10 @@
 
 #if defined(X86_OR_X64) && \
    (defined(__cplusplus) || \
+    defined(_MSC_VER) || \
    (GNUC_PREREQ(4, 2) || \
-    __has_builtin(__sync_val_compare_and_swap)) || \
-    defined(_MSC_VER))
-#define HAVE_CPUID
+    __has_builtin(__sync_val_compare_and_swap)))
+  #define HAVE_CPUID
 #endif
 
 #if GNUC_PREREQ(4, 2) || \
@@ -458,11 +458,12 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     if (cpuid == -1)
     {
       cpuid = get_cpuid();
-  #if defined(_MSC_VER)
-      _InterlockedCompareExchange(&cpuid_, cpuid, -1);
-  #else
-      __sync_val_compare_and_swap(&cpuid_, -1, cpuid);
-  #endif
+
+      #if defined(_MSC_VER)
+        _InterlockedCompareExchange(&cpuid_, cpuid, -1);
+      #else
+        __sync_val_compare_and_swap(&cpuid_, -1, cpuid);
+      #endif
     }
   #endif
 #endif
