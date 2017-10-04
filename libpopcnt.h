@@ -56,6 +56,11 @@
   #define CLANG_PREREQ(x, y) 0
 #endif
 
+#if (_MSC_VER < 1900) && \
+    !defined(__cplusplus)
+  #define inline __inline
+#endif
+
 #if (defined(__i386__) || \
      defined(__x86_64__) || \
      defined(_M_IX86) || \
@@ -65,6 +70,7 @@
 
 #if defined(X86_OR_X64) && \
    (defined(__cplusplus) || \
+    defined(_MSC_VER) || \
    (GNUC_PREREQ(4, 2) || \
     __has_builtin(__sync_val_compare_and_swap)))
   #define HAVE_CPUID
@@ -452,7 +458,12 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     if (cpuid == -1)
     {
       cpuid = get_cpuid();
-      __sync_val_compare_and_swap(&cpuid_, -1, cpuid);
+
+      #if defined(_MSC_VER)
+        _InterlockedCompareExchange(&cpuid_, cpuid, -1);
+      #else
+        __sync_val_compare_and_swap(&cpuid_, -1, cpuid);
+      #endif
     }
   #endif
 #endif
