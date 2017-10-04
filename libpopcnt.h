@@ -105,6 +105,11 @@
   #define HAVE_AVX2
 #endif
 
+#if defined(HAVE_CPUID) && \
+    defined(_MSC_VER) && defined(__AVX2__)
+#define HAVE_AVX2
+#endif
+
 /*
  * This uses fewer arithmetic operations than any other known
  * implementation on machines with fast multiplication.
@@ -322,15 +327,19 @@ static inline int get_cpuid()
 
 #include <immintrin.h>
 
+#ifndef _MSC_VER
 __attribute__ ((target ("avx2")))
+#endif
 static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i c)
 {
-  __m256i u = a ^ b;
-  *h = (a & b) | (u & c);
-  *l = u ^ c;
+  __m256i u = _mm256_xor_si256(a, b);
+  *h = _mm256_or_si256(_mm256_and_si256(a, b), _mm256_and_si256(u, c));
+  *l = _mm256_xor_si256(u, c);
 }
 
-__attribute__ ((target ("avx2")))
+#ifndef _MSC_VER
+__attribute__((target("avx2")))
+#endif
 static inline __m256i popcnt256(__m256i v)
 {
   __m256i lookup1 = _mm256_setr_epi8(
@@ -348,8 +357,8 @@ static inline __m256i popcnt256(__m256i v)
   );
 
   __m256i low_mask = _mm256_set1_epi8(0x0f);
-  __m256i lo = v & low_mask;
-  __m256i hi = _mm256_srli_epi16(v, 4) & low_mask;
+  __m256i lo = _mm256_and_si256(v, low_mask);
+  __m256i hi = _mm256_and_si256(_mm256_srli_epi16(v, 4), low_mask);
   __m256i popcnt1 = _mm256_shuffle_epi8(lookup1, lo);
   __m256i popcnt2 = _mm256_shuffle_epi8(lookup2, hi);
 
@@ -363,7 +372,9 @@ static inline __m256i popcnt256(__m256i v)
  * Wojciech Mula (23 Nov 2016).
  * @see https://arxiv.org/abs/1611.07612
  */
-__attribute__ ((target ("avx2")))
+#ifndef _MSC_VER
+__attribute__((target("avx2")))
+#endif
 static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
 {
   __m256i cnt = _mm256_setzero_si256();
