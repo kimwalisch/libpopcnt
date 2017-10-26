@@ -627,9 +627,9 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #if defined(HAVE_AVX512)
 
-  /* AVX512 requires arrays >= 512 bytes */
+  /* AVX512 requires arrays >= 1024 bytes */
   if ((cpuid & bit_AVX512) &&
-      size >= 512)
+      size >= 1024)
   {
     align_avx512(&ptr, &size, &cnt);
     cnt += popcnt_avx512((const __m512i*) ptr, size / 64);

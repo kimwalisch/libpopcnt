@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 #if defined(X86_OR_X64)
   #if defined(HAVE_CPUID)
     int cpuid = get_cpuid();
-    if ((cpuid & bit_AVX512) && bytes >= 512)
+    if ((cpuid & bit_AVX512) && bytes >= 1024)
       algo = "AVX512";
     else if ((cpuid & bit_AVX2) && bytes >= 512)
       algo = "AVX2";
