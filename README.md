@@ -119,7 +119,7 @@ Seconds: 1.59
 Speedup
 -------
 
-The benchmark below shows the speedup of the 3 algorithms
+The benchmark below shows the speedup of the 4 algorithms
 used in ```libpopcnt.h``` compared to a basic ```lookup-8```
 popcount algorithm. ```libpopcnt.h``` automatically **picks**
 the fastest algorithm for the given array size.
@@ -176,13 +176,24 @@ the fastest algorithm for the given array size.
     <td>3.22</td>
     <td>4.17</td>
     <td><b>8.46</b></td>
-    <td><b>10.74</b></td>
-    <td><b>12.52</b></td>
-    <td><b>13.66</b></td>
+    <td>10.74</td>
+    <td>12.52</td>
+    <td>13.66</td>
+  </tr>
+  <tr>
+    <td>avx512-harley-seal</td> 
+    <td>0.35</td>
+    <td>1.49</td>
+    <td>2.54</td>
+    <td>3.83</td>
+    <td>5.63</td>
+    <td><b>15.12</b></td>
+    <td><b>22.18</b></td>
+    <td><b>25.60</b></td>
   </tr>
 </table>
 
-This benchmark was run on an Intel Skylake i7-6700 CPU with GCC 5.3.
+This benchmark was run on an Intel Xeon Platinum 8168 CPU with GCC 5.4.
 
 More benchmarks are available at
 [WojciechMula/sse-popcount](https://github.com/WojciechMula/sse-popcount/tree/master/results).
