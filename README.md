@@ -1,5 +1,4 @@
-libpopcnt
-=========
+# libpopcnt
 
 [![Build Status](https://travis-ci.org/kimwalisch/libpopcnt.svg)](https://travis-ci.org/kimwalisch/libpopcnt)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/kimwalisch/libpopcnt?branch=master&svg=true)](https://ci.appveyor.com/project/kimwalisch/libpopcnt)
@@ -19,8 +18,7 @@ The algorithms used in ```libpopcnt.h``` are described in the paper
 [Faster Population Counts using AVX2 Instructions](https://arxiv.org/abs/1611.07612)
 by Daniel Lemire, Nathan Kurz and Wojciech Mula (23 Nov 2016).
 
-How it works
-------------
+## How it works
 
 On x86 CPUs ```libpopcnt.h``` uses a combination of 4 different bit
 population count algorithms:
@@ -36,8 +34,7 @@ Note that ```libpopcnt.h``` works on all CPUs, it checks at run-time
 whether your CPU supports POPCNT, AVX2, AVX512 before using it
 and it is also thread-safe.
 
-C/C++ API
----------
+## C/C++ API
 
 ```C
 #include "libpopcnt.h"
@@ -50,8 +47,7 @@ C/C++ API
 uint64_t popcnt(const void* data, uint64_t size);
 ```
 
-Speedup
--------
+## Speedup
 
 This benchmark shows the speedup of the 4 popcount algorithms
 used on x86 CPUs compared to a basic ```lookup-8```
@@ -130,8 +126,7 @@ popcount algorithm for different array sizes (in bytes).
 the given array size. This benchmark was run on an Intel Xeon
 Platinum 8168 CPU with GCC 5.4.
 
-CPU architectures
------------------
+## CPU architectures
 
 ```libpopcnt.h``` has hardware accelerated popcount algorithms for
 the following CPU architectures:
@@ -157,19 +152,32 @@ the following CPU architectures:
 
 For other CPU architectures a fast integer popcount algorithm is used.
 
-How to compile
---------------
+## How to compile
 
-Compilation does not require any special compiler flags (like
-```-mpopcnt```, ```-mavx2```)!
+For GCC and Clang compilation does not require any special compiler flags (like
+```-mavx2```)!
 
 ```bash
 cc  -O3 program.c
 c++ -O3 program.cpp
 ```
 
-Development
------------
+### Microsoft Visual C++
+
+Using the MSVC compiler ```libpopcnt.h``` will only use ```POPCNT```
+by default. You can enable AVX2 or AVX512 to get the best
+performance but then your program requires a CPU with
+AVX2 or AVX512 support.
+
+```bash
+# Enable AVX2
+cl /O2 /arch:AVX2 program.cpp
+
+# Enable AVX512
+cl /O2 /arch:AVX512 program.cpp
+```
+
+## Development
 
 ```bash
 cmake .
