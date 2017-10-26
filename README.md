@@ -7,9 +7,11 @@ libpopcnt
 
 ```libpopcnt.h``` is a header-only C/C++ library for counting the
 number of 1 bits (bit population count) in an array as quickly as
-possible using specialized CPU instructions e.g.
+possible using specialized CPU instructions i.e.
 [POPCNT](https://en.wikipedia.org/wiki/SSE4#POPCNT_and_LZCNT),
-[AVX2](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions).
+[AVX2](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions),
+[AVX512](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions),
+[NEON](https://en.wikipedia.org/wiki/ARM_architecture#Advanced_SIMD_.28NEON.29).
 ```libpopcnt.h``` has been tested successfully using the GCC,
 Clang and MSVC compilers.
 
@@ -20,20 +22,21 @@ by Daniel Lemire, Nathan Kurz and Wojciech Mula (23 Nov 2016).
 How it works
 ------------
 
-On x86 CPUs ```libpopcnt.h``` uses a combination of 3 different bit
+On x86 CPUs ```libpopcnt.h``` uses a combination of 4 different bit
 population count algorithms:
 
 * For array sizes < 512 bytes an unrolled ```POPCNT``` algorithm
 is used.
 * For array sizes ≥ 512 bytes an ```AVX2``` algorithm is used.
+* For array sizes ≥ 1024 bytes an ```AVX512``` algorithm is used.
 * For CPUs without ```POPCNT``` instruction a portable 
 integer algorithm is used.
 
 The GitHub repository
 [WojciechMula/sse-popcount](https://github.com/WojciechMula/sse-popcount/tree/master/results)
-contains extensive benchmarks for the 3 algorithms used in
+contains extensive benchmarks for the 4 algorithms used in
 ```libpopcnt.h```. The algorithms are named harley-seal,
-avx2-harley-seal, builtin-popcnt-unrolled.
+avx2-harley-seal, avx512-harley-seal, builtin-popcnt-unrolled.
 
 CPU architectures
 -----------------
@@ -44,11 +47,11 @@ the following CPU architectures:
 <table>
   <tr>
     <td><b>x86</b></td>
-    <td><code>POPCNT</code>, <code>AVX2</code></td> 
+    <td><code>POPCNT</code>, <code>AVX2</code>, <code>AVX512</code></td> 
   </tr>
   <tr>
     <td><b>x86-64</b></td>
-    <td><code>POPCNT</code>, <code>AVX2</code></td>
+    <td><code>POPCNT</code>, <code>AVX2</code>, <code>AVX512</code></td>
   </tr>
   <tr>
     <td><b>ARM</b></td>
@@ -81,7 +84,7 @@ How to compile
 
 Compilation does not require any special compiler flags (like
 ```-mpopcnt```, ```-mavx2```)! Also on x86 CPUs ```libpopcnt.h```
-checks using ```cpuid``` if the CPU supports POPCNT/AVX2
+checks using ```cpuid``` if the CPU supports POPCNT/AVX2/AVX512
 before using it.
 
 ```bash
@@ -99,18 +102,18 @@ make test
 ```
 
 The above commands also build the ```benchmark``` program which is
-useful for benchmarking ```libpopcnt.h``` code changes. Below is a
-usage example run on a 4th generation Intel Core i7 CPU:
+useful for benchmarking ```libpopcnt.h```. Below is a
+usage example run on an Intel Xeon Platinum 8168 CPU from 2017:
 
 ```bash
 # Usage: ./benchmark [array bytes] [iters]
 ./benchmark
 Iters: 10000000
 Array size: 16.00 KB
-Algorithm: AVX2
+Algorithm: AVX512
 Status: 100%
-Seconds: 3.42
-47.9 GB/s
+Seconds: 1.59
+103.4 GB/s
 ```
 
 Speedup
