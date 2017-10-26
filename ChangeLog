@@ -3,6 +3,7 @@
   Version 2.0 work in progress.
 
   * Add AVX512 support.
+  * Support AVX2 and AVX512 for the MSVC compiler.
   * Support CPUID for MSVC and the C programming language.
 
 2017-09-09 Kim Walisch  <kim.walisch@gmail.com>
