@@ -103,6 +103,18 @@
 #endif
 
 #if defined(HAVE_CPUID) && \
+    defined(_MSC_VER) && \
+    defined(__AVX2__)
+  #define HAVE_AVX2
+#endif
+
+#if defined(HAVE_CPUID) && \
+    defined(_MSC_VER) && \
+    defined(__AVX512__)
+  #define HAVE_AVX512
+#endif
+
+#if defined(HAVE_CPUID) && \
     CLANG_PREREQ(3, 8) && \
     __has_attribute(target) && \
    (!defined(_MSC_VER) || defined(__AVX2__)) && \
@@ -373,7 +385,9 @@ static inline int get_cpuid()
 
 #include <immintrin.h>
 
-__attribute__ ((target ("avx2")))
+#if !defined(_MSC_VER)
+  __attribute__ ((target ("avx2")))
+#endif
 static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i c)
 {
   __m256i u = _mm256_xor_si256(a, b);
@@ -381,7 +395,9 @@ static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i 
   *l = _mm256_xor_si256(u, c);
 }
 
-__attribute__ ((target ("avx2")))
+#if !defined(_MSC_VER)
+  __attribute__ ((target ("avx2")))
+#endif
 static inline __m256i popcnt256(__m256i v)
 {
   __m256i lookup1 = _mm256_setr_epi8(
@@ -414,7 +430,9 @@ static inline __m256i popcnt256(__m256i v)
  * Wojciech Mula (23 Nov 2016).
  * @see https://arxiv.org/abs/1611.07612
  */
-__attribute__ ((target ("avx2")))
+#if !defined(_MSC_VER)
+  __attribute__ ((target ("avx2")))
+#endif
 static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
 {
   __m256i cnt = _mm256_setzero_si256();
@@ -489,7 +507,9 @@ static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 
 #include <immintrin.h>
 
-__attribute__ ((target ("avx512bw")))
+#if !defined(_MSC_VER)
+  __attribute__ ((target ("avx512bw")))
+#endif
 static inline __m512i popcnt512(__m512i v)
 {
   __m512i m1 = _mm512_set1_epi8(0x55);
@@ -502,7 +522,9 @@ static inline __m512i popcnt512(__m512i v)
   return _mm512_sad_epu8(t3, _mm512_setzero_si512());
 }
 
-__attribute__ ((target ("avx512bw")))
+#if !defined(_MSC_VER)
+  __attribute__ ((target ("avx512bw")))
+#endif
 static inline void CSA512(__m512i* h, __m512i* l, __m512i a, __m512i b, __m512i c)
 {
   *l = _mm512_ternarylogic_epi32(c, b, a, 0x96);
@@ -516,7 +538,9 @@ static inline void CSA512(__m512i* h, __m512i* l, __m512i a, __m512i b, __m512i 
  * Wojciech Mula (23 Nov 2016).
  * @see https://arxiv.org/abs/1611.07612
  */
-__attribute__ ((target ("avx512bw")))
+#if !defined(_MSC_VER)
+  __attribute__ ((target ("avx512bw")))
+#endif
 static inline uint64_t popcnt_avx512(const __m512i* data, const uint64_t size)
 {
   __m512i cnt = _mm512_setzero_si512();
