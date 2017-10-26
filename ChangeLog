@@ -1,10 +1,9 @@
-2017-09-12 Kim Walisch  <kim.walisch@gmail.com>
+2017-10-26 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 2.0 work in progress.
 
-  * libpopcnt.h: Support CPUID for MSVC and the C programming
-                 language on x86 and x64 CPUs.
-                 Now POPCNT is used if the CPU supports it.
+  * Add AVX512 support.
+  * Support CPUID for MSVC and the C programming language.
 
 2017-09-09 Kim Walisch  <kim.walisch@gmail.com>
 
