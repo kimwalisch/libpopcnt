@@ -199,3 +199,9 @@ Status: 100%
 Seconds: 1.59
 103.4 GB/s
 ```
+
+## Acknowledgments
+
+The vectorized popcount algorithms used in ```libpopcnt.h``` have
+originally been written by [Wojciech Muła](https://github.com/WojciechMula/sse-popcount),
+I just made a convenient and portable C/C++ library using these algorithms.
