@@ -50,7 +50,7 @@ uint64_t popcnt(const void* data, uint64_t size);
 ## Speedup
 
 This benchmark shows the speedup of the 4 popcount algorithms
-used on x86 CPUs compared to a basic ```lookup-8```
+used on x86 CPUs compared to the basic [lookup-8](https://github.com/WojciechMula/sse-popcount/blob/master/popcnt-lookup.cpp#L139)
 popcount algorithm for different array sizes (in bytes).
 
 <table>
