@@ -77,15 +77,15 @@ popcount algorithm for different array sizes (in bytes).
     <td>1.00</td>
   </tr>
   <tr>
-    <td>harley-seal</td> 
-    <td>1.27</td>
-    <td>1.43</td>
-    <td>2.41</td>
-    <td>2.82</td>
-    <td>3.12</td>
-    <td>3.31</td>
-    <td>3.41</td>
-    <td>3.47</td>
+    <td>bit-parallel-mul</td>
+    <td>1.41</td>
+    <td>1.54</td>
+    <td>1.63</td>
+    <td>1.78</td>
+    <td>1.60</td>
+    <td>1.62</td>
+    <td>1.63</td>
+    <td>1.64</td>
   </tr>
   <tr>
     <td>builtin-popcnt-unrolled</td> 
