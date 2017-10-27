@@ -1,6 +1,6 @@
-2017-10-26 Kim Walisch  <kim.walisch@gmail.com>
+2017-10-27 Kim Walisch  <kim.walisch@gmail.com>
 
-  Version 2.0 work in progress.
+  Version 2.0 released.
 
   * Add AVX512 support.
   * Support AVX2 and AVX512 for the MSVC compiler.
