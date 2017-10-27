@@ -279,107 +279,68 @@ static inline void run_cpuid(int eax, int ecx, int* abcd)
 #endif
 }
 
-static inline int has_POPCNT()
-{
-  int abcd[4];
+#if defined(HAVE_AVX2) || \
+    defined(HAVE_AVX512)
 
-  run_cpuid(1, 0, abcd);
-  if ((abcd[2] & bit_POPCNT) != bit_POPCNT)
-    return 0;
-
-  return bit_POPCNT;
-}
-
-#if defined(HAVE_AVX2)
-
-static inline int check_xcr0_ymm()
+static inline int get_xcr0()
 {
   int xcr0;
-  int mask = XSTATE_SSE | XSTATE_YMM;
+
 #if defined(_MSC_VER)
   xcr0 = (int) _xgetbv(0);
 #else
   __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
 #endif
-  return (xcr0 & mask) == mask;
+
+  return xcr0;
 }
 
-static inline int has_AVX2()
-{
-  int abcd[4];
-  int osxsave_mask = (1 << 27);
-
-  /* ensure OS supports extended processor state management */
-  run_cpuid(1, 0, abcd);
-  if ((abcd[2] & osxsave_mask) != osxsave_mask)
-    return 0;
-
-  /* ensure OS supports YMM registers */
-  if (!check_xcr0_ymm())
-    return 0;
-
-  run_cpuid(7, 0, abcd);
-  if ((abcd[1] & bit_AVX2) != bit_AVX2)
-    return 0;
-
-  return bit_AVX2;
-}
-
-#endif /* has_AVX2 */
-
-#if defined(HAVE_AVX512)
-
-static inline int check_xcr0_zmm()
-{
-  int xcr0;
-  int mask = XSTATE_SSE | XSTATE_YMM | XSTATE_ZMM;
-#if defined(_MSC_VER)
-  xcr0 = (int) _xgetbv(0);
-#else
-  __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
 #endif
-  return (xcr0 & mask) == mask;
-}
-
-static inline int has_AVX512()
-{
-  int abcd[4];
-  int osxsave_mask = (1 << 27);
-
-  /* ensure OS supports extended processor state management */
-  run_cpuid(1, 0, abcd);
-  if ((abcd[2] & osxsave_mask) != osxsave_mask)
-    return 0;
-
-  /* ensure OS supports ZMM registers */
-  if (!check_xcr0_zmm())
-    return 0;
-
-  run_cpuid(7, 0, abcd);
-  if ((abcd[1] & bit_AVX512) != bit_AVX512)
-    return 0;
-
-  return bit_AVX512;
-}
-
-#endif /* has_AVX512 */
 
 static inline int get_cpuid()
 {
-  int cpuid = has_POPCNT();
+  int flags = 0;
+  int abcd[4];
 
-#if defined(HAVE_AVX2)
-  cpuid |= has_AVX2();
+  run_cpuid(1, 0, abcd);
+
+  if ((abcd[2] & bit_POPCNT) == bit_POPCNT)
+    flags |= bit_POPCNT;
+
+#if defined(HAVE_AVX2) || \
+    defined(HAVE_AVX512)
+
+  int osxsave_mask = (1 << 27);
+
+  /* ensure OS supports extended processor state management */
+  if ((abcd[2] & osxsave_mask) != osxsave_mask)
+    return 0;
+
+  int ymm_mask = XSTATE_SSE | XSTATE_YMM;
+  int zmm_mask = XSTATE_SSE | XSTATE_YMM | XSTATE_ZMM;
+
+  int xcr0 = get_xcr0();
+
+  if ((xcr0 & ymm_mask) == ymm_mask)
+  {
+    run_cpuid(7, 0, abcd);
+
+    if ((abcd[1] & bit_AVX2) == bit_AVX2)
+      flags |= bit_AVX2;
+
+    if ((xcr0 & zmm_mask) == zmm_mask)
+    {
+      if ((abcd[1] & bit_AVX512) == bit_AVX512)
+        flags |= bit_AVX512;
+    }
+  }
+
 #endif
 
-#if defined(HAVE_AVX512)
-  cpuid |= has_AVX512();
-#endif
-
-  return cpuid;
+  return flags;
 }
 
-#endif
+#endif /* cpuid */
 
 #if defined(HAVE_AVX2)
 
