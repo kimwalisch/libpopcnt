@@ -21,49 +21,58 @@
 #include <cstdlib>
 #include <stdint.h>
 
-void test(std::vector<uint8_t>& data, int i)
+using namespace std;
+
+/// Count 1 bits from &data[i] till &data[size].
+/// @data: An array for testing
+/// @i: Array start index
+///
+void test(vector<uint8_t>& data, size_t i)
 {
-  int size = data.size();
-  double percent = (100.0 * i) / size;
-  std::cout << "\rStatus: " << (int) percent << "%" << std::flush;
+  size_t size = data.size();
 
   uint64_t bits = popcnt(&data[i], size - i);
   uint64_t bits_verify = 0;
 
-  for (int j = i; j < size; j++)
-    bits_verify += popcount64(data[j]);
+  for (; i < size; i++)
+    bits_verify += popcount64(data[i]);
 
   if (bits != bits_verify)
   {
-    std::cerr << std::endl;
-    std::cerr << "libpopcnt test failed!" << std::endl;
-    std::exit(1);
+    cerr << endl;
+    cerr << "libpopcnt test failed!" << endl;
+    exit(1);
   }
 }
 
 int main(int argc, char* argv[])
 {
-  int size = 100000;
+  size_t size = 100000;
 
   if (argc > 1)
-    size = std::atoi(argv[1]);
+    size = atoi(argv[1]);
 
   // init array with only 1 bits
-  std::vector<uint8_t> data(size, 0xff);
-  srand((unsigned) time(0));
+  vector<uint8_t> data(size, 0xff);
 
-  if (size > 0)
+  if (!data.empty())
     test(data, 0);
 
+  srand((unsigned) time(0));
+
   // generate array with random data
-  for (int i = 0; i < size; i++)
+  for (size_t i = 0; i < size; i++)
     data[i] = (uint8_t) rand();
 
-  for (int i = 1; i < size; i++)
+  for (size_t i = 0; i < size; i++)
+  {
     test(data, i);
+    double percent = (100.0 * i) / size;
+    cout << "\rStatus: " << (int) percent << "%" << flush;
+  }
 
-  std::cout << "\rStatus: 100%" << std::endl;
-  std::cout << "libpopcnt tested successfully!" << std::endl;
+  cout << "\rStatus: 100%" << endl;
+  cout << "libpopcnt tested successfully!" << endl;
 
   return 0;
 }
