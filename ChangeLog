@@ -1,3 +1,11 @@
+2017-11-09 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 2.1 work in progress.
+
+  * Up to 20% ARM NEON speedup.
+  * test/test1.cpp: Add only 1 bits test case.
+  * test/test2.c: Add only 1 bits test case.
+
 2017-10-27 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 2.0 released.
