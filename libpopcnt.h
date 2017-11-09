@@ -665,6 +665,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #include <arm_neon.h>
 
+static inline uint64x2_t vpadalq(uint64x2_t sum, uint8x16_t t)
+{
+  return vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t)));
+}
+
 /*
  * Count the number of 1 bits in the data array
  * @data: An array
@@ -681,28 +686,43 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   uint8x16x4_t input0;
   uint8x16x4_t input1;
-  uint8x16_t t0;
-  uint32x4_t t1;
 
   uint64x2_t sum = vcombine_u64(vcreate_u64(0), vcreate_u64(0));
+  uint8x16_t zero = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
+
+  uint8x16_t t0 = zero;
+  uint8x16_t t1 = zero;
+  uint8x16_t t2 = zero;
+  uint8x16_t t3 = zero;
 
   for (i = 0; i < n; i++, ptr += chunk_size)
   {
     input0 = vld4q_u8(ptr);
     input1 = vld4q_u8(ptr + 64);
 
-    t0 = vcntq_u8(input0.val[0]);
-    t0 = vaddq_u8(t0, vcntq_u8(input0.val[1]));
-    t0 = vaddq_u8(t0, vcntq_u8(input0.val[2]));
-    t0 = vaddq_u8(t0, vcntq_u8(input0.val[3]));
+    t0 = vaddq_u8(t0, vcntq_u8(input0.val[0]));
+    t1 = vaddq_u8(t1, vcntq_u8(input0.val[1]));
+    t2 = vaddq_u8(t2, vcntq_u8(input0.val[2]));
+    t3 = vaddq_u8(t3, vcntq_u8(input0.val[3]));
     t0 = vaddq_u8(t0, vcntq_u8(input1.val[0]));
-    t0 = vaddq_u8(t0, vcntq_u8(input1.val[1]));
-    t0 = vaddq_u8(t0, vcntq_u8(input1.val[2]));
-    t0 = vaddq_u8(t0, vcntq_u8(input1.val[3]));
-    t1 = vpaddlq_u16(vpaddlq_u8(t0));
+    t1 = vaddq_u8(t1, vcntq_u8(input1.val[1]));
+    t2 = vaddq_u8(t2, vcntq_u8(input1.val[2]));
+    t3 = vaddq_u8(t3, vcntq_u8(input1.val[3]));
 
-    sum = vpadalq_u32(sum, t1);
+    if ((i & 7) == 7)
+    {
+      sum = vpadalq(sum, t0);
+      sum = vpadalq(sum, t1);
+      sum = vpadalq(sum, t2);
+      sum = vpadalq(sum, t3);
+      t0 = t1 = t2 = t3 = zero;
+    }
   }
+
+  sum = vpadalq(sum, t0);
+  sum = vpadalq(sum, t1);
+  sum = vpadalq(sum, t2);
+  sum = vpadalq(sum, t3);
 
   vst1q_u64(tmp, sum);
   for (i = 0; i < 2; i++)
