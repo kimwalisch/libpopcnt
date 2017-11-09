@@ -682,6 +682,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t tmp[2];
   uint64_t chunk_size = 128;
   uint64_t n = size / chunk_size;
+  uint64_t is_sum = 14;
   uint64_t i;
 
   uint8x16x4_t input0;
@@ -709,8 +710,9 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     t2 = vaddq_u8(t2, vcntq_u8(input1.val[2]));
     t3 = vaddq_u8(t3, vcntq_u8(input1.val[3]));
 
-    if ((i & 7) == 7)
+    if (i == is_sum)
     {
+      is_sum += 14;
       sum = vpadalq(sum, t0);
       sum = vpadalq(sum, t1);
       sum = vpadalq(sum, t2);
