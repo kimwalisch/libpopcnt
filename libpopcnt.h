@@ -680,13 +680,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   const uint8_t* ptr = (const uint8_t*) data;
   uint64_t cnt = 0;
   uint64_t tmp[2];
-  uint64_t chunk_size = 128;
+  uint64_t chunk_size = 64;
   uint64_t n = size / chunk_size;
-  uint64_t is_sum = 14;
+  uint64_t is_sum = 30;
   uint64_t i;
-
-  uint8x16x4_t input0;
-  uint8x16x4_t input1;
 
   uint64x2_t sum = vcombine_u64(vcreate_u64(0), vcreate_u64(0));
   uint8x16_t zero = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
@@ -695,24 +692,20 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint8x16_t t1 = zero;
   uint8x16_t t2 = zero;
   uint8x16_t t3 = zero;
+  uint8x16x4_t input;
 
   for (i = 0; i < n; i++, ptr += chunk_size)
   {
-    input0 = vld4q_u8(ptr);
-    input1 = vld4q_u8(ptr + 64);
+    input = vld4q_u8(ptr);
 
-    t0 = vaddq_u8(t0, vcntq_u8(input0.val[0]));
-    t1 = vaddq_u8(t1, vcntq_u8(input0.val[1]));
-    t2 = vaddq_u8(t2, vcntq_u8(input0.val[2]));
-    t3 = vaddq_u8(t3, vcntq_u8(input0.val[3]));
-    t0 = vaddq_u8(t0, vcntq_u8(input1.val[0]));
-    t1 = vaddq_u8(t1, vcntq_u8(input1.val[1]));
-    t2 = vaddq_u8(t2, vcntq_u8(input1.val[2]));
-    t3 = vaddq_u8(t3, vcntq_u8(input1.val[3]));
+    t0 = vaddq_u8(t0, vcntq_u8(input.val[0]));
+    t1 = vaddq_u8(t1, vcntq_u8(input.val[1]));
+    t2 = vaddq_u8(t2, vcntq_u8(input.val[2]));
+    t3 = vaddq_u8(t3, vcntq_u8(input.val[3]));
 
     if (i == is_sum)
     {
-      is_sum += 14;
+      is_sum += 30;
       sum = vpadalq(sum, t0);
       sum = vpadalq(sum, t1);
       sum = vpadalq(sum, t2);
