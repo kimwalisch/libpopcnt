@@ -579,6 +579,36 @@ static inline void align_avx512(const uint8_t** p, uint64_t* size, uint64_t* cnt
 /* x86 CPUs */
 #if defined(X86_OR_X64)
 
+/* Align memory to 8 bytes boundary */
+static inline void align_8(const uint8_t** p, uint64_t* size, uint64_t* cnt)
+{
+  for (; *size > 0 && (uintptr_t) *p % 8; (*p)++)
+  {
+    *cnt += popcount64(**p);
+    *size -= 1;
+  }
+}
+
+static inline uint64_t popcount64_unrolled(const uint64_t* data, uint64_t size)
+{
+  uint64_t i = 0;
+  uint64_t limit = size - size % 4;
+  uint64_t cnt = 0;
+
+  for (; i < limit; i += 4)
+  {
+    cnt += popcount64(data[i+0]);
+    cnt += popcount64(data[i+1]);
+    cnt += popcount64(data[i+2]);
+    cnt += popcount64(data[i+3]);
+  }
+
+  for (; i < size; i++)
+    cnt += popcount64(data[i]);
+
+  return cnt;
+}
+
 /*
  * Count the number of 1 bits in the data array
  * @data: An array
@@ -652,6 +682,15 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   }
 
 #endif
+
+  /* pure integer popcount algorithm */
+  if (size >= 8)
+  {
+    align_8(&ptr, &size, &cnt);
+    cnt += popcount64_unrolled((const uint64_t*) ptr, size / 8);
+    ptr += size - size % 8;
+    size = size % 8;
+  }
 
   /* pure integer popcount algorithm */
   for (i = 0; i < size; i++)
@@ -737,7 +776,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #else
 
 /* Align memory to 8 bytes boundary */
-static inline void align(const uint8_t** p, uint64_t* size, uint64_t* cnt)
+static inline void align_8(const uint8_t** p, uint64_t* size, uint64_t* cnt)
 {
   for (; *size > 0 && (uintptr_t) *p % 8; (*p)++)
   {
@@ -757,7 +796,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t cnt = 0;
   uint64_t i;
 
-  align(&ptr, &size, &cnt);
+  align_8(&ptr, &size, &cnt);
   cnt += popcnt64_unrolled((const uint64_t*) ptr, size / 8);
   ptr += size - size % 8;
   size = size % 8;
