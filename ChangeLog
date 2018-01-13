@@ -1,3 +1,9 @@
+2018-01-13 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 2.2 released.
+
+  * Up to 6x faster on old x86 CPUs without POPCNT.
+
 2017-11-10 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 2.1 released.
