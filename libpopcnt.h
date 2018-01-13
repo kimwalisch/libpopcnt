@@ -3,8 +3,8 @@
  * population count) in an array as quickly as possible using
  * specialized CPU instructions i.e. POPCNT, AVX2, AVX512, NEON.
  *
- * Copyright (c) 2016 - 2017, Kim Walisch
- * Copyright (c) 2016 - 2017, Wojciech Muła
+ * Copyright (c) 2016 - 2018, Kim Walisch
+ * Copyright (c) 2016 - 2018, Wojciech Muła
  *
  * All rights reserved.
  *
