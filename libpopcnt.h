@@ -123,6 +123,10 @@
   #define HAVE_AVX512
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * This uses fewer arithmetic operations than any other known
  * implementation on machines with fast multiplication.
@@ -806,6 +810,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   return cnt;
 }
 
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* LIBPOPCNT_H */
