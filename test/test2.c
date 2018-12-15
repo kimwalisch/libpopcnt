@@ -51,6 +51,12 @@ int main()
 
   uint8_t* data = (uint8_t*) malloc(size);
 
+  if (!data)
+  {
+    printf("Failed to allocate memory!\n");
+    exit(1);
+  }
+
   /* init array with only 1 bits */
   memset(data, 0xff, size);
   test(data, size, 0);
