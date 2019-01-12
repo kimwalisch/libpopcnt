@@ -6,6 +6,11 @@ compiler:
   - gcc
   - clang
 
+env:
+  global:
+    - CFLAGS="-O3 -g -Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-missing-braces"
+    - CXXFLAGS="-O3 -g -Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-missing-braces"
+
 install:
   - sudo apt-get install -y make cmake cppcheck valgrind g++-multilib mingw-w64
 
@@ -16,8 +21,7 @@ script:
   - mkdir build
   - cd build
   - |
-    cmake .. -DCMAKE_C_FLAGS="-Wall -Wextra -Werror -Wno-long-long -pedantic -O2" \
-             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror -Wno-long-long -pedantic -O2"
+    cmake ..
   - make -j4 VERBOSE=1
   - ctest
   # 3) Runtime memory analysis
@@ -29,8 +33,8 @@ script:
   - mkdir build
   - cd build
   - |
-    cmake .. -DCMAKE_C_FLAGS="-m32 -g -O3 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long" \
-             -DCMAKE_CXX_FLAGS="-m32 -g -O3 -Wall -pedantic -Wextra -Werror -Wno-unused-parameter -Wno-long-long"
+    cmake .. -DCMAKE_C_FLAGS="$CFLAGS -m32" \
+             -DCMAKE_CXX_FLAGS="$CXXFLAGS -m32"
   - make -j4 VERBOSE=1
   - ctest
   # 5) Compile using MinGW
@@ -42,8 +46,6 @@ script:
     cmake .. -DCMAKE_SYSTEM_NAME=Windows \
              -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc-posix \
              -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix \
-             -DCMAKE_C_FLAGS="-Wall -Wextra -Werror -Wno-long-long -pedantic -O2" \
-             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror -Wno-long-long -pedantic -O2" \
              -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
              -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
   - make -j4 VERBOSE=1
