@@ -11,7 +11,7 @@ install:
 
 script:
   # 1) Static code analysis
-  - cppcheck . --error-exitcode=1 --quiet --force
+  - cppcheck . --error-exitcode=1 --quiet
   # 2) Run test suite (64-bit)
   - mkdir build
   - cd build
