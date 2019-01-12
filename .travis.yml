@@ -15,8 +15,8 @@ matrix:
       addons:
         apt:
           packages:
-            - gcc-5
             - g++-5
+            - g++-5-multilib
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
@@ -27,8 +27,8 @@ matrix:
       addons:
         apt:
           packages:
-            - gcc-6
             - g++-6
+            - g++-6-multilib
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
@@ -39,8 +39,8 @@ matrix:
       addons:
         apt:
           packages:
-            - gcc-7
             - g++-7
+            - g++-7-multilib
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
@@ -51,8 +51,8 @@ matrix:
       addons:
         apt:
           packages:
-            - gcc-8
             - g++-8
+            - g++-8-multilib
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
@@ -78,14 +78,14 @@ before_install:
 
 install:
   - |
-    if [ "${TRAVIS_OS_NAME}" == "linux" ]
+    if [ "${TRAVIS_OS_NAME}" = "linux" ]
     then
         sudo apt-get install -y make cmake cppcheck valgrind g++-multilib
     fi
 
 script:
   - |
-    if [ "$CXX" == "x86_64-w64-mingw32-g++-posix" ]
+    if [ "$CXX" = "x86_64-w64-mingw32-g++-posix" ]
     then
         # 1) Test MinGW/GCC compilation
         mkdir build
@@ -95,10 +95,13 @@ script:
                  -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
         make -j4 VERBOSE=1
 
-    elif [ "${TRAVIS_OS_NAME}" == "linux" ]
+    elif [ "${TRAVIS_OS_NAME}" = "linux" ]
     then
         # 1) Static code analysis
-        cppcheck . --error-exitcode=1 --quiet --force -itest/test2.c
+        cppcheck . --error-exitcode=1 \
+                   --quiet \
+                   --force \
+                   -itest/test2.c
 
         # 2) Run test suite
         mkdir build
@@ -121,7 +124,7 @@ script:
         make -j4 VERBOSE=1
         ctest
 
-    elif [ "${TRAVIS_OS_NAME}" == "osx" ]
+    elif [ "${TRAVIS_OS_NAME}" = "osx" ]
     then
         # 1) Run test suite
         mkdir build
