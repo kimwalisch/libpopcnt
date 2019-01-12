@@ -33,40 +33,35 @@ script:
     then
         # 1) Static code analysis
         cppcheck . --error-exitcode=1 --quiet --force -itest/test2.c
-
         # 2) Run test suite
         mkdir build
         cd build
         cmake ..
         make -j4 VERBOSE=1
         ctest
-
         # 3) Runtime memory analysis
         cd test
         valgrind --error-exitcode=1 ./test1 30000
-
         # 4) Run test suite (32-bit)
         cd ../..
         rm -rf build
         mkdir build
         cd build
         cmake .. -DCMAKE_C_FLAGS="$CFLAGS -m32" \
-                -DCMAKE_CXX_FLAGS="$CXXFLAGS -m32"
+                 -DCMAKE_CXX_FLAGS="$CXXFLAGS -m32"
         make -j4 VERBOSE=1
         ctest
-
         # 5) Compile using MinGW
         cd ..
         rm -rf build
         mkdir build
         cd build
         cmake .. -DCMAKE_SYSTEM_NAME=Windows \
-                -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc-posix \
-                -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix \
-                -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-                -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
+                 -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc-posix \
+                 -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix \
+                 -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+                 -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
         make -j4 VERBOSE=1
-
     elif [ "${TRAVIS_OS_NAME}" == "osx" ]
         # 1) Run test suite
         mkdir build
