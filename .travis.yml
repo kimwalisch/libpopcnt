@@ -3,16 +3,56 @@ language: cpp
 
 matrix:
   include:
+    - os: osx
+      compiler: clang
+
+    - os: linux
+      dist: xenial
+      compiler: clang
+
+    # GCC 5
     - os: linux
       dist: xenial
       compiler: gcc
 
     - os: linux
       dist: xenial
-      compiler: clang
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - gcc-6
+            - g++-6
+          sources: &sources
+            - ubuntu-toolchain-r-test
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 
-    - os: osx
-      compiler: clang
+    - os: linux
+      dist: xenial
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - gcc-7
+            - g++-7
+          sources: &sources
+            - ubuntu-toolchain-r-test
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+    - os: linux
+      dist: xenial
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - gcc-8
+            - g++-8
+          sources: &sources
+            - ubuntu-toolchain-r-test
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
 env:
   global:
