@@ -10,14 +10,21 @@ matrix:
       dist: xenial
       compiler: clang
 
-    # GCC 5
     - os: linux
       dist: xenial
-      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - gcc-5
+            - g++-5
+          sources: &sources
+            - ubuntu-toolchain-r-test
+      env:
+        - CC=gcc-5
+        - CXX=g++-5
 
     - os: linux
       dist: xenial
-      compiler: gcc
       addons:
         apt:
           packages:
@@ -26,11 +33,11 @@ matrix:
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
-        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+        - CC=gcc-6
+        - CXX=g++-6
 
     - os: linux
       dist: xenial
-      compiler: gcc
       addons:
         apt:
           packages:
@@ -39,11 +46,11 @@ matrix:
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - CC=gcc-7
+        - CXX=g++-7
 
     - os: linux
       dist: xenial
-      compiler: gcc
       addons:
         apt:
           packages:
@@ -52,7 +59,8 @@ matrix:
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
-        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+        - CC=gcc-8
+        - CXX=g++-8
 
 env:
   global:
