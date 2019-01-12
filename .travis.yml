@@ -58,6 +58,15 @@ matrix:
       env:
         - COMPILERS="CC=gcc-8 && CXX=g++-8"
 
+    - os: linux
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - mingw-w64
+      env:
+        - COMPILERS="CC=x86_64-w64-mingw32-gcc-posix && CXX=x86_64-w64-mingw32-g++-posix"
+
 env:
   global:
     - CFLAGS="-O3 -g -Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-missing-braces"
@@ -72,12 +81,22 @@ install:
     if [ "${TRAVIS_OS_NAME}" == "linux" ]
     then
         sudo apt-get update -qq
-        sudo apt-get install -y make cmake cppcheck valgrind g++-multilib mingw-w64
+        sudo apt-get install -y make cmake cppcheck valgrind g++-multilib
     fi
 
 script:
   - |
-    if [ "${TRAVIS_OS_NAME}" == "linux" ]
+    if [ "$CXX" == "x86_64-w64-mingw32-g++-posix" ]
+    then
+        # 1) Test MinGW/GCC compilation
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_SYSTEM_NAME=Windows \
+                 -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+                 -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
+        make -j4 VERBOSE=1
+
+    elif [ "${TRAVIS_OS_NAME}" == "linux" ]
     then
         # 1) Static code analysis
         cppcheck . --error-exitcode=1 --quiet --force -itest/test2.c
@@ -102,18 +121,6 @@ script:
                  -DCMAKE_CXX_FLAGS="$CXXFLAGS -m32"
         make -j4 VERBOSE=1
         ctest
-
-        # 5) Compile using MinGW
-        cd ..
-        rm -rf build
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_SYSTEM_NAME=Windows \
-                 -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc-posix \
-                 -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix \
-                 -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-                 -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
-        make -j4 VERBOSE=1
 
     elif [ "${TRAVIS_OS_NAME}" == "osx" ]
     then
