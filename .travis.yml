@@ -20,8 +20,7 @@ matrix:
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
-        - CC=gcc-5
-        - CXX=g++-5
+        - COMPILERS="CC=gcc-5 && CXX=g++-5"
 
     - os: linux
       dist: xenial
@@ -33,8 +32,7 @@ matrix:
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
-        - CC=gcc-6
-        - CXX=g++-6
+        - COMPILERS="CC=gcc-6 && CXX=g++-6"
 
     - os: linux
       dist: xenial
@@ -46,8 +44,7 @@ matrix:
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
-        - CC=gcc-7
-        - CXX=g++-7
+        - COMPILERS="CC=gcc-7 && CXX=g++-7"
 
     - os: linux
       dist: xenial
@@ -59,13 +56,16 @@ matrix:
           sources: &sources
             - ubuntu-toolchain-r-test
       env:
-        - CC=gcc-8
-        - CXX=g++-8
+        - COMPILERS="CC=gcc-8 && CXX=g++-8"
 
 env:
   global:
     - CFLAGS="-O3 -g -Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-missing-braces"
     - CXXFLAGS="-O3 -g -Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-missing-braces"
+
+before_install:
+  # Overwrite default CC and CXX
+  - eval "${COMPILERS}"
 
 install:
   - |
