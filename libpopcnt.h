@@ -355,9 +355,14 @@ static inline int get_cpuid()
 #endif
 static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i c)
 {
-  __m256i u = _mm256_xor_si256(a, b);
-  *h = _mm256_or_si256(_mm256_and_si256(a, b), _mm256_and_si256(u, c));
-  *l = _mm256_xor_si256(u, c);
+  b = _mm256_xor_si256(b, a);
+  a = _mm256_xor_si256(a, c);
+  c = _mm256_xor_si256(c, b);
+  b = _mm256_or_si256(b, a);
+  b = _mm256_xor_si256(b, c);
+
+  *l = c;
+  *h = b;
 }
 
 #if !defined(_MSC_VER)
