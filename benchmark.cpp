@@ -5,7 +5,7 @@
 ///
 /// Usage: ./benchmark [array bytes] [iters]
 ///
-/// Copyright (C) 2017 Kim Walisch, <kim.walisch@gmail.com>
+/// Copyright (C) 2019 Kim Walisch, <kim.walisch@gmail.com>
 ///
 /// This file is distributed under the BSD License. See the LICENSE
 /// file in the top level directory.
@@ -27,18 +27,16 @@ double get_seconds()
 }
 
 // init vector with random data
-template <typename T>
-void init(std::vector<T>& v)
+void init(std::vector<uint8_t>& vect)
 {
   std::srand((unsigned) std::time(0));
 
-  for (uint64_t i = 0; i < v.size(); i++)
-    v[i] = (uint8_t) std::rand();
+  for (size_t i = 0; i < vect.size(); i++)
+    vect[i] = (uint8_t) std::rand();
 }
 
 // count 1 bits inside vector
-template <typename T>
-uint64_t benchmark(std::vector<T> v, int iters)
+uint64_t benchmark(const std::vector<uint8_t>& vect, int iters)
 {
   uint64_t total = 0;
   int old = - 1;
@@ -51,7 +49,7 @@ uint64_t benchmark(std::vector<T> v, int iters)
       std::cout << "\rStatus: " << percent << "%" << std::flush;
       old = percent;
     }
-    total += popcnt(&v[0], v.size());
+    total += popcnt(&vect[0], vect.size());
   }
 
   return total;
@@ -77,9 +75,9 @@ int main(int argc, char* argv[])
     iters = std::atoi(argv[2]);
 
   uint64_t cnt = 0;
-  std::vector<uint8_t> v(bytes);
+  std::vector<uint8_t> vect(bytes);
   std::string algo;
-  init(v);
+  init(vect);
 
   std::cout << "Iters: " << iters << std::endl;
 
@@ -112,11 +110,11 @@ int main(int argc, char* argv[])
 
   std::cout << "Algorithm: " << algo << std::endl;
 
-  for (uint64_t i = 0; i < v.size(); i++)
-    cnt += popcount64(v[i]);
+  for (size_t i = 0; i < vect.size(); i++)
+    cnt += popcount64(vect[i]);
 
   double seconds = get_seconds();
-  uint64_t total = benchmark(v, iters);
+  uint64_t total = benchmark(vect, iters);
   seconds = get_seconds() - seconds;
 
   std::cout << "\rStatus: 100%" << std::endl;
