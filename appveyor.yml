@@ -11,9 +11,6 @@ branches:
   except:
     - gh-pages
 
-configuration:
-  - Debug
-
 platform:
   - x86
   - x64
