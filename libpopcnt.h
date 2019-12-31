@@ -708,6 +708,16 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #include <arm_neon.h>
 
+/* Align memory to 8 bytes boundary */
+static inline void align_8(const uint8_t** p, uint64_t* size, uint64_t* cnt)
+{
+  for (; *size > 0 && (uintptr_t) *p % 8; (*p)++)
+  {
+    *cnt += popcnt64(**p);
+    *size -= 1;
+  }
+}
+
 static inline uint64x2_t vpadalq(uint64x2_t sum, uint8x16_t t)
 {
   return vpadalq_u32(sum, vpaddlq_u16(vpaddlq_u8(t)));
@@ -772,9 +782,16 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   }
 
   size %= chunk_size;
-  cnt += popcnt64_unrolled((const uint64_t*) ptr, size / 8);
+  align_8(&ptr, &size, &cnt);
+  const uint64_t* ptr64 = (const uint64_t*) ptr;
+  uint64_t iters = size / 8;
+
+  for (uint64_t i = 0; i < iters; i++)
+    cnt += popcnt64(ptr64[i]);
+
   ptr += size - size % 8;
   size = size % 8;
+
   for (uint64_t i = 0; i < size; i++)
     cnt += popcnt64(ptr[i]);
 
