@@ -3,6 +3,7 @@
   Version 2.3 released.
 
   * Up to 10% speedup on ARM NEON.
+  * Fix unaligned memory access on ARM.
 
 2018-01-13 Kim Walisch  <kim.walisch@gmail.com>
 
