@@ -1,3 +1,9 @@
+2019-12-31 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 2.3 released.
+
+  * Up to 10% speedup on ARM NEON.
+
 2018-01-13 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 2.2 released.
