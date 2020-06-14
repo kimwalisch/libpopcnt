@@ -115,6 +115,16 @@
 #endif
 
 #if defined(HAVE_CPUID) && \
+    (_MSC_VER >= 1900)
+#define HAVE_AVX2
+#endif
+
+#if defined(HAVE_CPUID) && \
+    (_MSC_VER >= 1910)
+#define HAVE_AVX512
+#endif
+
+#if defined(HAVE_CPUID) && \
     CLANG_PREREQ(3, 8) && \
     __has_attribute(target) && \
    (!defined(_MSC_VER) || defined(__AVX2__)) && \
@@ -480,9 +490,13 @@ static inline __m512i popcnt512(__m512i v)
   __m512i m1 = _mm512_set1_epi8(0x55);
   __m512i m2 = _mm512_set1_epi8(0x33);
   __m512i m4 = _mm512_set1_epi8(0x0F);
-  __m512i t1 = _mm512_sub_epi8(v, (_mm512_srli_epi16(v, 1) & m1));
-  __m512i t2 = _mm512_add_epi8(t1 & m2, (_mm512_srli_epi16(t1, 2) & m2));
-  __m512i t3 = _mm512_add_epi8(t2, _mm512_srli_epi16(t2, 4)) & m4;
+  __m512i vm = _mm512_and_si512(_mm512_srli_epi16(v, 1), m1);
+  __m512i t1 = _mm512_sub_epi8(v, vm);
+  __m512i tm = _mm512_and_si512(t1, m2);
+  __m512i tm2 = _mm512_and_si512(_mm512_srli_epi16(t1, 2), m2);
+  __m512i t2 = _mm512_add_epi8(tm, tm2);
+  __m512i tt = _mm512_add_epi8(t2, _mm512_srli_epi16(t2, 4));
+  __m512i t3 = _mm512_and_si512(tt, m4);
 
   return _mm512_sad_epu8(t3, _mm512_setzero_si512());
 }
