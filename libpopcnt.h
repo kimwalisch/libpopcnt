@@ -3,7 +3,7 @@
  * population count) in an array as quickly as possible using
  * specialized CPU instructions i.e. POPCNT, AVX2, AVX512, NEON.
  *
- * Copyright (c) 2016 - 2019, Kim Walisch
+ * Copyright (c) 2016 - 2020, Kim Walisch
  * Copyright (c) 2016 - 2018, Wojciech Muła
  *
  * All rights reserved.
@@ -103,24 +103,8 @@
 #endif
 
 #if defined(HAVE_CPUID) && \
-    defined(_MSC_VER) && \
-    defined(__AVX2__)
-  #define HAVE_AVX2
-#endif
-
-#if defined(HAVE_CPUID) && \
-    defined(_MSC_VER) && \
-    defined(__AVX512__)
-  #define HAVE_AVX512
-#endif
-
-#if defined(HAVE_CPUID) && \
-    (_MSC_VER >= 1900)
-#define HAVE_AVX2
-#endif
-
-#if defined(HAVE_CPUID) && \
     (_MSC_VER >= 1910)
+#define HAVE_AVX2
 #define HAVE_AVX512
 #endif
 
