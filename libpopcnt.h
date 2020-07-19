@@ -102,19 +102,34 @@
   #define HAVE_AVX512
 #endif
 
-#if defined(HAVE_CPUID) && \
-    (_MSC_VER >= 1910)
-#define HAVE_AVX2
-#define HAVE_AVX512
-#endif
-
-#if defined(HAVE_CPUID) && \
-    CLANG_PREREQ(3, 8) && \
-    __has_attribute(target) && \
-   (!defined(_MSC_VER) || defined(__AVX2__)) && \
-   (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
-  #define HAVE_AVX2
-  #define HAVE_AVX512
+/* Windows: MSVC compatible compilers */
+#if defined(_MSC_VER) && \
+    defined(HAVE_CPUID)
+  /* clang-cl (LLVM 10 from 2020) requires /arch:AVX2 or
+   * /arch:AVX512 to enable vector instructions */
+  #if defined(__clang__)
+    #if defined(__AVX2__)
+      #define HAVE_AVX2
+    #endif
+    #if defined(__AVX512__)
+      #define HAVE_AVX2
+      #define HAVE_AVX512
+    #endif
+  /* MSVC 2017 or later does not require
+   * /arch:AVX2 or /arch:AVX512 */
+  #elif (_MSC_VER >= 1910)
+    #define HAVE_AVX2
+    #define HAVE_AVX512
+  #endif
+#else /* Unix-like OSes */
+  #if defined(HAVE_CPUID) && \
+      CLANG_PREREQ(3, 8) && \
+      __has_attribute(target) && \
+    (!defined(_MSC_VER) || defined(__AVX2__)) && \
+    (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
+    #define HAVE_AVX2
+    #define HAVE_AVX512
+  #endif
 #endif
 
 #ifdef __cplusplus
