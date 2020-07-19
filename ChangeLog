@@ -1,4 +1,4 @@
-2020-06-25 Kim Walisch  <kim.walisch@gmail.com>
+2020-07-19 Kim Walisch  <kim.walisch@gmail.com>
 
   * Enable AVX2, AVX512 by default for MSVC.
     Thanks to KOConchobhair for the pull request #15.
