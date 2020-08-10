@@ -633,7 +633,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if (i < size)
   {
     uint64_t val = 0;
-    memcpy(&val, ptr, size - i);
+    memcpy(&val, &ptr[i], size - i);
     cnt += popcount64(val);
   }
 
@@ -718,7 +718,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if (i < size)
   {
     uint64_t val = 0;
-    memcpy(&val, ptr, size - i);
+    memcpy(&val, &ptr[i], size - i);
     cnt += popcount64(val);
   }
 
