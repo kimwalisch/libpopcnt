@@ -1,3 +1,10 @@
+2020-08-10 Kim Walisch  <kim.walisch@gmail.com>
+
+  * Use unaligned memory accesses to improve performance.
+    Aligning memory causes branch mispredictions which
+    can significantly deteriorate performance especially
+    for small array sizes.
+
 2020-07-19 Kim Walisch  <kim.walisch@gmail.com>
 
   * Enable AVX2, AVX512 by default for MSVC.
