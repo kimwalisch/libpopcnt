@@ -23,8 +23,7 @@ by Daniel Lemire, Nathan Kurz and Wojciech Mula (23 Nov 2016).
 On x86 CPUs ```libpopcnt.h``` uses a combination of 4 different bit
 population count algorithms:
 
-* For array sizes < 512 bytes an unrolled ```POPCNT``` algorithm
-is used.
+* For array sizes < 512 bytes a ```POPCNT``` algorithm is used.
 * For array sizes ≥ 512 bytes an ```AVX2``` algorithm is used.
 * For array sizes ≥ 1024 bytes an ```AVX512``` algorithm is used.
 * For CPUs without ```POPCNT``` instruction a portable 
@@ -88,7 +87,7 @@ popcount algorithm for different array sizes (in bytes).
     <td>1.64</td>
   </tr>
   <tr>
-    <td>builtin-popcnt-unrolled</td> 
+    <td>builtin-popcnt</td> 
     <td><b>4.75</b></td>
     <td><b>6.36</b></td>
     <td><b>8.58</b></td>
