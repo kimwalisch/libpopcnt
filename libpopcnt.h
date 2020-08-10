@@ -219,26 +219,6 @@ static inline uint64_t popcnt64(uint64_t x)
 
 #endif
 
-static inline uint64_t popcnt64_unrolled(const uint64_t* data, uint64_t size)
-{
-  uint64_t i = 0;
-  uint64_t limit = size - size % 4;
-  uint64_t cnt = 0;
-
-  for (; i < limit; i += 4)
-  {
-    cnt += popcnt64(data[i+0]);
-    cnt += popcnt64(data[i+1]);
-    cnt += popcnt64(data[i+2]);
-    cnt += popcnt64(data[i+3]);
-  }
-
-  for (; i < size; i++)
-    cnt += popcnt64(data[i]);
-
-  return cnt;
-}
-
 #if defined(HAVE_CPUID)
 
 #if defined(_MSC_VER)
@@ -406,7 +386,7 @@ static inline __m256i popcnt256(__m256i v)
 #if !defined(_MSC_VER)
   __attribute__ ((target ("avx2")))
 #endif
-static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
+static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
 {
   __m256i cnt = _mm256_setzero_si256();
   __m256i ones = _mm256_setzero_si256();
@@ -422,18 +402,18 @@ static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
 
   for(; i < limit; i += 16)
   {
-    CSA256(&twosA, &ones, ones, data[i+0], data[i+1]);
-    CSA256(&twosB, &ones, ones, data[i+2], data[i+3]);
+    CSA256(&twosA, &ones, ones, _mm256_loadu_si256(ptr + i + 0), _mm256_loadu_si256(ptr + i + 1));
+    CSA256(&twosB, &ones, ones, _mm256_loadu_si256(ptr + i + 2), _mm256_loadu_si256(ptr + i + 3));
     CSA256(&foursA, &twos, twos, twosA, twosB);
-    CSA256(&twosA, &ones, ones, data[i+4], data[i+5]);
-    CSA256(&twosB, &ones, ones, data[i+6], data[i+7]);
+    CSA256(&twosA, &ones, ones, _mm256_loadu_si256(ptr + i + 4), _mm256_loadu_si256(ptr + i + 5));
+    CSA256(&twosB, &ones, ones, _mm256_loadu_si256(ptr + i + 6), _mm256_loadu_si256(ptr + i + 7));
     CSA256(&foursB, &twos, twos, twosA, twosB);
     CSA256(&eightsA, &fours, fours, foursA, foursB);
-    CSA256(&twosA, &ones, ones, data[i+8], data[i+9]);
-    CSA256(&twosB, &ones, ones, data[i+10], data[i+11]);
+    CSA256(&twosA, &ones, ones, _mm256_loadu_si256(ptr + i + 8), _mm256_loadu_si256(ptr + i + 9));
+    CSA256(&twosB, &ones, ones, _mm256_loadu_si256(ptr + i + 10), _mm256_loadu_si256(ptr + i + 11));
     CSA256(&foursA, &twos, twos, twosA, twosB);
-    CSA256(&twosA, &ones, ones, data[i+12], data[i+13]);
-    CSA256(&twosB, &ones, ones, data[i+14], data[i+15]);
+    CSA256(&twosA, &ones, ones, _mm256_loadu_si256(ptr + i + 12), _mm256_loadu_si256(ptr + i + 13));
+    CSA256(&twosB, &ones, ones, _mm256_loadu_si256(ptr + i + 14), _mm256_loadu_si256(ptr + i + 15));
     CSA256(&foursB, &twos, twos, twosA, twosB);
     CSA256(&eightsB, &fours, fours, foursA, foursB);
     CSA256(&sixteens, &eights, eights, eightsA, eightsB);
@@ -448,7 +428,7 @@ static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
   cnt = _mm256_add_epi64(cnt, popcnt256(ones));
 
   for(; i < size; i++)
-    cnt = _mm256_add_epi64(cnt, popcnt256(data[i]));
+    cnt = _mm256_add_epi64(cnt, popcnt256(_mm256_loadu_si256(ptr + i)));
 
   cnt64 = (uint64_t*) &cnt;
 
@@ -456,22 +436,6 @@ static inline uint64_t popcnt_avx2(const __m256i* data, uint64_t size)
          cnt64[1] +
          cnt64[2] +
          cnt64[3];
-}
-
-/* Align memory to 32 bytes boundary */
-static inline void align_avx2(const uint8_t** p, uint64_t* size, uint64_t* cnt)
-{
-  for (; (uintptr_t) *p % 8; (*p)++)
-  {
-    *cnt += popcnt64(**p);
-    *size -= 1;
-  }
-  for (; (uintptr_t) *p % 32; (*p) += 8)
-  {
-    *cnt += popcnt64(
-        *(const uint64_t*) *p);
-    *size -= 8;
-  }
 }
 
 #endif
@@ -518,7 +482,7 @@ static inline void CSA512(__m512i* h, __m512i* l, __m512i a, __m512i b, __m512i 
 #if !defined(_MSC_VER)
   __attribute__ ((target ("avx512bw")))
 #endif
-static inline uint64_t popcnt_avx512(const __m512i* data, const uint64_t size)
+static inline uint64_t popcnt_avx512(const __m512i* ptr, const uint64_t size)
 {
   __m512i cnt = _mm512_setzero_si512();
   __m512i ones = _mm512_setzero_si512();
@@ -534,18 +498,18 @@ static inline uint64_t popcnt_avx512(const __m512i* data, const uint64_t size)
 
   for(; i < limit; i += 16)
   {
-    CSA512(&twosA, &ones, ones, data[i+0], data[i+1]);
-    CSA512(&twosB, &ones, ones, data[i+2], data[i+3]);
+    CSA512(&twosA, &ones, ones, _mm512_loadu_si512(ptr + i + 0), _mm512_loadu_si512(ptr + i + 1));
+    CSA512(&twosB, &ones, ones, _mm512_loadu_si512(ptr + i + 2), _mm512_loadu_si512(ptr + i + 3));
     CSA512(&foursA, &twos, twos, twosA, twosB);
-    CSA512(&twosA, &ones, ones, data[i+4], data[i+5]);
-    CSA512(&twosB, &ones, ones, data[i+6], data[i+7]);
+    CSA512(&twosA, &ones, ones, _mm512_loadu_si512(ptr + i + 4), _mm512_loadu_si512(ptr + i + 5));
+    CSA512(&twosB, &ones, ones, _mm512_loadu_si512(ptr + i + 6), _mm512_loadu_si512(ptr + i + 7));
     CSA512(&foursB, &twos, twos, twosA, twosB);
     CSA512(&eightsA, &fours, fours, foursA, foursB);
-    CSA512(&twosA, &ones, ones, data[i+8], data[i+9]);
-    CSA512(&twosB, &ones, ones, data[i+10], data[i+11]);
+    CSA512(&twosA, &ones, ones, _mm512_loadu_si512(ptr + i + 8), _mm512_loadu_si512(ptr + i + 9));
+    CSA512(&twosB, &ones, ones, _mm512_loadu_si512(ptr + i + 10), _mm512_loadu_si512(ptr + i + 11));
     CSA512(&foursA, &twos, twos, twosA, twosB);
-    CSA512(&twosA, &ones, ones, data[i+12], data[i+13]);
-    CSA512(&twosB, &ones, ones, data[i+14], data[i+15]);
+    CSA512(&twosA, &ones, ones, _mm512_loadu_si512(ptr + i + 12), _mm512_loadu_si512(ptr + i + 13));
+    CSA512(&twosB, &ones, ones, _mm512_loadu_si512(ptr + i + 14), _mm512_loadu_si512(ptr + i + 15));
     CSA512(&foursB, &twos, twos, twosA, twosB);
     CSA512(&eightsB, &fours, fours, foursA, foursB);
     CSA512(&sixteens, &eights, eights, eightsA, eightsB);
@@ -560,7 +524,7 @@ static inline uint64_t popcnt_avx512(const __m512i* data, const uint64_t size)
   cnt = _mm512_add_epi64(cnt, popcnt512(ones));
 
   for(; i < size; i++)
-    cnt = _mm512_add_epi64(cnt, popcnt512(data[i]));
+    cnt = _mm512_add_epi64(cnt, popcnt512(_mm512_loadu_si512(ptr + i)));
 
   cnt64 = (uint64_t*) &cnt;
 
@@ -574,56 +538,10 @@ static inline uint64_t popcnt_avx512(const __m512i* data, const uint64_t size)
          cnt64[7];
 }
 
-/* Align memory to 64 bytes boundary */
-static inline void align_avx512(const uint8_t** p, uint64_t* size, uint64_t* cnt)
-{
-  for (; (uintptr_t) *p % 8; (*p)++)
-  {
-    *cnt += popcnt64(**p);
-    *size -= 1;
-  }
-  for (; (uintptr_t) *p % 64; (*p) += 8)
-  {
-    *cnt += popcnt64(
-        *(const uint64_t*) *p);
-    *size -= 8;
-  }
-}
-
 #endif
 
 /* x86 CPUs */
 #if defined(X86_OR_X64)
-
-/* Align memory to 8 bytes boundary */
-static inline void align_8(const uint8_t** p, uint64_t* size, uint64_t* cnt)
-{
-  for (; *size > 0 && (uintptr_t) *p % 8; (*p)++)
-  {
-    *cnt += popcount64(**p);
-    *size -= 1;
-  }
-}
-
-static inline uint64_t popcount64_unrolled(const uint64_t* data, uint64_t size)
-{
-  uint64_t i = 0;
-  uint64_t limit = size - size % 4;
-  uint64_t cnt = 0;
-
-  for (; i < limit; i += 4)
-  {
-    cnt += popcount64(data[i+0]);
-    cnt += popcount64(data[i+1]);
-    cnt += popcount64(data[i+2]);
-    cnt += popcount64(data[i+3]);
-  }
-
-  for (; i < size; i++)
-    cnt += popcount64(data[i]);
-
-  return cnt;
-}
 
 /*
  * Count the number of 1 bits in the data array
@@ -632,9 +550,9 @@ static inline uint64_t popcount64_unrolled(const uint64_t* data, uint64_t size)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
-  const uint8_t* ptr = (const uint8_t*) data;
+  uint64_t i = 0;
   uint64_t cnt = 0;
-  uint64_t i;
+  const uint8_t* ptr = (const uint8_t*) data;
 
 #if defined(HAVE_CPUID)
   #if defined(__cplusplus)
@@ -660,12 +578,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   /* AVX512 requires arrays >= 1024 bytes */
   if ((cpuid & bit_AVX512) &&
-      size >= 1024)
+      i + 1024 <= size)
   {
-    align_avx512(&ptr, &size, &cnt);
-    cnt += popcnt_avx512((const __m512i*) ptr, size / 64);
-    ptr += size - size % 64;
-    size = size % 64;
+    const __m512i* ptr512 = (const __m512i*)(ptr + i);
+    cnt += popcnt_avx512(ptr512, (size - i) / 64);
+    i = size - size % 64;
   }
 
 #endif
@@ -674,12 +591,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   /* AVX2 requires arrays >= 512 bytes */
   if ((cpuid & bit_AVX2) &&
-      size >= 512)
+      i + 512 <= size)
   {
-    align_avx2(&ptr, &size, &cnt);
-    cnt += popcnt_avx2((const __m256i*) ptr, size / 32);
-    ptr += size - size % 32;
-    size = size % 32;
+    const __m256i* ptr256 = (const __m256i*)(ptr + i);
+    cnt += popcnt_avx2(ptr256, (size - i) / 32);
+    i = size - size % 32;
   }
 
 #endif
@@ -688,10 +604,17 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (cpuid & bit_POPCNT)
   {
-    cnt += popcnt64_unrolled((const uint64_t*) ptr, size / 8);
-    ptr += size - size % 8;
-    size = size % 8;
-    for (i = 0; i < size; i++)
+    /* We use unaligned memory accesses here to improve performance */
+    for (; i < size - size % 32; i += 32)
+    {
+      cnt += popcnt64(*(const uint64_t*)(ptr + i + 0));
+      cnt += popcnt64(*(const uint64_t*)(ptr + i + 8));
+      cnt += popcnt64(*(const uint64_t*)(ptr + i + 16));
+      cnt += popcnt64(*(const uint64_t*)(ptr + i + 24));
+    }
+    for (; i < size - size % 8; i += 8)
+      cnt += popcnt64(*(const uint64_t*)(ptr + i));
+    for (; i < size; i++)
       cnt += popcnt64(ptr[i]);
 
     return cnt;
@@ -699,18 +622,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #endif
 
-  /* pure integer popcount algorithm */
-  if (size >= 8)
-  {
-    align_8(&ptr, &size, &cnt);
-    cnt += popcount64_unrolled((const uint64_t*) ptr, size / 8);
-    ptr += size - size % 8;
-    size = size % 8;
-  }
+  /*
+   * Pure integer popcount algorithm.
+   * We use unaligned memory accesses here to improve performance.
+   */
+  for (; i < size - size % 8; i += 8)
+    cnt += popcount64(*(const uint64_t*)(ptr + i));
 
-  /* pure integer popcount algorithm */
-  for (i = 0; i < size; i++)
-    cnt += popcount64(ptr[i]);
+  uint8_t tmp[8] = { 0 };
+  for (uint64_t j = 0; i < size; i++)
+    tmp[j++] = ptr[i];
+
+  cnt += popcount64(*(const uint64_t*) tmp);
 
   return cnt;
 }
@@ -719,16 +642,6 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       defined(__aarch64__)
 
 #include <arm_neon.h>
-
-/* Align memory to 8 bytes boundary */
-static inline void align_8(const uint8_t** p, uint64_t* size, uint64_t* cnt)
-{
-  for (; *size > 0 && (uintptr_t) *p % 8; (*p)++)
-  {
-    *cnt += popcnt64(**p);
-    *size -= 1;
-  }
-}
 
 static inline uint64x2_t vpadalq(uint64x2_t sum, uint8x16_t t)
 {
@@ -742,13 +655,13 @@ static inline uint64x2_t vpadalq(uint64x2_t sum, uint8x16_t t)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
+  uint64_t i = 0;
   uint64_t cnt = 0;
   uint64_t chunk_size = 64;
   const uint8_t* ptr = (const uint8_t*) data;
 
   if (size >= chunk_size)
   {
-    uint64_t i = 0;
     uint64_t iters = size / chunk_size;
     uint64x2_t sum = vcombine_u64(vcreate_u64(0), vcreate_u64(0));
     uint8x16_t zero = vcombine_u8(vcreate_u8(0), vcreate_u8(0));
@@ -787,41 +700,30 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     }
     while (i < iters);
 
+    i = 0;
+    size %= chunk_size;
+
     uint64_t tmp[2];
     vst1q_u64(tmp, sum);
     cnt += tmp[0];
     cnt += tmp[1];
   }
 
-  size %= chunk_size;
-  align_8(&ptr, &size, &cnt);
-  const uint64_t* ptr64 = (const uint64_t*) ptr;
-  uint64_t iters = size / 8;
+  /* We use unaligned memory accesses here to improve performance */
+  for (; i < size - size % 8; i += 8)
+    cnt += popcnt64(*(const uint64_t*)(ptr + i));
 
-  for (uint64_t i = 0; i < iters; i++)
-    cnt += popcnt64(ptr64[i]);
+  uint8_t tmp[8] = { 0 };
+  for (uint64_t j = 0; i < size; i++)
+    tmp[j++] = ptr[i];
 
-  ptr += size - size % 8;
-  size = size % 8;
-
-  for (uint64_t i = 0; i < size; i++)
-    cnt += popcnt64(ptr[i]);
+  cnt += popcnt64(*(const uint64_t*) tmp);
 
   return cnt;
 }
 
 /* all other CPUs */
 #else
-
-/* Align memory to 8 bytes boundary */
-static inline void align_8(const uint8_t** p, uint64_t* size, uint64_t* cnt)
-{
-  for (; *size > 0 && (uintptr_t) *p % 8; (*p)++)
-  {
-    *cnt += popcnt64(**p);
-    *size -= 1;
-  }
-}
 
 /*
  * Count the number of 1 bits in the data array
@@ -830,15 +732,31 @@ static inline void align_8(const uint8_t** p, uint64_t* size, uint64_t* cnt)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
-  const uint8_t* ptr = (const uint8_t*) data;
+  uint64_t i = 0;
   uint64_t cnt = 0;
-  uint64_t i;
+  const uint8_t* ptr = (const uint8_t*) data;
 
-  align_8(&ptr, &size, &cnt);
-  cnt += popcnt64_unrolled((const uint64_t*) ptr, size / 8);
-  ptr += size - size % 8;
-  size = size % 8;
-  for (i = 0; i < size; i++)
+  if (size >= 8)
+  {
+    /*
+     * Since we don't know whether this CPU architecture
+     * supports unaligned memory accesses we align
+     * memory to an 8 byte boundary.
+     */
+    for (; (uintptr_t)(ptr + i) % 8; i++)
+      cnt += popcnt64(ptr[i]);
+    for (; i < size - size % 32; i += 32)
+    {
+      cnt += popcnt64(*(const uint64_t*)(ptr + i + 0));
+      cnt += popcnt64(*(const uint64_t*)(ptr + i + 8));
+      cnt += popcnt64(*(const uint64_t*)(ptr + i + 16));
+      cnt += popcnt64(*(const uint64_t*)(ptr + i + 24));
+    }
+    for (; i < size - size % 8; i += 8)
+      cnt += popcnt64(*(const uint64_t*)(ptr + i));
+  }
+
+  for (; i < size; i++)
     cnt += popcnt64(ptr[i]);
 
   return cnt;
