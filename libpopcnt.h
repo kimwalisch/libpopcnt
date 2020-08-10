@@ -33,6 +33,7 @@
 #define LIBPOPCNT_H
 
 #include <stdint.h>
+#include <string.h>
 
 #ifndef __has_builtin
   #define __has_builtin(x) 0
@@ -631,10 +632,9 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i < size)
   {
-    uint8_t tmp[8] = { 0 };
-    for (uint64_t j = 0; i < size; i++)
-      tmp[j++] = ptr[i];
-    cnt += popcount64(*(const uint64_t*) tmp);
+    uint64_t tmp[1] = { 0 };
+    memcpy(tmp, ptr, size - i);
+    cnt += popcount64(tmp[0]);
   }
 
   return cnt;
@@ -717,10 +717,9 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i < size)
   {
-    uint8_t tmp[8] = { 0 };
-    for (uint64_t j = 0; i < size; i++)
-      tmp[j++] = ptr[i];
-    cnt += popcnt64(*(const uint64_t*) tmp);
+    uint64_t tmp[1] = { 0 };
+    memcpy(tmp, ptr, size - i);
+    cnt += popcnt64(tmp[0]);
   }
 
   return cnt;
