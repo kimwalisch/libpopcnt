@@ -718,9 +718,20 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     cnt += tmp[1];
   }
 
+if defined(__ARM_FEATURE_UNALIGNED)
   /* We use unaligned memory accesses here to improve performance */
   for (; i < size - size % 8; i += 8)
     cnt += popcnt64(*(const uint64_t*)(ptr + i));
+#else
+  if (i + 8 <= size)
+  {
+    /* Align memory to an 8 byte boundary */
+    for (; (uintptr_t)(ptr + i) % 8; i++)
+      cnt += popcnt64(ptr[i]);
+    for (; i < size - size % 8; i += 8)
+      cnt += popcnt64(*(const uint64_t*)(ptr + i));
+  }
+#endif
 
   if (i < size)
   {
