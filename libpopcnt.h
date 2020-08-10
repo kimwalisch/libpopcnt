@@ -576,46 +576,58 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #endif
 
 #if defined(HAVE_AVX512)
-
-  /* AVX512 requires arrays >= 1024 bytes */
-  if ((cpuid & bit_AVX512) &&
-      i + 1024 <= size)
-  {
-    const __m512i* ptr512 = (const __m512i*)(ptr + i);
-    cnt += popcnt_avx512(ptr512, (size - i) / 64);
-    i = size - size % 64;
-  }
-
+  #if defined(__AVX512__) || defined(__AVX512BW__)
+    /* AVX512 requires arrays >= 1024 bytes */
+    if (i + 1024 <= size)
+  #else
+    if ((cpuid & bit_AVX512) &&
+        i + 1024 <= size)
+  #endif
+    {
+      const __m512i* ptr512 = (const __m512i*)(ptr + i);
+      cnt += popcnt_avx512(ptr512, (size - i) / 64);
+      i = size - size % 64;
+    }
 #endif
 
 #if defined(HAVE_AVX2)
-
-  /* AVX2 requires arrays >= 512 bytes */
-  if ((cpuid & bit_AVX2) &&
-      i + 512 <= size)
-  {
-    const __m256i* ptr256 = (const __m256i*)(ptr + i);
-    cnt += popcnt_avx2(ptr256, (size - i) / 32);
-    i = size - size % 32;
-  }
-
+  #if defined(__AVX2__)
+    /* AVX2 requires arrays >= 512 bytes */
+    if (i + 512 <= size)
+  #else
+    if ((cpuid & bit_AVX2) &&
+        i + 512 <= size)
+  #endif
+    {
+      const __m256i* ptr256 = (const __m256i*)(ptr + i);
+      cnt += popcnt_avx2(ptr256, (size - i) / 32);
+      i = size - size % 32;
+    }
 #endif
 
 #if defined(HAVE_POPCNT)
+  /* 
+   * The user has compiled without -mpopcnt.
+   * Unfortunately the MSVC compiler does not have
+   * a POPCNT macro so we cannot get rid of the
+   * runtime check for MSVC.
+   */
+  #if !defined(__POPCNT__)
+    if (cpuid & bit_POPCNT)
+  #endif
+    {
+      /* We use unaligned memory accesses here to improve performance */
+      for (; i < size - size % 8; i += 8)
+        cnt += popcnt64(*(const uint64_t*)(ptr + i));
+      for (; i < size; i++)
+        cnt += popcnt64(ptr[i]);
 
-  if (cpuid & bit_POPCNT)
-  {
-    /* We use unaligned memory accesses here to improve performance */
-    for (; i < size - size % 8; i += 8)
-      cnt += popcnt64(*(const uint64_t*)(ptr + i));
-    for (; i < size; i++)
-      cnt += popcnt64(ptr[i]);
-
-    return cnt;
-  }
-
+      return cnt;
+    }
 #endif
 
+#if defined(HAVE_POPCNT) && \
+   !defined(__POPCNT__)
   /*
    * Pure integer popcount algorithm.
    * We use unaligned memory accesses here to improve performance.
@@ -632,6 +644,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   }
 
   return cnt;
+#endif
 }
 
 #elif defined(__ARM_NEON) || \
