@@ -133,9 +133,9 @@
     defined(_MSC_VER) || \
    (GNUC_PREREQ(4, 2) || \
     __has_builtin(__sync_val_compare_and_swap))) && \
-   !(defined(HAVE_AVX512) && (defined(__AVX512__) || defined(__AVX512BW__)) && \
-     defined(HAVE_AVX2) && defined(__AVX2__) && \
-     defined(HAVE_POPCNT) && defined(__POPCNT__))
+   ((defined(HAVE_AVX512) && !(defined(__AVX512__) || defined(__AVX512BW__))) || \
+    (defined(HAVE_AVX2) && !defined(__AVX2__)) || \
+    (defined(HAVE_POPCNT) && !defined(__POPCNT__)))
   #define HAVE_CPUID
 #endif
 
