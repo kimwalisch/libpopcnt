@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
     std::cout << "Array size: " << std::fixed << std::setprecision(2) << bytes / (1024.0 * 1024.0) << " MB" << std::endl;
 
 #if defined(X86_OR_X64)
+
   #if defined(HAVE_CPUID)
     int cpuid = get_cpuid();
     if ((cpuid & bit_AVX512) && bytes >= 1024)
@@ -97,7 +98,21 @@ int main(int argc, char* argv[])
       algo = "AVX2";
     else if (cpuid & bit_POPCNT)
       algo = "POPCNT";
+  #else
+    #if defined(HAVE_AVX512) && (defined(__AVX512__) || defined(__AVX512BW__))
+      if (algo.empty() && bytes >= 1024)
+        algo = "AVX512";
+    #endif
+    #if defined(HAVE_AVX2) && defined(__AVX2__)
+      if (algo.empty() && bytes >= 512)
+        algo = "AVX2";
+    #endif
+    #if defined(HAVE_POPCNT) && defined(__POPCNT__)
+      if (algo.empty())
+        algo = "POPCNT";
+    #endif
   #endif
+
 #elif defined(__ARM_NEON) || \
       defined(__aarch64__)
   algo = "NEON";

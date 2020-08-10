@@ -69,14 +69,6 @@
   #define X86_OR_X64
 #endif
 
-#if defined(X86_OR_X64) && \
-   (defined(__cplusplus) || \
-    defined(_MSC_VER) || \
-   (GNUC_PREREQ(4, 2) || \
-    __has_builtin(__sync_val_compare_and_swap)))
-  #define HAVE_CPUID
-#endif
-
 #if GNUC_PREREQ(4, 2) || \
     __has_builtin(__builtin_popcount)
   #define HAVE_BUILTIN_POPCOUNT
@@ -87,49 +79,64 @@
   #define HAVE_ASM_POPCNT
 #endif
 
-#if defined(HAVE_CPUID) && \
+#if defined(X86_OR_X64) && \
    (defined(HAVE_ASM_POPCNT) || \
     defined(_MSC_VER))
   #define HAVE_POPCNT
 #endif
 
-#if defined(HAVE_CPUID) && \
+#if defined(X86_OR_X64) && \
     GNUC_PREREQ(4, 9)
   #define HAVE_AVX2
 #endif
 
-#if defined(HAVE_CPUID) && \
+#if defined(X86_OR_X64) && \
     GNUC_PREREQ(5, 0)
   #define HAVE_AVX512
 #endif
 
-/* MSVC compatible compilers (Windows) */
-#if defined(_MSC_VER) && \
-    defined(HAVE_CPUID)
-  /* clang-cl (LLVM 10 from 2020) requires /arch:AVX2 or
-   * /arch:AVX512 to enable vector instructions */
-  #if defined(__clang__)
-    #if defined(__AVX2__)
-      #define HAVE_AVX2
-    #endif
-    #if defined(__AVX512__)
+#if defined(X86_OR_X64)
+  /* MSVC compatible compilers (Windows) */
+  #if defined(_MSC_VER)
+    /* clang-cl (LLVM 10 from 2020) requires /arch:AVX2 or
+    * /arch:AVX512 to enable vector instructions */
+    #if defined(__clang__)
+      #if defined(__AVX2__)
+        #define HAVE_AVX2
+      #endif
+      #if defined(__AVX512__)
+        #define HAVE_AVX2
+        #define HAVE_AVX512
+      #endif
+    /* MSVC 2017 or later does not require
+    * /arch:AVX2 or /arch:AVX512 */
+    #elif _MSC_VER >= 1910
       #define HAVE_AVX2
       #define HAVE_AVX512
     #endif
-  /* MSVC 2017 or later does not require
-   * /arch:AVX2 or /arch:AVX512 */
-  #elif _MSC_VER >= 1910
+  /* Clang (Unix-like OSes) */
+  #elif CLANG_PREREQ(3, 8) && \
+        __has_attribute(target) && \
+        (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
     #define HAVE_AVX2
     #define HAVE_AVX512
   #endif
-#else /* Clang (Unix-like OSes) */
-  #if defined(HAVE_CPUID) && \
-      CLANG_PREREQ(3, 8) && \
-      __has_attribute(target) && \
-    (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
-    #define HAVE_AVX2
-    #define HAVE_AVX512
-  #endif
+#endif
+
+/*
+ * Only enable CPUID runtime checks if this is really
+ * needed. E.g. do not enable if user has compiled
+ * using -march=native on a CPU that supports AVX512.
+ */
+#if defined(X86_OR_X64) && \
+   (defined(__cplusplus) || \
+    defined(_MSC_VER) || \
+   (GNUC_PREREQ(4, 2) || \
+    __has_builtin(__sync_val_compare_and_swap))) && \
+   !(defined(HAVE_AVX512) && (defined(__AVX512__) || defined(__AVX512BW__)) && \
+     defined(HAVE_AVX2) && defined(__AVX2__) && \
+     defined(HAVE_POPCNT) && defined(__POPCNT__))
+  #define HAVE_CPUID
 #endif
 
 #ifdef __cplusplus
@@ -555,6 +562,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t cnt = 0;
   const uint8_t* ptr = (const uint8_t*) data;
 
+/*
+ * CPUID runtime checks are only enabled if this is needed.
+ * E.g. CPUID is disabled when a user compiles his
+ * code using -march=native on a CPU with AVX512.
+ */
 #if defined(HAVE_CPUID)
   #if defined(__cplusplus)
     /* C++11 thread-safe singleton */
