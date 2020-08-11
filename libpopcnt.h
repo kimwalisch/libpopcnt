@@ -638,8 +638,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     }
 #endif
 
-#if defined(HAVE_POPCNT) && \
-   !defined(__POPCNT__)
+#if !defined(HAVE_POPCNT) || \
+    !defined(__POPCNT__)
   /*
    * Pure integer popcount algorithm.
    * We use unaligned memory accesses here to improve performance.
