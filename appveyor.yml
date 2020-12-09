@@ -19,6 +19,7 @@ configuration:
   - Debug
   - Release
 
+for:
   - matrix:
       only:
         - image: Ubuntu
