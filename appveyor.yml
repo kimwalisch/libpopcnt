@@ -41,8 +41,8 @@ for:
         - image: macos
           platform: x64
     environment:
-      CFLAGS: "-Wall -Wextra -pedantic -Werror"
-      CXXFLAGS: "-Wall -Wextra -pedantic -Werror -std=gnu++11"
+      CFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long"
+      CXXFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long"
     build_script:
       - cmake . -DCMAKE_BUILD_TYPE=$Configuration
       - make VERBOSE=1
