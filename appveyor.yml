@@ -4,61 +4,57 @@
 version: 1.0.{build}
 
 image:
-- Visual Studio 2015
-- Visual Studio 2017
+- Ubuntu
+- macos
+- Visual Studio 2019
 
 branches:
   except:
     - gh-pages
 
 platform:
-  - x86
   - x64
+
+configuration:
+  - Debug
+  - Release
 
 for:
   - matrix:
       only:
-        - image: Visual Studio 2015
-          platform: x86
+        - image: Ubuntu
+          platform: x64
     environment:
-      CFLAGS: "/W3 /WX"
-      CXXFLAGS: "/W3 /WX"
+      CFLAGS: "-Wall -Wextra -pedantic -Werror"
+      CXXFLAGS: "-Wall -Wextra -pedantic -Werror"
     build_script:
-      - cmake . -G "Visual Studio 14 2015"
-      - cmake --build . --config Release --target install
+      - cmake . -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=$Configuration
+      - make VERBOSE=1
+    test_script:
+      - ctest
 
   - matrix:
       only:
-        - image: Visual Studio 2015
+        - image: macos
+          platform: x64
+    environment:
+      CFLAGS: "-Wall -Wextra -pedantic -Werror"
+      CXXFLAGS: "-Wall -Wextra -pedantic -Werror"
+    build_script:
+      - cmake . -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=$Configuration
+      - make VERBOSE=1
+    test_script:
+      - ctest
+
+  - matrix:
+      only:
+        - image: Visual Studio 2019
           platform: x64
     environment:
       CFLAGS: "/W3 /WX"
       CXXFLAGS: "/W3 /WX"
     build_script:
-      - cmake . -G "Visual Studio 14 2015 Win64"
-      - cmake --build . --config Release --target install
-
-  - matrix:
-      only:
-        - image: Visual Studio 2017
-          platform: x86
-    environment:
-      CFLAGS: "/W3 /WX"
-      CXXFLAGS: "/W3 /WX"
-    build_script:
-      - cmake . -G "Visual Studio 15 2017"
-      - cmake --build . --config Release --target install
-
-  - matrix:
-      only:
-        - image: Visual Studio 2017
-          platform: x64
-    environment:
-      CFLAGS: "/W3 /WX"
-      CXXFLAGS: "/W3 /WX"
-    build_script:
-      - cmake . -G "Visual Studio 15 2017 Win64"
-      - cmake --build . --config Release --target install
-
-test_script:
-  - ctest -C Release
+      - cmake . -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=%Configuration%
+      - cmake --build . --config %Configuration% --target install
+    test_script:
+      - ctest -C %Configuration%
