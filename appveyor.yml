@@ -28,7 +28,7 @@ for:
       CFLAGS: "-Wall -Wextra -pedantic -Werror"
       CXXFLAGS: "-Wall -Wextra -pedantic -Werror"
     build_script:
-      - cmake . -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=$Configuration
+      - cmake . -DCMAKE_BUILD_TYPE=$Configuration
       - make VERBOSE=1
     test_script:
       - ctest
@@ -38,10 +38,10 @@ for:
         - image: macos
           platform: x64
     environment:
-      CFLAGS: "-Wall -Wextra -pedantic -Werror"
-      CXXFLAGS: "-Wall -Wextra -pedantic -Werror"
+      CFLAGS: "-Wall -Wextra -pedantic -Werror -std=gnu++11"
+      CXXFLAGS: "-Wall -Wextra -pedantic -Werror -std=gnu++11"
     build_script:
-      - cmake . -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=$Configuration
+      - cmake . -DCMAKE_BUILD_TYPE=$Configuration
       - make VERBOSE=1
     test_script:
       - ctest
