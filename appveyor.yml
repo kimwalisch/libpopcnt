@@ -24,10 +24,13 @@ for:
       only:
         - image: Ubuntu
           platform: x64
-    environment:
-      CFLAGS: "-Wall -Wextra -pedantic -Werror"
-      CXXFLAGS: "-Wall -Wextra -pedantic -Werror"
     build_script:
+      - export WARNING_FLAGS="-Wall -Wextra -pedantic -Werror -Wno-long-long"
+      - export SANITIZER_FLAGS=-O1 -g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
+      - if [[ "$Configuration" == "Relase" ]]; then export CXXFLAGS="$WARNING_FLAGS"; fi
+      - if [[ "$Configuration" == "Relase" ]]; then export CFLAGS="$WARNING_FLAGS"; fi
+      - if [[ "$Configuration" == "Debug" ]]; then export CXXFLAGS="$WARNING_FLAGS $SANITIZER_FLAGS"; fi
+      - if [[ "$Configuration" == "Debug" ]]; then export CFLAGS="$WARNING_FLAGS $SANITIZER_FLAGS"; fi
       - cmake . -DCMAKE_BUILD_TYPE=$Configuration
       - make VERBOSE=1
     test_script:
