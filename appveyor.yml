@@ -19,18 +19,29 @@ configuration:
   - Debug
   - Release
 
-for:
   - matrix:
       only:
         - image: Ubuntu
           platform: x64
+          configuration: Debug
+    environment:
+      CFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long -O1 -g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
+      CXXFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long -O1 -g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
     build_script:
-      - export WARNING_FLAGS="-Wall -Wextra -pedantic -Werror -Wno-long-long"
-      - export SANITIZER_FLAGS="-O1 -g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
-      - if [[ "$Configuration" == "Relase" ]]; then export CXXFLAGS="$WARNING_FLAGS"; fi
-      - if [[ "$Configuration" == "Relase" ]]; then export CFLAGS="$WARNING_FLAGS"; fi
-      - if [[ "$Configuration" == "Debug" ]]; then export CXXFLAGS="$WARNING_FLAGS $SANITIZER_FLAGS"; fi
-      - if [[ "$Configuration" == "Debug" ]]; then export CFLAGS="$WARNING_FLAGS $SANITIZER_FLAGS"; fi
+      - cmake . -DCMAKE_BUILD_TYPE=$Configuration
+      - make VERBOSE=1
+    test_script:
+      - ctest
+
+  - matrix:
+      only:
+        - image: Ubuntu
+          platform: x64
+          configuration: Release
+    environment:
+      CFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long"
+      CXXFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long"
+    build_script:
       - cmake . -DCMAKE_BUILD_TYPE=$Configuration
       - make VERBOSE=1
     test_script:
