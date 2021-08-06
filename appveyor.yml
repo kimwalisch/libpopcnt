@@ -41,7 +41,7 @@ for:
       CFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long"
       CXXFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long"
     build_script:
-      - cmake . -DCMAKE_BUILD_TYPE=$Configuration
+      - cmake . -DCMAKE_BUILD_TYPE=$CONFIGURATION
       - make VERBOSE=1
     test_script:
       - ctest
