@@ -28,6 +28,8 @@ for:
       CFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long"
       CXXFLAGS: "-Wall -Wextra -pedantic -Werror -Wno-long-long"
     build_script:
+      - echo "===$CONFIGURATION==="
+      - echo "---$env:CONFIGURATION---"
       - cmake . -DCMAKE_BUILD_TYPE="$CONFIGURATION"
       - make VERBOSE=1
     test_script:
