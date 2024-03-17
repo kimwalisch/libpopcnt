@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
   std::cout << "Algorithm: " << algo << std::endl;
 
   for (size_t i = 0; i < vect.size(); i++)
-    cnt += libpopcount64(vect[i]);
+    cnt += popcnt64_bitwise(vect[i]);
 
   double seconds = get_seconds();
   uint64_t total = benchmark(vect, iters);

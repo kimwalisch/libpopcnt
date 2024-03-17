@@ -35,7 +35,7 @@ void test(vector<uint8_t>& data, size_t i)
   uint64_t bits_verify = 0;
 
   for (; i < size; i++)
-    bits_verify += libpopcount64(data[i]);
+    bits_verify += popcnt64_bitwise(data[i]);
 
   if (bits != bits_verify)
   {
