@@ -30,7 +30,7 @@ uint64_t popcnt(const void* data, uint64_t size);
 ## How to compile
 
 ```libpopcnt.h``` does not require any special compiler flags like ```-mavx2```!
-To get the best performance we recommend to compile with
+To get the best performance we only recommend to compile with
 optimizations enabled e.g. ```-O3``` or ```-O2```.
 
 ```bash
