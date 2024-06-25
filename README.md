@@ -18,20 +18,6 @@ The algorithms used in ```libpopcnt.h``` are described in the paper
 [Faster Population Counts using AVX2 Instructions](https://arxiv.org/abs/1611.07612)
 by Daniel Lemire, Nathan Kurz and Wojciech Mula (23 Nov 2016).
 
-## How it works
-
-On x86 CPUs ```libpopcnt.h``` uses one of these 4 different bit
-population count algorithms:
-
-* If the CPU supports ```AVX512``` the ```AVX512 VPOPCNT``` algorithm is used.
-* Else if the CPU supports ```AVX2``` the ```AVX2 Harley Seal``` algorithm is used.
-* Else if the CPU supports ```POPCNT``` the ```POPCNT``` algorithm is used.
-* For CPUs without ```POPCNT``` instruction a portable integer algorithm is used.
-
-Note that ```libpopcnt.h``` works on all CPUs, it checks at run-time
-whether your CPU supports POPCNT, AVX2, AVX512 before using it
-and it is also thread-safe.
-
 ## C/C++ API
 
 ```C
@@ -45,84 +31,24 @@ and it is also thread-safe.
 uint64_t popcnt(const void* data, uint64_t size);
 ```
 
-## Speedup
+## How it works
 
-This benchmark shows the speedup of the 4 popcount algorithms
-used on x86 CPUs compared to the basic [lookup-8](https://github.com/WojciechMula/sse-popcount/blob/master/popcnt-lookup.cpp#L139)
-popcount algorithm for different array sizes (in bytes).
+On x86 CPUs, ```libpopcnt.h``` first queries your CPU's supported
+instruction sets using the ```CPUID``` instruction (this is done only once).
+Then ```libpopcnt.h``` chooses the fastest bit population count algorithm
+supported by your CPU:
 
-<table>
-  <tr align="center">
-    <td><b>Algorithm</b></td>
-    <td><b>32 B</b></td>
-    <td><b>64 B</b></td>
-    <td><b>128 B</b></td>
-    <td><b>256 B</b></td>
-    <td><b>512 B</b></td>
-    <td><b>1024 B</b></td>
-    <td><b>2048 B</b></td>
-    <td><b>4096 B</b></td>
-  </tr>
-  <tr>
-    <td>lookup-8</td> 
-    <td>1.00</td>
-    <td>1.00</td>
-    <td>1.00</td>
-    <td>1.00</td>
-    <td>1.00</td>
-    <td>1.00</td>
-    <td>1.00</td>
-    <td>1.00</td>
-  </tr>
-  <tr>
-    <td>bit-parallel-mul</td>
-    <td>1.41</td>
-    <td>1.54</td>
-    <td>1.63</td>
-    <td>1.78</td>
-    <td>1.60</td>
-    <td>1.62</td>
-    <td>1.63</td>
-    <td>1.64</td>
-  </tr>
-  <tr>
-    <td>builtin-popcnt</td> 
-    <td><b>4.75</b></td>
-    <td><b>6.36</b></td>
-    <td><b>8.58</b></td>
-    <td><b>8.55</b></td>
-    <td>6.72</td>
-    <td>7.60</td>
-    <td>7.88</td>
-    <td>7.94</td>
-  </tr>
-  <tr>
-    <td>avx2-harley-seal</td> 
-    <td>1.15</td>
-    <td>1.85</td>
-    <td>3.22</td>
-    <td>4.17</td>
-    <td><b>8.46</b></td>
-    <td>10.74</td>
-    <td>12.52</td>
-    <td>13.66</td>
-  </tr>
-  <tr>
-    <td>avx512-harley-seal</td> 
-    <td>0.35</td>
-    <td>1.49</td>
-    <td>2.54</td>
-    <td>3.83</td>
-    <td>5.63</td>
-    <td><b>15.12</b></td>
-    <td><b>22.18</b></td>
-    <td><b>25.60</b></td>
-  </tr>
-</table>
+* If the CPU supports ```AVX512``` the ```AVX512 VPOPCNT``` algorithm is used.
+* Else if the CPU supports ```AVX2``` the ```AVX2 Harley Seal``` algorithm is used.
+* Else if the CPU supports ```POPCNT``` the ```POPCNT``` algorithm is used.
+* For CPUs without ```POPCNT``` instruction a portable integer algorithm is used.
 
-```libpopcnt.h``` automatically **picks** the fastest algorithm for
-the given array size. This benchmark was run on an Intel Xeon
-Platinum 8168 CPU with GCC 5.4.
+Note that ```libpopcnt.h``` works on all CPUs (x86, ARM, PPC, WebAssembly, ...),
+it is portable by default and hardware acceleration is only enabled if the CPU
+supports it. ```libpopcnt.h``` it is also thread-safe.
+
+We take performance seriously, if you compile using e.g. ```-march=native```
+on an x86 CPU with AVX512 support then all runtime ```CPUID``` checks are removed!
 
 ## CPU architectures
 
