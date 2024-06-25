@@ -1,5 +1,13 @@
 name: ci
 
+on:
+  push:
+    branches-ignore:
+      - gh-pages
+  pull_request:
+    branches-ignore:
+      - gh-pages
+
 jobs:
   linux_gcc:
     strategy:
