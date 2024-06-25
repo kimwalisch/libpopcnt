@@ -43,6 +43,10 @@
   #define __has_attribute(x) 0
 #endif
 
+#ifndef __has_include
+  #define __has_include(x) 0
+#endif
+
 #ifdef __GNUC__
   #define GNUC_PREREQ(x, y) \
       (__GNUC__ > x || (__GNUC__ == x && __GNUC_MINOR__ >= y))
@@ -85,40 +89,49 @@
   #define HAVE_POPCNT
 #endif
 
+/* GCC compiler */
 #if defined(X86_OR_X64) && \
     GNUC_PREREQ(4, 9)
   #define HAVE_AVX2
 #endif
 
+/* GCC compiler */
 #if defined(X86_OR_X64) && \
-    GNUC_PREREQ(5, 0)
+    GNUC_PREREQ(11, 0)
   #define HAVE_AVX512
 #endif
 
-#if defined(X86_OR_X64)
-  /* MSVC compatible compilers (Windows) */
-  #if defined(_MSC_VER)
-    /* clang-cl (LLVM 10 from 2020) requires /arch:AVX2 or
-    * /arch:AVX512 to enable vector instructions */
-    #if defined(__clang__)
-      #if defined(__AVX2__)
-        #define HAVE_AVX2
-      #endif
-      #if defined(__AVX512__)
-        #define HAVE_AVX2
-        #define HAVE_AVX512
-      #endif
-    /* MSVC 2017 or later does not require
-    * /arch:AVX2 or /arch:AVX512 */
-    #elif _MSC_VER >= 1910
+/* MSVC compatible compilers (Windows) */
+#if defined(X86_OR_X64) && \
+    defined(_MSC_VER)
+  /* clang-cl (LLVM 10 from 2020) requires /arch:AVX2 or
+  * /arch:AVX512 to enable vector instructions */
+  #if defined(__clang__)
+    #if defined(__AVX2__)
+      #define HAVE_AVX2
+    #endif
+    #if defined(__AVX512__)
       #define HAVE_AVX2
       #define HAVE_AVX512
     #endif
-  /* Clang (Unix-like OSes) */
-  #elif CLANG_PREREQ(3, 8) && \
-        __has_attribute(target) && \
-        (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
+  /* MSVC 2017 or later does not require
+  * /arch:AVX2 or /arch:AVX512 */
+  #elif _MSC_VER >= 1910
     #define HAVE_AVX2
+    #define HAVE_AVX512
+  #endif
+#endif
+
+/* Clang (Unix-like OSes) */
+#if defined(X86_OR_X64) && !defined(_MSC_VER)
+  #if CLANG_PREREQ(3, 8) && \
+      __has_attribute(target) && \
+      (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
+    #define HAVE_AVX2
+  #endif
+  #if CLANG_PREREQ(9, 0) && \
+      __has_attribute(target) && \
+      (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
     #define HAVE_AVX512
   #endif
 #endif
@@ -133,7 +146,7 @@
     defined(_MSC_VER) || \
    (GNUC_PREREQ(4, 2) || \
     __has_builtin(__sync_val_compare_and_swap))) && \
-   ((defined(HAVE_AVX512) && !(defined(__AVX512__) || defined(__AVX512BW__))) || \
+   ((defined(HAVE_AVX512) && !(defined(__AVX512__) || (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__)))) || \
     (defined(HAVE_AVX2) && !defined(__AVX2__)) || \
     (defined(HAVE_POPCNT) && !defined(__POPCNT__)))
   #define HAVE_CPUID
@@ -190,22 +203,22 @@ static inline uint64_t popcnt64(uint64_t x)
 #elif defined(_MSC_VER) && \
       defined(_M_X64)
 
-#include <nmmintrin.h>
+#include <intrin.h>
 
 static inline uint64_t popcnt64(uint64_t x)
 {
-  return _mm_popcnt_u64(x);
+  return __popcnt64(x);
 }
 
 #elif defined(_MSC_VER) && \
       defined(_M_IX86)
 
-#include <nmmintrin.h>
+#include <intrin.h>
 
 static inline uint64_t popcnt64(uint64_t x)
 {
-  return _mm_popcnt_u32((uint32_t) x) + 
-         _mm_popcnt_u32((uint32_t)(x >> 32));
+  return __popcnt((uint32_t) x) + 
+         __popcnt((uint32_t)(x >> 32));
 }
 
 /* non x86 CPUs */
@@ -234,12 +247,16 @@ static inline uint64_t popcnt64(uint64_t x)
   #include <immintrin.h>
 #endif
 
-/* %ecx bit flags */
-#define bit_POPCNT (1 << 23)
+/* CPUID bits documentation: */
+/* https://en.wikipedia.org/wiki/CPUID */
 
 /* %ebx bit flags */
-#define bit_AVX2   (1 << 5)
-#define bit_AVX512 (1 << 30)
+#define bit_AVX2    (1 << 5)
+#define bit_AVX512F (1 << 16)
+
+/* %ecx bit flags */
+#define bit_POPCNT (1 << 23)
+#define bit_AVX512_VPOPCNTDQ (1 << 14)
 
 /* xgetbv bit flags */
 #define XSTATE_SSE (1 << 1)
@@ -256,20 +273,20 @@ static inline void run_cpuid(int eax, int ecx, int* abcd)
 
   #if defined(__i386__) && \
       defined(__PIC__)
-    /* in case of PIC under 32-bit EBX cannot be clobbered */
-    __asm__ ("movl %%ebx, %%edi;"
-             "cpuid;"
-             "xchgl %%ebx, %%edi;"
-             : "=D" (ebx),
-               "+a" (eax),
-               "+c" (ecx),
-               "=d" (edx));
+    /* In case of PIC under 32-bit EBX cannot be clobbered */
+    asm volatile("movl %%ebx, %%edi;"
+                 "cpuid;"
+                 "xchgl %%ebx, %%edi;"
+                 : "+a" (eax),
+                   "=D" (ebx),
+                   "+c" (ecx),
+                   "=d" (edx));
   #else
-    __asm__ ("cpuid;"
-             : "+b" (ebx),
-               "+a" (eax),
-               "+c" (ecx),
-               "=d" (edx));
+    asm volatile("cpuid"
+                 : "+a" (eax),
+                   "+b" (ebx),
+                   "+c" (ecx),
+                   "=d" (edx));
   #endif
 
   abcd[0] = eax;
@@ -282,17 +299,17 @@ static inline void run_cpuid(int eax, int ecx, int* abcd)
 #if defined(HAVE_AVX2) || \
     defined(HAVE_AVX512)
 
-static inline int get_xcr0()
+static inline uint64_t get_xcr0()
 {
-  int xcr0;
-
 #if defined(_MSC_VER)
-  xcr0 = (int) _xgetbv(0);
+  return _xgetbv(0);
 #else
-  __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
-#endif
+  uint32_t eax;
+  uint32_t edx;
 
-  return xcr0;
+  asm volatile("xgetbv" : "=a"(eax), "=d"(edx) : "c"(0));
+  return eax | (uint64_t(edx) << 32);
+#endif
 }
 
 #endif
@@ -316,10 +333,9 @@ static inline int get_cpuid()
   if ((abcd[2] & osxsave_mask) != osxsave_mask)
     return 0;
 
-  int ymm_mask = XSTATE_SSE | XSTATE_YMM;
-  int zmm_mask = XSTATE_SSE | XSTATE_YMM | XSTATE_ZMM;
-
-  int xcr0 = get_xcr0();
+  uint64_t ymm_mask = XSTATE_SSE | XSTATE_YMM;
+  uint64_t zmm_mask = XSTATE_SSE | XSTATE_YMM | XSTATE_ZMM;
+  uint64_t xcr0 = get_xcr0();
 
   if ((xcr0 & ymm_mask) == ymm_mask)
   {
@@ -330,8 +346,9 @@ static inline int get_cpuid()
 
     if ((xcr0 & zmm_mask) == zmm_mask)
     {
-      if ((abcd[1] & bit_AVX512) == bit_AVX512)
-        flags |= bit_AVX512;
+      if ((abcd[1] & bit_AVX512F) == bit_AVX512F &&
+          (abcd[2] & bit_AVX512_VPOPCNTDQ) == bit_AVX512_VPOPCNTDQ)
+        flags |= bit_AVX512_VPOPCNTDQ;
     }
   }
 
@@ -342,7 +359,8 @@ static inline int get_cpuid()
 
 #endif /* cpuid */
 
-#if defined(HAVE_AVX2)
+#if defined(HAVE_AVX2) && \
+    __has_include(<immintrin.h>)
 
 #include <immintrin.h>
 
@@ -448,102 +466,32 @@ static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
 
 #endif
 
-#if defined(HAVE_AVX512)
+#if defined(HAVE_AVX512) && \
+    __has_include(<immintrin.h>)
 
 #include <immintrin.h>
 
 #if !defined(_MSC_VER)
-  __attribute__ ((target ("avx512bw")))
+  __attribute__ ((target ("avx512f,avx512vpopcntdq")))
 #endif
-static inline __m512i popcnt512(__m512i v)
+static inline uint64_t popcnt_avx512(const uint64_t* ptr, const uint64_t size)
 {
-  __m512i m1 = _mm512_set1_epi8(0x55);
-  __m512i m2 = _mm512_set1_epi8(0x33);
-  __m512i m4 = _mm512_set1_epi8(0x0F);
-  __m512i vm = _mm512_and_si512(_mm512_srli_epi16(v, 1), m1);
-  __m512i t1 = _mm512_sub_epi8(v, vm);
-  __m512i tm = _mm512_and_si512(t1, m2);
-  __m512i tm2 = _mm512_and_si512(_mm512_srli_epi16(t1, 2), m2);
-  __m512i t2 = _mm512_add_epi8(tm, tm2);
-  __m512i tt = _mm512_add_epi8(t2, _mm512_srli_epi16(t2, 4));
-  __m512i t3 = _mm512_and_si512(tt, m4);
+    __m512i cnt = _mm512_setzero_si512();
+    uint64_t i = 0;
 
-  return _mm512_sad_epu8(t3, _mm512_setzero_si512());
-}
+    for (; i + 8 < size; i += 8)
+    {
+      __m512i vec = _mm512_loadu_epi64(&ptr[i]);
+      vec = _mm512_popcnt_epi64(vec);
+      cnt = _mm512_add_epi64(cnt, vec);
+    }
 
-#if !defined(_MSC_VER)
-  __attribute__ ((target ("avx512bw")))
-#endif
-static inline void CSA512(__m512i* h, __m512i* l, __m512i a, __m512i b, __m512i c)
-{
-  *l = _mm512_ternarylogic_epi32(c, b, a, 0x96);
-  *h = _mm512_ternarylogic_epi32(c, b, a, 0xe8);
-}
+    __mmask8 mask = (__mmask8) (0xff >> (i + 8 - size));
+    __m512i vec = _mm512_maskz_loadu_epi64(mask , &ptr[i]);
+    vec = _mm512_popcnt_epi64(vec);
+    cnt = _mm512_add_epi64(cnt, vec);
 
-/*
- * AVX512 Harley-Seal popcount (4th iteration).
- * The algorithm is based on the paper "Faster Population Counts
- * using AVX2 Instructions" by Daniel Lemire, Nathan Kurz and
- * Wojciech Mula (23 Nov 2016).
- * @see https://arxiv.org/abs/1611.07612
- */
-#if !defined(_MSC_VER)
-  __attribute__ ((target ("avx512bw")))
-#endif
-static inline uint64_t popcnt_avx512(const __m512i* ptr, const uint64_t size)
-{
-  __m512i cnt = _mm512_setzero_si512();
-  __m512i ones = _mm512_setzero_si512();
-  __m512i twos = _mm512_setzero_si512();
-  __m512i fours = _mm512_setzero_si512();
-  __m512i eights = _mm512_setzero_si512();
-  __m512i sixteens = _mm512_setzero_si512();
-  __m512i twosA, twosB, foursA, foursB, eightsA, eightsB;
-
-  uint64_t i = 0;
-  uint64_t limit = size - size % 16;
-  uint64_t* cnt64;
-
-  for(; i < limit; i += 16)
-  {
-    CSA512(&twosA, &ones, ones, _mm512_loadu_si512(ptr + i + 0), _mm512_loadu_si512(ptr + i + 1));
-    CSA512(&twosB, &ones, ones, _mm512_loadu_si512(ptr + i + 2), _mm512_loadu_si512(ptr + i + 3));
-    CSA512(&foursA, &twos, twos, twosA, twosB);
-    CSA512(&twosA, &ones, ones, _mm512_loadu_si512(ptr + i + 4), _mm512_loadu_si512(ptr + i + 5));
-    CSA512(&twosB, &ones, ones, _mm512_loadu_si512(ptr + i + 6), _mm512_loadu_si512(ptr + i + 7));
-    CSA512(&foursB, &twos, twos, twosA, twosB);
-    CSA512(&eightsA, &fours, fours, foursA, foursB);
-    CSA512(&twosA, &ones, ones, _mm512_loadu_si512(ptr + i + 8), _mm512_loadu_si512(ptr + i + 9));
-    CSA512(&twosB, &ones, ones, _mm512_loadu_si512(ptr + i + 10), _mm512_loadu_si512(ptr + i + 11));
-    CSA512(&foursA, &twos, twos, twosA, twosB);
-    CSA512(&twosA, &ones, ones, _mm512_loadu_si512(ptr + i + 12), _mm512_loadu_si512(ptr + i + 13));
-    CSA512(&twosB, &ones, ones, _mm512_loadu_si512(ptr + i + 14), _mm512_loadu_si512(ptr + i + 15));
-    CSA512(&foursB, &twos, twos, twosA, twosB);
-    CSA512(&eightsB, &fours, fours, foursA, foursB);
-    CSA512(&sixteens, &eights, eights, eightsA, eightsB);
-
-    cnt = _mm512_add_epi64(cnt, popcnt512(sixteens));
-  }
-
-  cnt = _mm512_slli_epi64(cnt, 4);
-  cnt = _mm512_add_epi64(cnt, _mm512_slli_epi64(popcnt512(eights), 3));
-  cnt = _mm512_add_epi64(cnt, _mm512_slli_epi64(popcnt512(fours), 2));
-  cnt = _mm512_add_epi64(cnt, _mm512_slli_epi64(popcnt512(twos), 1));
-  cnt = _mm512_add_epi64(cnt, popcnt512(ones));
-
-  for(; i < size; i++)
-    cnt = _mm512_add_epi64(cnt, popcnt512(_mm512_loadu_si512(ptr + i)));
-
-  cnt64 = (uint64_t*) &cnt;
-
-  return cnt64[0] +
-         cnt64[1] +
-         cnt64[2] +
-         cnt64[3] +
-         cnt64[4] +
-         cnt64[5] +
-         cnt64[6] +
-         cnt64[7];
+    return _mm512_reduce_add_epi64(cnt);
 }
 
 #endif
@@ -588,17 +536,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #endif
 
 #if defined(HAVE_AVX512)
-  #if defined(__AVX512__) || defined(__AVX512BW__)
-    /* AVX512 requires arrays >= 1024 bytes */
-    if (i + 1024 <= size)
+  #if defined(__AVX512__) || \
+     (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__))
+    /* For tiny arrays AVX512 is not worth it */
+    if (i + 32 <= size)
   #else
-    if ((cpuid & bit_AVX512) &&
-        i + 1024 <= size)
+    if ((cpuid & bit_AVX512_VPOPCNTDQ) &&
+        i + 32 <= size)
   #endif
     {
-      const __m512i* ptr512 = (const __m512i*)(ptr + i);
-      cnt += popcnt_avx512(ptr512, (size - i) / 64);
-      i = size - size % 64;
+      const uint64_t* ptr64 = (const uint64_t*)(ptr + i);
+      cnt += popcnt_avx512(ptr64, (size - i) / 8);
+      i = size - size % 8;
     }
 #endif
 
@@ -638,6 +587,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     }
 #endif
 
+/*
+ * This code is used for:
+ * 1) Compiler does not support POPCNT.
+ * 2) x86 CPU does not support POPCNT (cpuid != POPCNT).
+ */
 #if !defined(HAVE_POPCNT) || \
     !defined(__POPCNT__)
   /*
@@ -659,8 +613,49 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #endif
 }
 
-#elif defined(__ARM_NEON) || \
-      defined(__aarch64__)
+#elif defined(__ARM_FEATURE_SVE) && \
+      __has_include(<arm_sve.h>)
+
+#include <arm_sve.h>
+
+/*
+ * Count the number of 1 bits in the data array
+ * @data: An array
+ * @size: Size of data in bytes
+ */
+static inline uint64_t popcnt(const void* data, uint64_t size)
+{
+  uint64_t i = 0;
+  const uint64_t* ptr64 = (const uint64_t*) data;
+  uint64_t size64 = size / sizeof(uint64_t);
+  svbool_t pg = svwhilelt_b64(i, size64);
+  svuint64_t vcnt = svdup_u64(0);
+
+  do {
+    svuint64_t vec = svld1_u64(pg, &ptr64[i]);
+    vec = svcnt_u64_z(pg, vec);
+    vcnt = svadd_u64_z(svptrue_b64(), vcnt, vec);
+    i += svcntd();
+    pg = svwhilelt_b64(i, size64);
+  }
+  while (svptest_any(svptrue_b64(), pg));
+
+  uint64_t cnt = svaddv_u64(svptrue_b64(), vcnt);
+  size %= sizeof(uint64_t);
+
+  if (size > 0)
+  {
+    uint64_t val = 0;
+    memcpy(&val, &ptr64[i], size);
+    cnt += popcnt64(val);
+  }
+
+  return cnt;
+}
+
+#elif (defined(__ARM_NEON) || \
+       defined(__aarch64__)) && \
+      __has_include(<arm_neon.h>)
 
 #include <arm_neon.h>
 
@@ -750,7 +745,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     uint64_t val = 0;
     size_t bytes = (size_t)(size - i);
     memcpy(&val, &ptr[i], bytes);
-    cnt += popcnt64_bitwise(val);
+    cnt += popcnt64(val);
   }
 
   return cnt;

@@ -92,14 +92,14 @@ int main(int argc, char* argv[])
 
   #if defined(HAVE_CPUID)
     int cpuid = get_cpuid();
-    if ((cpuid & bit_AVX512) && bytes >= 1024)
+    if ((cpuid & bit_AVX512_VPOPCNTDQ) && bytes >= 32)
       algo = "AVX512";
     else if ((cpuid & bit_AVX2) && bytes >= 512)
       algo = "AVX2";
     else if (cpuid & bit_POPCNT)
       algo = "POPCNT";
   #else
-    #if defined(HAVE_AVX512) && (defined(__AVX512__) || defined(__AVX512BW__))
+    #if defined(HAVE_AVX512) && (defined(__AVX512__) || (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__)))
       if (algo.empty() && bytes >= 1024)
         algo = "AVX512";
     #endif
@@ -113,9 +113,13 @@ int main(int argc, char* argv[])
     #endif
   #endif
 
-#elif defined(__ARM_NEON) || \
-      defined(__aarch64__)
-  algo = "NEON";
+#elif defined(__ARM_FEATURE_SVE) && \
+      __has_include(<arm_sve.h>)
+  algo = "ARM SVE";
+#elif (defined(__ARM_NEON) || \
+       defined(__aarch64__)) && \
+      __has_include(<arm_neon.h>)
+  algo = "ARM NEON";
 #elif defined(__PPC64__)
   algo = "POPCNTD";
 #endif

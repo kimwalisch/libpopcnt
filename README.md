@@ -9,7 +9,8 @@ possible using specialized CPU instructions i.e.
 [POPCNT](https://en.wikipedia.org/wiki/SSE4#POPCNT_and_LZCNT),
 [AVX2](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions),
 [AVX512](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions),
-[NEON](https://en.wikipedia.org/wiki/ARM_architecture#Advanced_SIMD_.28NEON.29).
+[NEON](https://en.wikipedia.org/wiki/ARM_architecture_family#Advanced_SIMD_(Neon)),
+[SVE](https://en.wikipedia.org/wiki/AArch64#Scalable_Vector_Extension_(SVE)).
 ```libpopcnt.h``` has been tested successfully using the GCC,
 Clang and MSVC compilers.
 
@@ -19,14 +20,13 @@ by Daniel Lemire, Nathan Kurz and Wojciech Mula (23 Nov 2016).
 
 ## How it works
 
-On x86 CPUs ```libpopcnt.h``` uses a combination of 4 different bit
+On x86 CPUs ```libpopcnt.h``` uses one of these 4 different bit
 population count algorithms:
 
-* For array sizes < 512 bytes a ```POPCNT``` algorithm is used.
-* For array sizes ≥ 512 bytes an ```AVX2``` algorithm is used.
-* For array sizes ≥ 1024 bytes an ```AVX512``` algorithm is used.
-* For CPUs without ```POPCNT``` instruction a portable 
-integer algorithm is used.
+* If the CPU supports ```AVX512``` the ```AVX512 VPOPCNT``` algorithm is used.
+* Else if the CPU supports ```AVX2``` the ```AVX2 Harley Seal``` algorithm is used.
+* Else if the CPU supports ```POPCNT``` the ```POPCNT``` algorithm is used.
+* For CPUs without ```POPCNT``` instruction a portable integer algorithm is used.
 
 Note that ```libpopcnt.h``` works on all CPUs, it checks at run-time
 whether your CPU supports POPCNT, AVX2, AVX512 before using it
@@ -140,7 +140,7 @@ the following CPU architectures:
   </tr>
   <tr>
     <td><b>ARM</b></td>
-    <td><code>NEON</code></td> 
+    <td><code>NEON</code>, <code>SVE</code></td> 
   </tr>
   <tr>
     <td><b>PPC64</b></td>
@@ -183,9 +183,3 @@ Status: 100%
 Seconds: 1.59
 103.4 GB/s
 ```
-
-## Acknowledgments
-
-The vectorized popcount algorithms used in ```libpopcnt.h``` have
-originally been written by [Wojciech Muła](https://github.com/WojciechMula/sse-popcount),
-I just made a convenient and portable C/C++ library using these algorithms.
