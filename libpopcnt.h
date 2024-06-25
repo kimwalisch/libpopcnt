@@ -308,7 +308,7 @@ static inline uint64_t get_xcr0()
   uint32_t edx;
 
   asm volatile("xgetbv" : "=a"(eax), "=d"(edx) : "c"(0));
-  return eax | (uint64_t(edx) << 32);
+  return eax | (((uint64_t) edx) << 32);
 #endif
 }
 
