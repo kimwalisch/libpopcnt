@@ -1,5 +1,6 @@
 .*
 *~
+!/.github
 !/.gitignore
 !/.travis.yml
 *.exe

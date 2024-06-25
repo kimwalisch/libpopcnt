@@ -1,0 +1,139 @@
+name: ci
+
+jobs:
+  linux_gcc:
+    strategy:
+      matrix:
+        platform: ['ubuntu-latest']
+        config: ['Debug', 'Release']
+    runs-on: ${{ matrix.platform }}
+    env:
+      CC: gcc
+      CXX: g++
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build libpopcnt
+        run: |
+            cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
+            cmake --build . --parallel --verbose
+      - name: CTest (unit tests)
+        run: ctest -j2
+      - name: benchmark
+        run: ./benchmark 16389 100
+
+  linux_clang:
+    strategy:
+      matrix:
+        platform: ['ubuntu-latest']
+        config: ['Debug', 'Release']
+    runs-on: ${{ matrix.platform }}
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build libpopcnt
+        run: |
+            cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
+            cmake --build . --parallel --verbose
+      - name: CTest (unit tests)
+        run: ctest -j2
+      - name: benchmark
+        run: ./benchmark 16389 100
+
+  macos_clang:
+    strategy:
+      matrix:
+        platform: ['macos-latest']
+        config: ['Debug', 'Release']
+    runs-on: ${{ matrix.platform }}
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build libpopcnt
+        run: |
+            cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_INSTALL_PREFIX=$(pwd) -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
+            cmake --build . --parallel --verbose
+            cmake --install .
+      - name: CTest (unit tests)
+        run: ctest -j2
+      - name: benchmark
+        run: ./benchmark 16389 100
+
+  # See documentation: https://www.msys2.org/docs/ci/
+  windows_mingw64:
+    strategy:
+      matrix:
+        platform: ['windows-latest']
+        config: ['Debug', 'Release']
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
+      - name: Build libpopcnt
+        run: |
+            cmake . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
+            cmake --build . --parallel --verbose
+      - name: CTest (unit tests)
+        run: ctest -j2
+      - name: benchmark
+        run: ./benchmark 16389 100
+
+  windows_msvc2022:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build libpopcnt
+        run: |
+            cmake . -G "Visual Studio 17 2022" -DCMAKE_CXX_FLAGS="/W3 /WX /MP /EHsc"
+            cmake --build . --config Release --target install
+      - name: CTest (unit tests)
+        run: ctest -j2 -C Release --output-on-failure
+      - name: benchmark
+        run: Release\benchmark.exe 16389 100
+
+  linux_gcc_sanitizers:
+    # This test fails on Ubuntu 22.04 likely due to an Ubuntu or compiler bug.
+    # See discussion at: https://github.com/quantumlib/Stim/issues/717#issuecomment-2002623560
+    runs-on: ubuntu-20.04
+    env:
+      CC: gcc
+      CXX: g++
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build libpopcnt
+        run: |
+            cmake . -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror -O1 -g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror -O1 -g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
+            cmake --build . --parallel --verbose
+      - name: CTest (unit tests)
+        run: ctest -j2
+      - name: benchmark
+        run: ./benchmark 16389 100
+
+  linux_gcc_valgrind:
+    runs-on: ubuntu-latest
+    env:
+      CC: gcc
+      CXX: g++
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install valgrind
+        run: |
+            sudo apt update
+            sudo apt install valgrind
+      - name: Build libpopcnt
+        run: |
+            cmake . -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror -g" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror -g"
+            cmake --build . --parallel --verbose
+      - name: CTest (unit tests)
+        run: ctest -j2
+      - name: benchmark
+        run: ./benchmark 16389 100
