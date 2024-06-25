@@ -1,6 +1,6 @@
 # libpopcnt
 
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/kimwalisch/libpopcnt?branch=master&svg=true)](https://ci.appveyor.com/project/kimwalisch/libpopcnt)
+[![Build status](https://github.com/kimwalisch/libpopcnt/actions/workflows/ci.yml/badge.svg)](https://github.com/kimwalisch/libpopcnt/actions/workflows/ci.yml)
 [![Github Releases](https://img.shields.io/github/release/kimwalisch/libpopcnt.svg)](https://github.com/kimwalisch/libpopcnt/releases)
 
 ```libpopcnt.h``` is a header-only C/C++ library for counting the
