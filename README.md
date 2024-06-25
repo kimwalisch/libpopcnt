@@ -27,6 +27,17 @@ Clang and MSVC compilers.
 uint64_t popcnt(const void* data, uint64_t size);
 ```
 
+## How to compile
+
+```libpopcnt.h``` does not require any special compiler flags like ```-mavx2```!
+To get the best performance we recommend to compile with
+optimizations enabled e.g. ```-O3``` or ```-O2```.
+
+```bash
+cc  -O3 program.c
+c++ -O3 program.cpp
+```
+
 ## How it works
 
 On x86 CPUs, ```libpopcnt.h``` first queries your CPU's supported
@@ -71,17 +82,6 @@ the following CPU architectures:
 </table>
 
 For other CPU architectures a fast integer popcount algorithm is used.
-
-## How to compile
-
-```libpopcnt.h``` does not require any special compiler flags like ```-mavx2```!
-In order to get the best performance we recommend however to compile with
-optimizations enabled e.g. ```-O3``` or ```-O2```.
-
-```bash
-cc  -O3 program.c
-c++ -O3 program.cpp
-```
 
 ## Development
 
