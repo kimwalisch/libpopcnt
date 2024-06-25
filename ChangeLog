@@ -1,3 +1,13 @@
+2024-06-25 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 3.0
+
+  * Replace AVX512BW algorithm by faster AVX512 VPOPCNTDQ algorithm.
+  * Add ARM SVE algorithm.
+  * Minor speedup of ARM NEON algorithm.
+  * Improve preprocessor checks using __has_include() macro.
+  * Port tests from AppVeyor to GitHub actions.
+
 2020-08-10 Kim Walisch  <kim.walisch@gmail.com>
 
   * Use unaligned memory accesses to improve performance.
