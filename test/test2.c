@@ -44,7 +44,7 @@ void test(uint8_t* data,
   }
 }
 
-int main()
+int main(void)
 {
   size_t i;
   size_t size = 70000;
