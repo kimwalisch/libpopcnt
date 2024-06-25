@@ -577,11 +577,28 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     if (cpuid & bit_POPCNT)
   #endif
     {
-      /* We use unaligned memory accesses here to improve performance */
+      uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
+
+      /* Align &ptr[i] to an 8 byte boundary */
+      if (rem8 != 0)
+      {
+        uint64_t val = 0;
+        size_t bytes = (size_t) (8 - rem8 % 8);
+        memcpy(&val, &ptr[i], bytes);
+        cnt += popcnt64(val);
+        i += bytes;
+      }
+
       for (; i < size - size % 8; i += 8)
         cnt += popcnt64(*(const uint64_t*)(ptr + i));
-      for (; i < size; i++)
-        cnt += popcnt64(ptr[i]);
+
+      if (i < size)
+      {
+        uint64_t val = 0;
+        size_t bytes = (size_t)(size - i);
+        memcpy(&val, &ptr[i], bytes);
+        cnt += popcnt64(val);
+      }
 
       return cnt;
     }
@@ -594,10 +611,19 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
  */
 #if !defined(HAVE_POPCNT) || \
     !defined(__POPCNT__)
-  /*
-   * Pure integer popcount algorithm.
-   * We use unaligned memory accesses here to improve performance.
-   */
+
+  uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
+
+  /* Align &ptr[i] to an 8 byte boundary */
+  if (rem8 != 0)
+  {
+    uint64_t val = 0;
+    size_t bytes = (size_t) (8 - rem8 % 8);
+    memcpy(&val, &ptr[i], bytes);
+    cnt += popcnt64_bitwise(val);
+    i += bytes;
+  }
+
   for (; i < size - size % 8; i += 8)
     cnt += popcnt64_bitwise(*(const uint64_t*)(ptr + i));
 
@@ -725,20 +751,20 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     cnt += tmp[1];
   }
 
-#if defined(__ARM_FEATURE_UNALIGNED)
-  /* We use unaligned memory accesses here to improve performance */
+  uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
+
+  /* Align &ptr[i] to an 8 byte boundary */
+  if (rem8 != 0)
+  {
+    uint64_t val = 0;
+    size_t bytes = (size_t) (8 - rem8 % 8);
+    memcpy(&val, &ptr[i], bytes);
+    cnt += popcnt64(val);
+    i += bytes;
+  }
+
   for (; i < size - size % 8; i += 8)
     cnt += popcnt64(*(const uint64_t*)(ptr + i));
-#else
-  if (i + 8 <= size)
-  {
-    /* Align memory to an 8 byte boundary */
-    for (; (uintptr_t)(ptr + i) % 8; i++)
-      cnt += popcnt64(ptr[i]);
-    for (; i < size - size % 8; i += 8)
-      cnt += popcnt64(*(const uint64_t*)(ptr + i));
-  }
-#endif
 
   if (i < size)
   {
@@ -764,22 +790,28 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t i = 0;
   uint64_t cnt = 0;
   const uint8_t* ptr = (const uint8_t*) data;
+  uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
 
-  if (size >= 8)
+  /* Align &ptr[i] to an 8 byte boundary */
+  if (rem8 != 0)
   {
-    /*
-     * Since we don't know whether this CPU architecture
-     * supports unaligned memory accesses we align
-     * memory to an 8 byte boundary.
-     */
-    for (; (uintptr_t)(ptr + i) % 8; i++)
-      cnt += popcnt64(ptr[i]);
-    for (; i < size - size % 8; i += 8)
-      cnt += popcnt64(*(const uint64_t*)(ptr + i));
+    uint64_t val = 0;
+    size_t bytes = (size_t) (8 - rem8 % 8);
+    memcpy(&val, &ptr[i], bytes);
+    cnt += popcnt64(val);
+    i += bytes;
   }
 
-  for (; i < size; i++)
-    cnt += popcnt64(ptr[i]);
+  for (; i < size - size % 8; i += 8)
+    cnt += popcnt64(*(const uint64_t*)(ptr + i));
+
+  if (i < size)
+  {
+    uint64_t val = 0;
+    size_t bytes = (size_t)(size - i);
+    memcpy(&val, &ptr[i], bytes);
+    cnt += popcnt64(val);
+  }
 
   return cnt;
 }

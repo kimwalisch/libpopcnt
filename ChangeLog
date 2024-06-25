@@ -7,6 +7,8 @@
   * Minor speedup of ARM NEON algorithm.
   * Improve preprocessor checks using __has_include() macro.
   * Port tests from AppVeyor to GitHub actions.
+  * Get rid of unaligned uint64_t memory acceses, this fixes
+    test failures when using GCC compiler sanitizers.
 
 2020-08-10 Kim Walisch  <kim.walisch@gmail.com>
 
