@@ -43,8 +43,8 @@ supported by your CPU:
 * Else if the CPU supports ```POPCNT``` the ```POPCNT``` algorithm is used.
 * For CPUs without ```POPCNT``` instruction a portable integer algorithm is used.
 
-Note that ```libpopcnt.h``` works on all CPUs (x86, ARM, PPC, WebAssembly, ...),
-it is portable by default and hardware acceleration is only enabled if the CPU
+Note that ```libpopcnt.h``` works on all CPUs (x86, ARM, PPC, WebAssembly, ...).
+It is portable by default and hardware acceleration is only enabled if the CPU
 supports it. ```libpopcnt.h``` it is also thread-safe.
 
 We take performance seriously, if you compile using e.g. ```-march=native```
