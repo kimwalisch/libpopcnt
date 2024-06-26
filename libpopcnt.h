@@ -305,7 +305,7 @@ static inline void run_cpuid(int eax, int ecx, int* abcd)
 #if defined(HAVE_AVX2) || \
     defined(HAVE_AVX512)
 
-static inline uint64_t get_xcr0()
+static inline uint64_t get_xcr0(void)
 {
 #if defined(_MSC_VER)
   return _xgetbv(0);
@@ -320,7 +320,7 @@ static inline uint64_t get_xcr0()
 
 #endif
 
-static inline int get_cpuid()
+static inline int get_cpuid(void)
 {
   int flags = 0;
   int abcd[4];
