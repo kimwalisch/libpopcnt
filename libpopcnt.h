@@ -104,8 +104,14 @@
 /* MSVC compatible compilers (Windows) */
 #if defined(X86_OR_X64) && \
     defined(_MSC_VER)
-  /* clang-cl (LLVM 10 from 2020) requires /arch:AVX2 or
-  * /arch:AVX512 to enable vector instructions */
+  /*
+   * There is an LLVM/Clang bug on Windows where function targets
+   * for AVX2 and AVX512 fail to compile unless the user compiles
+   * using the options /arch:AVX2 and /arch:AVX512.
+   * All Clang versions <= 18.0 (from 2024) are affected by this bug.
+   * However, I expect this bug will be fixed in near future:
+   * https://github.com/llvm/llvm-project/issues/53520
+   */
   #if defined(__clang__)
     #if defined(__AVX2__)
       #define HAVE_AVX2
