@@ -9,6 +9,7 @@
   * Port tests from AppVeyor to GitHub actions.
   * Get rid of unaligned uint64_t memory acceses, this fixes
     test failures when using GCC compiler sanitizers.
+  * Prefix all libpopcnt macros using LIBPOPCNT_ to have any naming collisions.
 
 2020-08-10 Kim Walisch  <kim.walisch@gmail.com>
 
