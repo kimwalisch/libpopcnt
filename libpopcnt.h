@@ -364,7 +364,7 @@ static inline int get_cpuid()
 
 #include <immintrin.h>
 
-#if !defined(_MSC_VER)
+#if __has_attribute(target)
   __attribute__ ((target ("avx2")))
 #endif
 static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i c)
@@ -374,7 +374,7 @@ static inline void CSA256(__m256i* h, __m256i* l, __m256i a, __m256i b, __m256i 
   *l = _mm256_xor_si256(u, c);
 }
 
-#if !defined(_MSC_VER)
+#if __has_attribute(target)
   __attribute__ ((target ("avx2")))
 #endif
 static inline __m256i popcnt256(__m256i v)
@@ -409,7 +409,7 @@ static inline __m256i popcnt256(__m256i v)
  * Wojciech Mula (23 Nov 2016).
  * @see https://arxiv.org/abs/1611.07612
  */
-#if !defined(_MSC_VER)
+#if __has_attribute(target)
   __attribute__ ((target ("avx2")))
 #endif
 static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
@@ -471,7 +471,7 @@ static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
 
 #include <immintrin.h>
 
-#if !defined(_MSC_VER)
+#if __has_attribute(target)
   __attribute__ ((target ("avx512f,avx512vpopcntdq")))
 #endif
 static inline uint64_t popcnt_avx512(const uint64_t* ptr, const uint64_t size)
