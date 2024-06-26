@@ -593,7 +593,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
           uint64_t bytes = (uint64_t) (8 - rem % 8);
           bytes = (bytes <= 7) ? bytes : 7;
           for (uint64_t j = 0; j < bytes; j++)
-            val = (val << 8) + ptr[i + j];
+            val |= ((uint64_t) ptr[i + j]) << (j * 8);
           cnt += popcnt64(val);
           i += bytes;
         }
@@ -608,7 +608,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
         uint64_t bytes = (uint64_t) (size - i);
         bytes = (bytes <= 7) ? bytes : 7;
         for (uint64_t j = 0; j < bytes; j++)
-          val = (val << 8) + ptr[i + j];
+          val |= ((uint64_t) ptr[i + j]) << (j * 8);
         cnt += popcnt64(val);
       }
 
@@ -635,7 +635,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       uint64_t bytes = (uint64_t) (8 - rem % 8);
       bytes = (bytes <= 7) ? bytes : 7;
       for (uint64_t j = 0; j < bytes; j++)
-        val = (val << 8) + ptr[i + j];
+        val |= ((uint64_t) ptr[i + j]) << (j * 8);
       cnt += popcnt64_bitwise(val);
       i += bytes;
     }
@@ -650,7 +650,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     uint64_t bytes = (uint64_t) (size - i);
     bytes = (bytes <= 7) ? bytes : 7;
     for (uint64_t j = 0; j < bytes; j++)
-      val = (val << 8) + ptr[i + j];
+      val |= ((uint64_t) ptr[i + j]) << (j * 8);
     cnt += popcnt64_bitwise(val);
   }
 
@@ -696,7 +696,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     uint64_t val = 0;
     bytes = (bytes <= 7) ? bytes : 7;
     for (uint64_t j = 0; j < bytes; j++)
-      val = (val << 8) + ptr8[i + j];
+      val |= ((uint64_t) ptr[i + j]) << (j * 8);
     cnt += popcnt64(val);
   }
 
@@ -786,7 +786,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       uint64_t bytes = (uint64_t) (8 - rem % 8);
       bytes = (bytes <= 7) ? bytes : 7;
       for (uint64_t j = 0; j < bytes; j++)
-        val = (val << 8) + ptr[i + j];
+        val |= ((uint64_t) ptr[i + j]) << (j * 8);
       cnt += popcnt64(val);
       i += bytes;
     }
@@ -801,7 +801,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     uint64_t bytes = (uint64_t) (size - i);
     bytes = (bytes <= 7) ? bytes : 7;
     for (uint64_t j = 0; j < bytes; j++)
-      val = (val << 8) + ptr[i + j];
+      val |= ((uint64_t) ptr[i + j]) << (j * 8);
     cnt += popcnt64(val);
   }
 
@@ -833,7 +833,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       uint64_t bytes = (uint64_t) (8 - rem % 8);
       bytes = (bytes <= 7) ? bytes : 7;
       for (uint64_t j = 0; j < bytes; j++)
-        val = (val << 8) + ptr[i + j];
+        val |= ((uint64_t) ptr[i + j]) << (j * 8);
       cnt += popcnt64(val);
       i += bytes;
     }
@@ -848,7 +848,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     uint64_t bytes = (uint64_t) (size - i);
     bytes = (bytes <= 7) ? bytes : 7;
     for (uint64_t j = 0; j < bytes; j++)
-      val = (val << 8) + ptr[i + j];
+      val |= ((uint64_t) ptr[i + j]) << (j * 8);
     cnt += popcnt64(val);
   }
 
