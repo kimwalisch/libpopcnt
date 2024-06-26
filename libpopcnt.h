@@ -553,6 +553,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       const uint64_t* ptr64 = (const uint64_t*)(ptr + i);
       cnt += popcnt_avx512(ptr64, (size - i) / 8);
       i = size - size % 8;
+      if (i == size)
+        return cnt;
     }
 #endif
 
