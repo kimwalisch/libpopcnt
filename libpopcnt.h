@@ -584,15 +584,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     {
       if (i + 8 <= size)
       {
-        /* Align &ptr[i] to an 8 byte boundary */
         uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
+
+        /* Align &ptr[i] to an 8 byte boundary */
         if (rem != 0)
         {
-          size_t bytes = (size_t) (8 - rem % 8);
           uint64_t val = 0;
-          for (; i < bytes; i++)
-            val = (val << 8) + ptr[i];
+          uint64_t bytes = (uint64_t) (8 - rem % 8);
+          bytes = (bytes <= 7) ? bytes : 7;
+          for (uint64_t j = 0; j < bytes; j++)
+            val = (val << 8) + ptr[i + j];
           cnt += popcnt64(val);
+          i += bytes;
         }
       }
 
@@ -602,8 +605,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       if (i < size)
       {
         uint64_t val = 0;
-        for (; i < size; i++)
-          val = (val << 8) + ptr[i];
+        uint64_t bytes = (uint64_t) (size - i);
+        bytes = (bytes <= 7) ? bytes : 7;
+        for (uint64_t j = 0; j < bytes; j++)
+          val = (val << 8) + ptr[i + j];
         cnt += popcnt64(val);
       }
 
@@ -621,15 +626,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i + 8 <= size)
   {
-    /* Align &ptr[i] to an 8 byte boundary */
     uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
+
+    /* Align &ptr[i] to an 8 byte boundary */
     if (rem != 0)
     {
-      size_t bytes = (size_t) (8 - rem % 8);
       uint64_t val = 0;
-      for (; i < bytes; i++)
-        val = (val << 8) + ptr[i];
+      uint64_t bytes = (uint64_t) (8 - rem % 8);
+      bytes = (bytes <= 7) ? bytes : 7;
+      for (uint64_t j = 0; j < bytes; j++)
+        val = (val << 8) + ptr[i + j];
       cnt += popcnt64_bitwise(val);
+      i += bytes;
     }
   }
 
@@ -639,8 +647,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if (i < size)
   {
     uint64_t val = 0;
-    for (; i < size; i++)
-      val = (val << 8) + ptr[i];
+    uint64_t bytes = (uint64_t) (size - i);
+    bytes = (bytes <= 7) ? bytes : 7;
+    for (uint64_t j = 0; j < bytes; j++)
+      val = (val << 8) + ptr[i + j];
     cnt += popcnt64_bitwise(val);
   }
 
@@ -684,8 +694,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     i = size - rem;
     const uint8_t* ptr8 = (const uint8_t*) data;
     uint64_t val = 0;
-    for (; i < size; i++)
-      val = (val << 8) + ptr8[i];
+    uint64_t bytes = (uint64_t) (size - i);
+    bytes = (bytes <= 7) ? bytes : 7;
+    for (uint64_t j = 0; j < bytes; j++)
+      val = (val << 8) + ptr8[i + j];
     cnt += popcnt64(val);
   }
 
@@ -766,15 +778,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i + 8 <= size)
   {
-    /* Align &ptr[i] to an 8 byte boundary */
     uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
+
+    /* Align &ptr[i] to an 8 byte boundary */
     if (rem != 0)
     {
-      size_t bytes = (size_t) (8 - rem % 8);
       uint64_t val = 0;
-      for (; i < bytes; i++)
-        val = (val << 8) + ptr[i];
+      uint64_t bytes = (uint64_t) (8 - rem % 8);
+      bytes = (bytes <= 7) ? bytes : 7;
+      for (uint64_t j = 0; j < bytes; j++)
+        val = (val << 8) + ptr[i + j];
       cnt += popcnt64(val);
+      i += bytes;
     }
   }
 
@@ -784,8 +799,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if (i < size)
   {
     uint64_t val = 0;
-    for (; i < size; i++)
-      val = (val << 8) + ptr[i];
+    uint64_t bytes = (uint64_t) (size - i);
+    bytes = (bytes <= 7) ? bytes : 7;
+    for (uint64_t j = 0; j < bytes; j++)
+      val = (val << 8) + ptr[i + j];
     cnt += popcnt64(val);
   }
 
@@ -808,15 +825,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i + 8 <= size)
   {
-    /* Align &ptr[i] to an 8 byte boundary */
     uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
+
+    /* Align &ptr[i] to an 8 byte boundary */
     if (rem != 0)
     {
-      size_t bytes = (size_t) (8 - rem % 8);
       uint64_t val = 0;
-      for (; i < bytes; i++)
-        val = (val << 8) + ptr[i];
+      uint64_t bytes = (uint64_t) (8 - rem % 8);
+      bytes = (bytes <= 7) ? bytes : 7;
+      for (uint64_t j = 0; j < bytes; j++)
+        val = (val << 8) + ptr[i + j];
       cnt += popcnt64(val);
+      i += bytes;
     }
   }
 
@@ -826,8 +846,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if (i < size)
   {
     uint64_t val = 0;
-    for (; i < size; i++)
-      val = (val << 8) + ptr[i];
+    uint64_t bytes = (uint64_t) (size - i);
+    bytes = (bytes <= 7) ? bytes : 7;
+    for (uint64_t j = 0; j < bytes; j++)
+      val = (val << 8) + ptr[i + j];
     cnt += popcnt64(val);
   }
 
