@@ -484,6 +484,22 @@ static inline uint64_t popcnt_avx512(const uint64_t* ptr, const uint64_t size)
     __m512i cnt = _mm512_setzero_si512();
     uint64_t i = 0;
 
+    for (; i + 32 < size; i += 32)
+    {
+      __m512i vec0 = _mm512_loadu_epi64(&ptr[i + 0]);
+      __m512i vec1 = _mm512_loadu_epi64(&ptr[i + 8]);
+      __m512i vec2 = _mm512_loadu_epi64(&ptr[i + 16]);
+      __m512i vec3 = _mm512_loadu_epi64(&ptr[i + 24]);
+      vec0 = _mm512_popcnt_epi64(vec0);
+      vec1 = _mm512_popcnt_epi64(vec1);
+      vec2 = _mm512_popcnt_epi64(vec2);
+      vec3 = _mm512_popcnt_epi64(vec3);
+      cnt = _mm512_add_epi64(cnt, vec0);
+      cnt = _mm512_add_epi64(cnt, vec1);
+      cnt = _mm512_add_epi64(cnt, vec2);
+      cnt = _mm512_add_epi64(cnt, vec3);
+    }
+
     for (; i + 8 < size; i += 8)
     {
       __m512i vec = _mm512_loadu_epi64(&ptr[i]);
