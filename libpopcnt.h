@@ -617,7 +617,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
         }
       }
 
-      for (; i < size - size % 8; i += 8)
+      for (; i + 8 <= size; i += 8)
         cnt += popcnt64(*(const uint64_t*)(ptr + i));
 
       if (i < size)
@@ -659,7 +659,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     }
   }
 
-  for (; i < size - size % 8; i += 8)
+  for (; i + 8 <= size; i += 8)
     cnt += popcnt64_bitwise(*(const uint64_t*)(ptr + i));
 
   if (i < size)
@@ -810,7 +810,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     }
   }
 
-  for (; i < size - size % 8; i += 8)
+  for (; i + 8 <= size; i += 8)
     cnt += popcnt64(*(const uint64_t*)(ptr + i));
 
   if (i < size)
@@ -857,7 +857,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     }
   }
 
-  for (; i < size - size % 8; i += 8)
+  for (; i + 8 <= size; i += 8)
     cnt += popcnt64(*(const uint64_t*)(ptr + i));
 
   if (i < size)
