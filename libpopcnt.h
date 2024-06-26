@@ -545,10 +545,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   #if defined(__AVX512__) || \
      (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__))
     /* For tiny arrays AVX512 is not worth it */
-    if (i + 32 <= size)
+    if (i + 48 <= size)
   #else
     if ((cpuid & bit_AVX512_VPOPCNTDQ) &&
-        i + 32 <= size)
+        i + 48 <= size)
   #endif
     {
       const uint64_t* ptr64 = (const uint64_t*)(ptr + i);
