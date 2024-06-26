@@ -553,8 +553,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       const uint64_t* ptr64 = (const uint64_t*)(ptr + i);
       cnt += popcnt_avx512(ptr64, (size - i) / 8);
       i = size - size % 8;
+
       if (i == size)
         return cnt;
+      else
+        goto trailing_bytes;
     }
 #endif
 
@@ -571,6 +574,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       cnt += popcnt_avx2(ptr256, (size - i) / 32);
       i = size - size % 32;
     }
+#endif
+
+#if defined(LIBPOPCNT_HAVE_AVX512)
+  trailing_bytes:
 #endif
 
 #if defined(LIBPOPCNT_HAVE_POPCNT)
