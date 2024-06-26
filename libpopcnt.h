@@ -582,7 +582,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     if (cpuid & LIBPOPCNT_BIT_POPCNT)
   #endif
     {
-      if (i + 8 < size)
+      if (i + 8 <= size)
       {
         /* Align &ptr[i] to an 8 byte boundary */
         uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
@@ -619,7 +619,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #if !defined(LIBPOPCNT_HAVE_POPCNT) || \
     !defined(__POPCNT__)
 
-  if (i + 8 < size)
+  if (i + 8 <= size)
   {
     /* Align &ptr[i] to an 8 byte boundary */
     uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
@@ -764,7 +764,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     cnt += tmp[1];
   }
 
-  if (i + 8 < size)
+  if (i + 8 <= size)
   {
     /* Align &ptr[i] to an 8 byte boundary */
     uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
@@ -806,7 +806,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t cnt = 0;
   const uint8_t* ptr = (const uint8_t*) data;
 
-  if (i + 8 < size)
+  if (i + 8 <= size)
   {
     /* Align &ptr[i] to an 8 byte boundary */
     uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
