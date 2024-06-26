@@ -93,7 +93,7 @@ make test
 
 The above commands also build the ```benchmark``` program which is
 useful for benchmarking ```libpopcnt.h```. Below is a
-usage example run on an Intel Xeon Platinum 8168 CPU from 2017:
+usage example run on an AMD EPYC 9R14 CPU from 2023:
 
 ```bash
 # Usage: ./benchmark [array bytes] [iters]
@@ -102,8 +102,8 @@ Iters: 10000000
 Array size: 16.00 KB
 Algorithm: AVX512
 Status: 100%
-Seconds: 1.59
-103.4 GB/s
+Seconds: 1.23
+133.5 GB/s
 ```
 
 ## Acknowledgments
