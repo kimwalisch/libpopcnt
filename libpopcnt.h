@@ -33,7 +33,6 @@
 #define LIBPOPCNT_H
 
 #include <stdint.h>
-#include <string.h>
 
 #ifndef __has_builtin
   #define __has_builtin(x) 0
@@ -583,16 +582,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     if (cpuid & LIBPOPCNT_BIT_POPCNT)
   #endif
     {
-      uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
-
-      /* Align &ptr[i] to an 8 byte boundary */
-      if (rem8 != 0)
+      if (i + 8 < size)
       {
-        uint64_t val = 0;
-        size_t bytes = (size_t) (8 - rem8 % 8);
-        memcpy(&val, &ptr[i], bytes);
-        cnt += popcnt64(val);
-        i += bytes;
+        /* Align &ptr[i] to an 8 byte boundary */
+        uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
+        if (rem != 0)
+        {
+          size_t bytes = (size_t) (8 - rem % 8);
+          uint64_t val = 0;
+          for (; i < bytes; i++)
+            val = (val << 8) + ptr[i];
+          cnt += popcnt64(val);
+        }
       }
 
       for (; i < size - size % 8; i += 8)
@@ -601,8 +602,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       if (i < size)
       {
         uint64_t val = 0;
-        size_t bytes = (size_t)(size - i);
-        memcpy(&val, &ptr[i], bytes);
+        for (; i < size; i++)
+          val = (val << 8) + ptr[i];
         cnt += popcnt64(val);
       }
 
@@ -618,16 +619,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #if !defined(LIBPOPCNT_HAVE_POPCNT) || \
     !defined(__POPCNT__)
 
-  uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
-
-  /* Align &ptr[i] to an 8 byte boundary */
-  if (rem8 != 0)
+  if (i + 8 < size)
   {
-    uint64_t val = 0;
-    size_t bytes = (size_t) (8 - rem8 % 8);
-    memcpy(&val, &ptr[i], bytes);
-    cnt += popcnt64_bitwise(val);
-    i += bytes;
+    /* Align &ptr[i] to an 8 byte boundary */
+    uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
+    if (rem != 0)
+    {
+      size_t bytes = (size_t) (8 - rem % 8);
+      uint64_t val = 0;
+      for (; i < bytes; i++)
+        val = (val << 8) + ptr[i];
+      cnt += popcnt64_bitwise(val);
+    }
   }
 
   for (; i < size - size % 8; i += 8)
@@ -636,8 +639,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if (i < size)
   {
     uint64_t val = 0;
-    size_t bytes = (size_t)(size - i);
-    memcpy(&val, &ptr[i], bytes);
+    for (; i < size; i++)
+      val = (val << 8) + ptr[i];
     cnt += popcnt64_bitwise(val);
   }
 
@@ -678,9 +681,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (rem != 0)
   {
-    uint64_t val = 0;
+    i = size - rem;
     const uint8_t* ptr8 = (const uint8_t*) data;
-    memcpy(&val, &ptr8[size - rem], rem);
+    uint64_t val = 0;
+    for (; i < size; i++)
+      val = (val << 8) + ptr8[i];
     cnt += popcnt64(val);
   }
 
@@ -759,16 +764,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     cnt += tmp[1];
   }
 
-  uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
-
-  /* Align &ptr[i] to an 8 byte boundary */
-  if (rem8 != 0)
+  if (i + 8 < size)
   {
-    uint64_t val = 0;
-    size_t bytes = (size_t) (8 - rem8 % 8);
-    memcpy(&val, &ptr[i], bytes);
-    cnt += popcnt64(val);
-    i += bytes;
+    /* Align &ptr[i] to an 8 byte boundary */
+    uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
+    if (rem != 0)
+    {
+      size_t bytes = (size_t) (8 - rem % 8);
+      uint64_t val = 0;
+      for (; i < bytes; i++)
+        val = (val << 8) + ptr[i];
+      cnt += popcnt64(val);
+    }
   }
 
   for (; i < size - size % 8; i += 8)
@@ -777,8 +784,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if (i < size)
   {
     uint64_t val = 0;
-    size_t bytes = (size_t)(size - i);
-    memcpy(&val, &ptr[i], bytes);
+    for (; i < size; i++)
+      val = (val << 8) + ptr[i];
     cnt += popcnt64(val);
   }
 
@@ -798,16 +805,19 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t i = 0;
   uint64_t cnt = 0;
   const uint8_t* ptr = (const uint8_t*) data;
-  uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
 
-  /* Align &ptr[i] to an 8 byte boundary */
-  if (rem8 != 0)
+  if (i + 8 < size)
   {
-    uint64_t val = 0;
-    size_t bytes = (size_t) (8 - rem8 % 8);
-    memcpy(&val, &ptr[i], bytes);
-    cnt += popcnt64(val);
-    i += bytes;
+    /* Align &ptr[i] to an 8 byte boundary */
+    uintptr_t rem = ((uintptr_t) &ptr[i]) % 8;
+    if (rem != 0)
+    {
+      size_t bytes = (size_t) (8 - rem % 8);
+      uint64_t val = 0;
+      for (; i < bytes; i++)
+        val = (val << 8) + ptr[i];
+      cnt += popcnt64(val);
+    }
   }
 
   for (; i < size - size % 8; i += 8)
@@ -816,8 +826,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   if (i < size)
   {
     uint64_t val = 0;
-    size_t bytes = (size_t)(size - i);
-    memcpy(&val, &ptr[i], bytes);
+    for (; i < size; i++)
+      val = (val << 8) + ptr[i];
     cnt += popcnt64(val);
   }
 
