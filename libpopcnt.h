@@ -645,6 +645,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 #endif
 }
 
+/* Compile with e.g. -march=armv8-a+sve to enable ARM SVE */
 #elif defined(__ARM_FEATURE_SVE) && \
       __has_include(<arm_sve.h>)
 
