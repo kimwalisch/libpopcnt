@@ -527,10 +527,6 @@ static inline uint64_t popcnt_avx512(const uint64_t* ptr, const uint64_t size)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
-  uint64_t i = 0;
-  uint64_t cnt = 0;
-  const uint8_t* ptr = (const uint8_t*) data;
-
 /*
  * CPUID runtime checks are only enabled if this is needed.
  * E.g. CPUID is disabled when a user compiles his
@@ -556,6 +552,10 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   #endif
 #endif
 
+  const uint8_t* ptr = (const uint8_t*) data;
+  uint64_t cnt = 0;
+  uint64_t i = 0;
+
 #if defined(LIBPOPCNT_HAVE_AVX512)
   #if defined(__AVX512__) || \
      (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__))
@@ -569,11 +569,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       const uint64_t* ptr64 = (const uint64_t*)(ptr + i);
       cnt += popcnt_avx512(ptr64, (size - i) / 8);
       i = size - size % 8;
-
       if (i == size)
         return cnt;
-      else
-        goto trailing_bytes;
     }
 #endif
 
@@ -590,10 +587,6 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       cnt += popcnt_avx2(ptr256, (size - i) / 32);
       i = size - size % 32;
     }
-#endif
-
-#if defined(LIBPOPCNT_HAVE_AVX512)
-  trailing_bytes:
 #endif
 
 #if defined(LIBPOPCNT_HAVE_POPCNT)
