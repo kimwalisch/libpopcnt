@@ -673,12 +673,13 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   while (svptest_any(svptrue_b64(), pg));
 
   uint64_t cnt = svaddv_u64(svptrue_b64(), vcnt);
-  size %= sizeof(uint64_t);
+  uint64_t rem = size % sizeof(uint64_t);
 
-  if (size > 0)
+  if (rem != 0)
   {
     uint64_t val = 0;
-    memcpy(&val, &ptr64[i], size);
+    const uint8_t* ptr8 = (const uint8_t*) data;
+    memcpy(&val, &ptr8[size - rem], rem);
     cnt += popcnt64(val);
   }
 
