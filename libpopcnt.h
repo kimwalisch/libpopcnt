@@ -717,7 +717,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     uint64_t val = 0;
     bytes = (bytes <= 7) ? bytes : 7;
     for (uint64_t j = 0; j < bytes; j++)
-      val |= ((uint64_t) ptr[i + j]) << (j * 8);
+      val |= ((uint64_t) ptr8[i + j]) << (j * 8);
     cnt += popcnt64(val);
   }
 
