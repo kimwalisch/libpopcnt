@@ -88,26 +88,26 @@ int main(int argc, char* argv[])
   else
     std::cout << "Array size: " << std::fixed << std::setprecision(2) << bytes / (1024.0 * 1024.0) << " MB" << std::endl;
 
-#if defined(X86_OR_X64)
+#if defined(LIBPOPCNT_X86_OR_X64)
 
-  #if defined(HAVE_CPUID)
+  #if defined(LIBPOPCNT_HAVE_CPUID)
     int cpuid = get_cpuid();
-    if ((cpuid & bit_AVX512_VPOPCNTDQ) && bytes >= 32)
+    if ((cpuid & LIBPOPCNT_BIT_AVX512_VPOPCNTDQ) && bytes >= 32)
       algo = "AVX512";
-    else if ((cpuid & bit_AVX2) && bytes >= 512)
+    else if ((cpuid & LIBPOPCNT_BIT_AVX2) && bytes >= 512)
       algo = "AVX2";
-    else if (cpuid & bit_POPCNT)
+    else if (cpuid & LIBPOPCNT_BIT_POPCNT)
       algo = "POPCNT";
   #else
-    #if defined(HAVE_AVX512) && (defined(__AVX512__) || (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__)))
+    #if defined(LIBPOPCNT_HAVE_AVX512) && (defined(__AVX512__) || (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__)))
       if (algo.empty() && bytes >= 1024)
         algo = "AVX512";
     #endif
-    #if defined(HAVE_AVX2) && defined(__AVX2__)
+    #if defined(LIBPOPCNT_HAVE_AVX2) && defined(__AVX2__)
       if (algo.empty() && bytes >= 512)
         algo = "AVX2";
     #endif
-    #if defined(HAVE_POPCNT) && defined(__POPCNT__)
+    #if defined(LIBPOPCNT_HAVE_POPCNT) && defined(__POPCNT__)
       if (algo.empty())
         algo = "POPCNT";
     #endif

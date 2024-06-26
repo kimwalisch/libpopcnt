@@ -48,17 +48,17 @@
 #endif
 
 #ifdef __GNUC__
-  #define GNUC_PREREQ(x, y) \
+  #define LIBPOPCNT_GNUC_PREREQ(x, y) \
       (__GNUC__ > x || (__GNUC__ == x && __GNUC_MINOR__ >= y))
 #else
-  #define GNUC_PREREQ(x, y) 0
+  #define LIBPOPCNT_GNUC_PREREQ(x, y) 0
 #endif
 
 #ifdef __clang__
-  #define CLANG_PREREQ(x, y) \
+  #define LIBPOPCNT_CLANG_PREREQ(x, y) \
       (__clang_major__ > x || (__clang_major__ == x && __clang_minor__ >= y))
 #else
-  #define CLANG_PREREQ(x, y) 0
+  #define LIBPOPCNT_CLANG_PREREQ(x, y) 0
 #endif
 
 #if (_MSC_VER < 1900) && \
@@ -70,39 +70,39 @@
      defined(__x86_64__) || \
      defined(_M_IX86) || \
      defined(_M_X64))
-  #define X86_OR_X64
+  #define LIBPOPCNT_X86_OR_X64
 #endif
 
-#if GNUC_PREREQ(4, 2) || \
+#if LIBPOPCNT_GNUC_PREREQ(4, 2) || \
     __has_builtin(__builtin_popcount)
-  #define HAVE_BUILTIN_POPCOUNT
+  #define LIBPOPCNT_HAVE_BUILTIN_POPCOUNT
 #endif
 
-#if GNUC_PREREQ(4, 2) || \
-    CLANG_PREREQ(3, 0)
-  #define HAVE_ASM_POPCNT
+#if LIBPOPCNT_GNUC_PREREQ(4, 2) || \
+    LIBPOPCNT_CLANG_PREREQ(3, 0)
+  #define LIBPOPCNT_HAVE_ASM_POPCNT
 #endif
 
-#if defined(X86_OR_X64) && \
-   (defined(HAVE_ASM_POPCNT) || \
+#if defined(LIBPOPCNT_X86_OR_X64) && \
+   (defined(LIBPOPCNT_HAVE_ASM_POPCNT) || \
     defined(_MSC_VER))
-  #define HAVE_POPCNT
+  #define LIBPOPCNT_HAVE_POPCNT
 #endif
 
 /* GCC compiler */
-#if defined(X86_OR_X64) && \
-    GNUC_PREREQ(4, 9)
-  #define HAVE_AVX2
+#if defined(LIBPOPCNT_X86_OR_X64) && \
+    LIBPOPCNT_GNUC_PREREQ(4, 9)
+  #define LIBPOPCNT_HAVE_AVX2
 #endif
 
 /* GCC compiler */
-#if defined(X86_OR_X64) && \
-    GNUC_PREREQ(11, 0)
-  #define HAVE_AVX512
+#if defined(LIBPOPCNT_X86_OR_X64) && \
+    LIBPOPCNT_GNUC_PREREQ(11, 0)
+  #define LIBPOPCNT_HAVE_AVX512
 #endif
 
 /* MSVC compatible compilers (Windows) */
-#if defined(X86_OR_X64) && \
+#if defined(LIBPOPCNT_X86_OR_X64) && \
     defined(_MSC_VER)
   /*
    * There is an LLVM/Clang bug on Windows where function targets
@@ -114,31 +114,31 @@
    */
   #if defined(__clang__)
     #if defined(__AVX2__)
-      #define HAVE_AVX2
+      #define LIBPOPCNT_HAVE_AVX2
     #endif
     #if defined(__AVX512__)
-      #define HAVE_AVX2
-      #define HAVE_AVX512
+      #define LIBPOPCNT_HAVE_AVX2
+      #define LIBPOPCNT_HAVE_AVX512
     #endif
   /* MSVC 2017 or later does not require
   * /arch:AVX2 or /arch:AVX512 */
   #elif _MSC_VER >= 1910
-    #define HAVE_AVX2
-    #define HAVE_AVX512
+    #define LIBPOPCNT_HAVE_AVX2
+    #define LIBPOPCNT_HAVE_AVX512
   #endif
 #endif
 
 /* Clang (Unix-like OSes) */
-#if defined(X86_OR_X64) && !defined(_MSC_VER)
-  #if CLANG_PREREQ(3, 8) && \
+#if defined(LIBPOPCNT_X86_OR_X64) && !defined(_MSC_VER)
+  #if LIBPOPCNT_CLANG_PREREQ(3, 8) && \
       __has_attribute(target) && \
       (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
-    #define HAVE_AVX2
+    #define LIBPOPCNT_HAVE_AVX2
   #endif
-  #if CLANG_PREREQ(9, 0) && \
+  #if LIBPOPCNT_CLANG_PREREQ(9, 0) && \
       __has_attribute(target) && \
       (!defined(__apple_build_version__) || __apple_build_version__ >= 8000000)
-    #define HAVE_AVX512
+    #define LIBPOPCNT_HAVE_AVX512
   #endif
 #endif
 
@@ -147,15 +147,15 @@
  * needed. E.g. do not enable if user has compiled
  * using -march=native on a CPU that supports AVX512.
  */
-#if defined(X86_OR_X64) && \
+#if defined(LIBPOPCNT_X86_OR_X64) && \
    (defined(__cplusplus) || \
     defined(_MSC_VER) || \
-   (GNUC_PREREQ(4, 2) || \
+   (LIBPOPCNT_GNUC_PREREQ(4, 2) || \
     __has_builtin(__sync_val_compare_and_swap))) && \
-   ((defined(HAVE_AVX512) && !(defined(__AVX512__) || (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__)))) || \
-    (defined(HAVE_AVX2) && !defined(__AVX2__)) || \
-    (defined(HAVE_POPCNT) && !defined(__POPCNT__)))
-  #define HAVE_CPUID
+   ((defined(LIBPOPCNT_HAVE_AVX512) && !(defined(__AVX512__) || (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__)))) || \
+    (defined(LIBPOPCNT_HAVE_AVX2) && !defined(__AVX2__)) || \
+    (defined(LIBPOPCNT_HAVE_POPCNT) && !defined(__POPCNT__)))
+  #define LIBPOPCNT_HAVE_CPUID
 #endif
 
 #ifdef __cplusplus
@@ -182,7 +182,7 @@ static inline uint64_t popcnt64_bitwise(uint64_t x)
   return (x * h01) >> 56;
 }
 
-#if defined(HAVE_ASM_POPCNT) && \
+#if defined(LIBPOPCNT_HAVE_ASM_POPCNT) && \
     defined(__x86_64__)
 
 static inline uint64_t popcnt64(uint64_t x)
@@ -191,7 +191,7 @@ static inline uint64_t popcnt64(uint64_t x)
   return x;
 }
 
-#elif defined(HAVE_ASM_POPCNT) && \
+#elif defined(LIBPOPCNT_HAVE_ASM_POPCNT) && \
       defined(__i386__)
 
 static inline uint32_t popcnt32(uint32_t x)
@@ -228,7 +228,7 @@ static inline uint64_t popcnt64(uint64_t x)
 }
 
 /* non x86 CPUs */
-#elif defined(HAVE_BUILTIN_POPCOUNT)
+#elif defined(LIBPOPCNT_HAVE_BUILTIN_POPCOUNT)
 
 static inline uint64_t popcnt64(uint64_t x)
 {
@@ -246,7 +246,7 @@ static inline uint64_t popcnt64(uint64_t x)
 
 #endif
 
-#if defined(HAVE_CPUID)
+#if defined(LIBPOPCNT_HAVE_CPUID)
 
 #if defined(_MSC_VER)
   #include <intrin.h>
@@ -257,17 +257,17 @@ static inline uint64_t popcnt64(uint64_t x)
 /* https://en.wikipedia.org/wiki/CPUID */
 
 /* %ebx bit flags */
-#define bit_AVX2    (1 << 5)
-#define bit_AVX512F (1 << 16)
+#define LIBPOPCNT_BIT_AVX2    (1 << 5)
+#define LIBPOPCNT_BIT_AVX512F (1 << 16)
 
 /* %ecx bit flags */
-#define bit_POPCNT (1 << 23)
-#define bit_AVX512_VPOPCNTDQ (1 << 14)
+#define LIBPOPCNT_BIT_POPCNT (1 << 23)
+#define LIBPOPCNT_BIT_AVX512_VPOPCNTDQ (1 << 14)
 
 /* xgetbv bit flags */
-#define XSTATE_SSE (1 << 1)
-#define XSTATE_YMM (1 << 2)
-#define XSTATE_ZMM (7 << 5)
+#define LIBPOPCNT_XSTATE_SSE (1 << 1)
+#define LIBPOPCNT_XSTATE_YMM (1 << 2)
+#define LIBPOPCNT_XSTATE_ZMM (7 << 5)
 
 static inline void run_cpuid(int eax, int ecx, int* abcd)
 {
@@ -302,8 +302,8 @@ static inline void run_cpuid(int eax, int ecx, int* abcd)
 #endif
 }
 
-#if defined(HAVE_AVX2) || \
-    defined(HAVE_AVX512)
+#if defined(LIBPOPCNT_HAVE_AVX2) || \
+    defined(LIBPOPCNT_HAVE_AVX512)
 
 static inline uint64_t get_xcr0(void)
 {
@@ -327,11 +327,11 @@ static inline int get_cpuid(void)
 
   run_cpuid(1, 0, abcd);
 
-  if ((abcd[2] & bit_POPCNT) == bit_POPCNT)
-    flags |= bit_POPCNT;
+  if ((abcd[2] & LIBPOPCNT_BIT_POPCNT) == LIBPOPCNT_BIT_POPCNT)
+    flags |= LIBPOPCNT_BIT_POPCNT;
 
-#if defined(HAVE_AVX2) || \
-    defined(HAVE_AVX512)
+#if defined(LIBPOPCNT_HAVE_AVX2) || \
+    defined(LIBPOPCNT_HAVE_AVX512)
 
   int osxsave_mask = (1 << 27);
 
@@ -339,22 +339,22 @@ static inline int get_cpuid(void)
   if ((abcd[2] & osxsave_mask) != osxsave_mask)
     return 0;
 
-  uint64_t ymm_mask = XSTATE_SSE | XSTATE_YMM;
-  uint64_t zmm_mask = XSTATE_SSE | XSTATE_YMM | XSTATE_ZMM;
+  uint64_t ymm_mask = LIBPOPCNT_XSTATE_SSE | LIBPOPCNT_XSTATE_YMM;
+  uint64_t zmm_mask = LIBPOPCNT_XSTATE_SSE | LIBPOPCNT_XSTATE_YMM | LIBPOPCNT_XSTATE_ZMM;
   uint64_t xcr0 = get_xcr0();
 
   if ((xcr0 & ymm_mask) == ymm_mask)
   {
     run_cpuid(7, 0, abcd);
 
-    if ((abcd[1] & bit_AVX2) == bit_AVX2)
-      flags |= bit_AVX2;
+    if ((abcd[1] & LIBPOPCNT_BIT_AVX2) == LIBPOPCNT_BIT_AVX2)
+      flags |= LIBPOPCNT_BIT_AVX2;
 
     if ((xcr0 & zmm_mask) == zmm_mask)
     {
-      if ((abcd[1] & bit_AVX512F) == bit_AVX512F &&
-          (abcd[2] & bit_AVX512_VPOPCNTDQ) == bit_AVX512_VPOPCNTDQ)
-        flags |= bit_AVX512_VPOPCNTDQ;
+      if ((abcd[1] & LIBPOPCNT_BIT_AVX512F) == LIBPOPCNT_BIT_AVX512F &&
+          (abcd[2] & LIBPOPCNT_BIT_AVX512_VPOPCNTDQ) == LIBPOPCNT_BIT_AVX512_VPOPCNTDQ)
+        flags |= LIBPOPCNT_BIT_AVX512_VPOPCNTDQ;
     }
   }
 
@@ -365,7 +365,7 @@ static inline int get_cpuid(void)
 
 #endif /* cpuid */
 
-#if defined(HAVE_AVX2) && \
+#if defined(LIBPOPCNT_HAVE_AVX2) && \
     __has_include(<immintrin.h>)
 
 #include <immintrin.h>
@@ -472,7 +472,7 @@ static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
 
 #endif
 
-#if defined(HAVE_AVX512) && \
+#if defined(LIBPOPCNT_HAVE_AVX512) && \
     __has_include(<immintrin.h>)
 
 #include <immintrin.h>
@@ -503,7 +503,7 @@ static inline uint64_t popcnt_avx512(const uint64_t* ptr, const uint64_t size)
 #endif
 
 /* x86 CPUs */
-#if defined(X86_OR_X64)
+#if defined(LIBPOPCNT_X86_OR_X64)
 
 /*
  * Count the number of 1 bits in the data array
@@ -521,7 +521,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
  * E.g. CPUID is disabled when a user compiles his
  * code using -march=native on a CPU with AVX512.
  */
-#if defined(HAVE_CPUID)
+#if defined(LIBPOPCNT_HAVE_CPUID)
   #if defined(__cplusplus)
     /* C++11 thread-safe singleton */
     static const int cpuid = get_cpuid();
@@ -541,13 +541,13 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   #endif
 #endif
 
-#if defined(HAVE_AVX512)
+#if defined(LIBPOPCNT_HAVE_AVX512)
   #if defined(__AVX512__) || \
      (defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__))
     /* For tiny arrays AVX512 is not worth it */
     if (i + 48 <= size)
   #else
-    if ((cpuid & bit_AVX512_VPOPCNTDQ) &&
+    if ((cpuid & LIBPOPCNT_BIT_AVX512_VPOPCNTDQ) &&
         i + 48 <= size)
   #endif
     {
@@ -557,12 +557,12 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     }
 #endif
 
-#if defined(HAVE_AVX2)
+#if defined(LIBPOPCNT_HAVE_AVX2)
   #if defined(__AVX2__)
     /* AVX2 requires arrays >= 512 bytes */
     if (i + 512 <= size)
   #else
-    if ((cpuid & bit_AVX2) &&
+    if ((cpuid & LIBPOPCNT_BIT_AVX2) &&
         i + 512 <= size)
   #endif
     {
@@ -572,7 +572,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     }
 #endif
 
-#if defined(HAVE_POPCNT)
+#if defined(LIBPOPCNT_HAVE_POPCNT)
   /* 
    * The user has compiled without -mpopcnt.
    * Unfortunately the MSVC compiler does not have
@@ -580,7 +580,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
    * runtime check for MSVC.
    */
   #if !defined(__POPCNT__)
-    if (cpuid & bit_POPCNT)
+    if (cpuid & LIBPOPCNT_BIT_POPCNT)
   #endif
     {
       uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
@@ -615,7 +615,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
  * 1) Compiler does not support POPCNT.
  * 2) x86 CPU does not support POPCNT (cpuid != POPCNT).
  */
-#if !defined(HAVE_POPCNT) || \
+#if !defined(LIBPOPCNT_HAVE_POPCNT) || \
     !defined(__POPCNT__)
 
   uintptr_t rem8 = ((uintptr_t) &ptr[i]) % 8;
