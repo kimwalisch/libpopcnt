@@ -490,10 +490,12 @@ static inline uint64_t popcnt_avx512(const uint64_t* ptr, const uint64_t size)
       __m512i vec1 = _mm512_loadu_epi64(&ptr[i + 8]);
       __m512i vec2 = _mm512_loadu_epi64(&ptr[i + 16]);
       __m512i vec3 = _mm512_loadu_epi64(&ptr[i + 24]);
+
       vec0 = _mm512_popcnt_epi64(vec0);
       vec1 = _mm512_popcnt_epi64(vec1);
       vec2 = _mm512_popcnt_epi64(vec2);
       vec3 = _mm512_popcnt_epi64(vec3);
+
       cnt = _mm512_add_epi64(cnt, vec0);
       cnt = _mm512_add_epi64(cnt, vec1);
       cnt = _mm512_add_epi64(cnt, vec2);
@@ -695,17 +697,36 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   uint64_t i = 0;
   const uint64_t* ptr64 = (const uint64_t*) data;
   uint64_t size64 = size / sizeof(uint64_t);
-  svbool_t pg = svwhilelt_b64(i, size64);
   svuint64_t vcnt = svdup_u64(0);
 
-  do {
+  for (; i + svcntd() * 4 <= size64; i += svcntd() * 4)
+  {
+    svuint64_t vec0 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 0]);
+    svuint64_t vec1 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 1]);
+    svuint64_t vec2 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 2]);
+    svuint64_t vec3 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 3]);
+
+    vec0 = svcnt_u64_x(svptrue_b64(), vec0);
+    vec1 = svcnt_u64_x(svptrue_b64(), vec1);
+    vec2 = svcnt_u64_x(svptrue_b64(), vec2);
+    vec3 = svcnt_u64_x(svptrue_b64(), vec3);
+
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec0);
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec1);
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec2);
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec3);
+  }
+
+  svbool_t pg = svwhilelt_b64(i, size64);
+
+  while (svptest_any(svptrue_b64(), pg))
+  {
     svuint64_t vec = svld1_u64(pg, &ptr64[i]);
     vec = svcnt_u64_z(pg, vec);
     vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec);
     i += svcntd();
     pg = svwhilelt_b64(i, size64);
   }
-  while (svptest_any(svptrue_b64(), pg));
 
   uint64_t cnt = svaddv_u64(svptrue_b64(), vcnt);
   uint64_t bytes = size % sizeof(uint64_t);
