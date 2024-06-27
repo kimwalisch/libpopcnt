@@ -1,10 +1,10 @@
-2024-06-25 Kim Walisch  <kim.walisch@gmail.com>
+2024-06-27 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 3.0
 
-  * Replace AVX512BW algorithm by faster AVX512 VPOPCNTDQ algorithm.
   * Add ARM SVE algorithm.
-  * Minor speedup of ARM NEON algorithm.
+  * Replace AVX512BW algorithm by faster AVX512 VPOPCNTDQ algorithm.
+  * Add MSVC compiler support ARM NEON popcount algorithm.
   * Improve preprocessor checks using __has_include() macro.
   * Port tests from AppVeyor to GitHub actions.
   * Get rid of unaligned uint64_t memory acceses, this fixes
