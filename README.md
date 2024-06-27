@@ -38,25 +38,6 @@ cc  -O3 program.c
 c++ -O3 program.cpp
 ```
 
-## How it works
-
-On x86 CPUs, ```libpopcnt.h``` first queries your CPU's supported
-instruction sets using the ```CPUID``` instruction (this is done only once).
-Then ```libpopcnt.h``` chooses the fastest bit population count algorithm
-supported by your CPU:
-
-* If the CPU supports ```AVX512``` the ```AVX512 VPOPCNT``` algorithm is used.
-* Else if the CPU supports ```AVX2``` the ```AVX2 Harley Seal``` algorithm is used.
-* Else if the CPU supports ```POPCNT``` the ```POPCNT``` algorithm is used.
-* For CPUs without ```POPCNT``` instruction a portable integer algorithm is used.
-
-Note that ```libpopcnt.h``` works on all CPUs (x86, ARM, PPC, WebAssembly, ...).
-It is portable by default and hardware acceleration is only enabled if the CPU
-supports it. ```libpopcnt.h``` it is also thread-safe.
-
-We take performance seriously, if you compile using e.g. ```-march=native```
-on an x86 CPU with AVX512 support then all runtime ```CPUID``` checks are removed!
-
 ## CPU architectures
 
 ```libpopcnt.h``` has hardware accelerated popcount algorithms for
@@ -82,6 +63,46 @@ the following CPU architectures:
 </table>
 
 For other CPU architectures a fast integer popcount algorithm is used.
+
+## How it works
+
+On x86 CPUs, ```libpopcnt.h``` first queries your CPU's supported
+instruction sets using the ```CPUID``` instruction (this is done only once).
+Then ```libpopcnt.h``` chooses the fastest bit population count algorithm
+supported by your CPU:
+
+* If the CPU supports ```AVX512``` the ```AVX512 VPOPCNT``` algorithm is used.
+* Else if the CPU supports ```AVX2``` the ```AVX2 Harley Seal``` algorithm is used.
+* Else if the CPU supports ```POPCNT``` the ```POPCNT``` algorithm is used.
+* For CPUs without ```POPCNT``` instruction a portable integer algorithm is used.
+
+Note that ```libpopcnt.h``` works on all CPUs (x86, ARM, PPC, WebAssembly, ...).
+It is portable by default and hardware acceleration is only enabled if the CPU
+supports it. ```libpopcnt.h``` it is also thread-safe.
+
+We take performance seriously, if you compile using e.g. ```-march=native```
+on an x86 CPU with AVX512 support then all runtime ```CPUID``` checks are removed!
+
+## ARM SVE (Scalable Vector Extension)
+
+ARM SVE is a new vector instruction set for ARM CPUs that was first released in
+2020. ARM SVE supports a variable vector length from 128 to 2048 bits. Hence
+ARM SVE algorithms can be much faster than ARM NEON algorithms which are limited
+to 128 bits vector length.
+
+libpopcnt new ARM SVE popcount algorithm is up to 3x faster than its ARM NEON
+popcount algorithm. Unfortunately runtime dispatching to ARM SVE is not yet well
+supported by the GCC and Clang compilers and libc's. Therefore, by default only
+the (portable) ARM NEON popcount algorithm is enabled when using libpopcnt on
+ARM CPUs.
+
+To enable libpopcnt's ARM SVE popcount algorithm you need to compile your program
+using your compiler's ARM SVE option e.g.:
+
+```bash
+gcc -O3 -march=armv8-a+sve program.c
+g++ -O3 -march=armv8-a+sve program.cpp
+```
 
 ## Development
 
