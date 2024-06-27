@@ -90,11 +90,11 @@ ARM SVE is a new vector instruction set for ARM CPUs that was first released in
 ARM SVE algorithms can be much faster than ARM NEON algorithms which are limited
 to 128 bits vector length.
 
-libpopcnt new ARM SVE popcount algorithm is up to 3x faster than its ARM NEON
-popcount algorithm. Unfortunately runtime dispatching to ARM SVE is not yet well
-supported by the GCC and Clang compilers and libc's. Therefore, by default only
-the (portable) ARM NEON popcount algorithm is enabled when using libpopcnt on
-ARM CPUs.
+libpopcnt's new ARM SVE popcount algorithm is up to 3x faster than its ARM NEON
+popcount algorithm (on AWS Graviton3  CPUs). Unfortunately runtime dispatching to
+ARM SVE is not yet well supported by the GCC and Clang compilers and libc's.
+Therefore, by default only the (portable) ARM NEON popcount algorithm is enabled
+when using libpopcnt on ARM CPUs.
 
 To enable libpopcnt's ARM SVE popcount algorithm you need to compile your program
 using your compiler's ARM SVE option e.g.:
