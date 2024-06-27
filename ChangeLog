@@ -4,7 +4,7 @@
 
   * Add ARM SVE algorithm.
   * Replace AVX512BW algorithm by faster AVX512 VPOPCNTDQ algorithm.
-  * Add MSVC compiler support ARM NEON popcount algorithm.
+  * Add MSVC support for ARM NEON.
   * Improve preprocessor checks using __has_include() macro.
   * Port tests from AppVeyor to GitHub actions.
   * Get rid of unaligned uint64_t memory acceses, this fixes
