@@ -768,7 +768,8 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 }
 
 #elif (defined(__ARM_NEON) || \
-       defined(__aarch64__)) && \
+       defined(__aarch64__) || \
+       defined(_M_ARM64)) && \
       __has_include(<arm_neon.h>)
 
 #include <arm_neon.h>
