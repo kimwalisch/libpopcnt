@@ -1,3 +1,10 @@
+2024-06-29 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 3.1
+
+  * Improve AVX512 algorithm for trailing 64 bytes.
+  * AVX512 algorithm does not require AVX512-BITALG extension anymore.
+
 2024-06-27 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 3.0

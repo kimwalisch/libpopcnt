@@ -102,8 +102,7 @@ int main(int argc, char* argv[])
     #if defined(LIBPOPCNT_HAVE_AVX512) && (defined(__AVX512__) || \
                                           (defined(__AVX512F__) && \
                                            defined(__AVX512BW__) && \
-                                           defined(__AVX512VPOPCNTDQ__) && \
-                                           defined(__AVX512BITALG__)))
+                                           defined(__AVX512VPOPCNTDQ__)))
       if (algo.empty() && bytes >= 40)
         algo = "AVX512";
     #endif

@@ -154,8 +154,7 @@
    ((defined(LIBPOPCNT_HAVE_AVX512) && !(defined(__AVX512__) || \
                                         (defined(__AVX512F__) && \
                                          defined(__AVX512BW__) && \
-                                         defined(__AVX512VPOPCNTDQ__) && \
-                                         defined(__AVX512BITALG__)))) || \
+                                         defined(__AVX512VPOPCNTDQ__)))) || \
     (defined(LIBPOPCNT_HAVE_AVX2) && !defined(__AVX2__)) || \
     (defined(LIBPOPCNT_HAVE_POPCNT) && !defined(__POPCNT__)))
   #define LIBPOPCNT_HAVE_CPUID
@@ -265,7 +264,6 @@ static inline uint64_t popcnt64(uint64_t x)
 #define LIBPOPCNT_BIT_AVX512BW (1 << 30)
 
 /* %ecx bit flags */
-#define LIBPOPCNT_BIT_AVX512_BITALG    (1 << 12)
 #define LIBPOPCNT_BIT_AVX512_VPOPCNTDQ (1 << 14)
 #define LIBPOPCNT_BIT_POPCNT           (1 << 23)
 
@@ -361,8 +359,7 @@ static inline int get_cpuid(void)
       /* then we add LIBPOPCNT_BIT_AVX512_VPOPCNTDQ to our CPUID flags. */
       if ((abcd[1] & LIBPOPCNT_BIT_AVX512F) == LIBPOPCNT_BIT_AVX512F &&
           (abcd[1] & LIBPOPCNT_BIT_AVX512BW) == LIBPOPCNT_BIT_AVX512BW &&
-          (abcd[2] & LIBPOPCNT_BIT_AVX512_VPOPCNTDQ) == LIBPOPCNT_BIT_AVX512_VPOPCNTDQ &&
-          (abcd[2] & LIBPOPCNT_BIT_AVX512_BITALG) == LIBPOPCNT_BIT_AVX512_BITALG)
+          (abcd[2] & LIBPOPCNT_BIT_AVX512_VPOPCNTDQ) == LIBPOPCNT_BIT_AVX512_VPOPCNTDQ)
         flags |= LIBPOPCNT_BIT_AVX512_VPOPCNTDQ;
     }
   }
@@ -487,7 +484,7 @@ static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
 #include <immintrin.h>
 
 #if __has_attribute(target)
-  __attribute__ ((target ("avx512f,avx512bw,avx512vpopcntdq,avx512bitalg")))
+  __attribute__ ((target ("avx512f,avx512bw,avx512vpopcntdq")))
 #endif
 static inline uint64_t popcnt_avx512(const uint8_t* ptr8, uint64_t size)
 {
@@ -528,9 +525,8 @@ static inline uint64_t popcnt_avx512(const uint8_t* ptr8, uint64_t size)
     {
       __mmask64 mask = (__mmask64) (0xffffffffffffffffull >> (i + 64 - size));
       __m512i vec = _mm512_maskz_loadu_epi8(mask, &ptr8[i]);
-      __m512i cnt8 = _mm512_popcnt_epi8(vec);
-      cnt8 = _mm512_sad_epu8(cnt8, _mm512_setzero_si512());
-      cnt = _mm512_add_epi64(cnt, cnt8);
+      vec = _mm512_popcnt_epi64(vec);
+      cnt = _mm512_add_epi64(cnt, vec);
     }
 
     return _mm512_reduce_add_epi64(cnt);
@@ -581,8 +577,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
   #if defined(__AVX512__) || \
      (defined(__AVX512F__) && \
       defined(__AVX512BW__) && \
-      defined(__AVX512VPOPCNTDQ__) && \
-      defined(__AVX512BITALG__))
+      defined(__AVX512VPOPCNTDQ__))
     /* For tiny arrays AVX512 is not worth it */
     if (i + 40 <= size)
   #else
