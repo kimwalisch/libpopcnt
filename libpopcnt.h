@@ -520,7 +520,7 @@ static inline uint64_t popcnt_avx512(const uint8_t* ptr8, uint64_t size)
 
     i *= sizeof(uint64_t);
 
-    /* Process last 64 bytes */
+    /* Process last 63 bytes */
     if (i < size)
     {
       __mmask64 mask = (__mmask64) (0xffffffffffffffffull >> (i + 64 - size));
