@@ -173,10 +173,10 @@ extern "C" {
  */
 static inline uint64_t popcnt64_bitwise(uint64_t x)
 {
-  uint64_t m1 = 0x5555555555555555ll;
-  uint64_t m2 = 0x3333333333333333ll;
-  uint64_t m4 = 0x0F0F0F0F0F0F0F0Fll;
-  uint64_t h01 = 0x0101010101010101ll;
+  uint64_t m1 = 0x5555555555555555ull;
+  uint64_t m2 = 0x3333333333333333ull;
+  uint64_t m4 = 0x0F0F0F0F0F0F0F0Full;
+  uint64_t h01 = 0x0101010101010101ull;
 
   x -= (x >> 1) & m1;
   x = (x & m2) + ((x >> 2) & m2);
@@ -521,22 +521,12 @@ static inline uint64_t popcnt_avx512(const uint8_t* ptr8, uint64_t size)
       cnt = _mm512_add_epi64(cnt, vec);
     }
 
+    i *= sizeof(uint64_t);
+
     /* Process last 64 bytes */
-    if (i < size64)
+    if (i < size)
     {
-      __mmask8 mask = (__mmask8) (0xff >> (i + 8 - size64));
-      __m512i vec = _mm512_maskz_loadu_epi64(mask , &ptr64[i]);
-      vec = _mm512_popcnt_epi64(vec);
-      cnt = _mm512_add_epi64(cnt, vec);
-    }
-
-    uint64_t bytes = size % sizeof(uint64_t);
-
-    /* Process last 8 bytes */
-    if (bytes != 0)
-    {
-      i = size - bytes;
-      __mmask64 mask = (__mmask64) (0xff >> (i + 8 - size));
+      __mmask64 mask = (__mmask64) (0xffffffffffffffffull >> (i + 64 - size));
       __m512i vec = _mm512_maskz_loadu_epi8(mask, &ptr8[i]);
       __m512i cnt8 = _mm512_popcnt_epi8(vec);
       cnt8 = _mm512_sad_epu8(cnt8, _mm512_setzero_si512());
@@ -594,10 +584,10 @@ static uint64_t popcnt(const void* data, uint64_t size)
       defined(__AVX512VPOPCNTDQ__) && \
       defined(__AVX512BITALG__))
     /* For tiny arrays AVX512 is not worth it */
-    if (i + 48 <= size)
+    if (i + 40 <= size)
   #else
     if ((cpuid & LIBPOPCNT_BIT_AVX512_VPOPCNTDQ) &&
-        i + 48 <= size)
+        i + 40 <= size)
   #endif
       return popcnt_avx512(ptr, size);
 #endif
