@@ -1,3 +1,10 @@
+2026-06-25 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 3.2
+
+  * Fix undefined behavior in `libpopcnt.h`.
+  * Increase minimum CMake version to 3.9 in `CMakeLists.txt`.
+
 2024-06-29 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 3.1
