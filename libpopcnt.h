@@ -161,6 +161,22 @@
   #define LIBPOPCNT_HAVE_CPUID
 #endif
 
+#if defined(LIBPOPCNT_HAVE_CPUID)
+  #if defined(__cplusplus)
+    #include <atomic>
+    static std::atomic<int> libpopcnt_cpuid(-1);
+  #elif defined(__STDC_VERSION__) && \
+        __STDC_VERSION__ >= 201112L && \
+       !defined(__STDC_NO_ATOMICS__) && \
+        __has_include(<stdatomic.h>)
+    #include <stdatomic.h>
+    #define LIBPOPCNT_HAVE_C11_ATOMIC
+    static atomic_int libpopcnt_cpuid = -1;
+  #else
+    static int libpopcnt_cpuid = -1;
+  #endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -548,19 +564,29 @@ static uint64_t popcnt(const void* data, uint64_t size)
  */
 #if defined(LIBPOPCNT_HAVE_CPUID)
   #if defined(__cplusplus)
-    /* C++11 thread-safe singleton */
-    static const int cpuid = get_cpuid();
+    int cpuid = libpopcnt_cpuid.load(std::memory_order_relaxed);
+    if (cpuid == -1)
+    {
+      cpuid = get_cpuid();
+      libpopcnt_cpuid.store(cpuid, std::memory_order_relaxed);
+    }
+  #elif defined(LIBPOPCNT_HAVE_C11_ATOMIC)
+    int cpuid = atomic_load_explicit(&libpopcnt_cpuid, memory_order_relaxed);
+    if (cpuid == -1)
+    {
+      cpuid = get_cpuid();
+      atomic_store_explicit(&libpopcnt_cpuid, cpuid, memory_order_relaxed);
+    }
   #else
-    static int cpuid_ = -1;
-    int cpuid = cpuid_;
+    int cpuid = libpopcnt_cpuid;
     if (cpuid == -1)
     {
       cpuid = get_cpuid();
 
       #if defined(_MSC_VER)
-        _InterlockedCompareExchange(&cpuid_, cpuid, -1);
+        _InterlockedCompareExchange((long*) &libpopcnt_cpuid, cpuid, -1);
       #else
-        __sync_val_compare_and_swap(&cpuid_, -1, cpuid);
+        __sync_val_compare_and_swap(&libpopcnt_cpuid, -1, cpuid);
       #endif
     }
   #endif
