@@ -5,6 +5,7 @@
   * Fix undefined behavior in `libpopcnt.h`.
   * Increase minimum CMake version to 3.9 in `CMakeLists.txt`.
   * Fix potential threading data race in CPUID initialization code.
+  * `ci.yml`: Fix hanging test.
 
 2024-06-29 Kim Walisch  <kim.walisch@gmail.com>
 
