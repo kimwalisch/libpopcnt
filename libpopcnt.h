@@ -1,7 +1,7 @@
 /*
  * libpopcnt.h - C/C++ library for counting the number of 1 bits (bit
  * population count) in an array as quickly as possible using
- * specialized CPU instructions i.e. POPCNT, AVX2, AVX512, NEON.
+ * specialized CPU instructions i.e. POPCNT, AVX2, AVX512, ARM NEON, ARM SVE.
  *
  * Copyright (c) 2016 - 2026, Kim Walisch
  * Copyright (c) 2016 - 2018, Wojciech Muła
