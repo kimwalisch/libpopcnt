@@ -7,6 +7,7 @@
   * Fix potential threading data race in CPUID initialization code.
   * `ci.yml`: Fix hanging test.
   * `ci.yml`: Add FreeBSD CI test.
+  * `libpopcnt.h`: Fix inaccurate AVX2 array size comment (#20).
 
 2024-06-29 Kim Walisch  <kim.walisch@gmail.com>
 

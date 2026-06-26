@@ -612,7 +612,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
 #if defined(LIBPOPCNT_HAVE_AVX2)
   #if defined(__AVX2__)
-    /* AVX2 requires arrays >= 512 bytes */
+    /* AVX2 is only faster for arrays >= 512 bytes */
     if (i + 512 <= size)
   #else
     if ((cpuid & LIBPOPCNT_BIT_AVX2) &&
