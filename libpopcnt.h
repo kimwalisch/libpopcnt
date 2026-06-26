@@ -584,7 +584,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
       cpuid = get_cpuid();
 
       #if defined(_MSC_VER)
-        _InterlockedCompareExchange((long*) &libpopcnt_cpuid, cpuid, -1);
+        _InterlockedCompareExchange(&libpopcnt_cpuid, cpuid, -1);
       #else
         __sync_val_compare_and_swap(&libpopcnt_cpuid, -1, cpuid);
       #endif
