@@ -183,3 +183,22 @@ jobs:
         run: ctest -j2
       - name: benchmark
         run: ./benchmark 16389 100
+
+  clang_freebsd:
+    strategy:
+      matrix:
+        config: ['Debug', 'Release']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build and test libpopcnt
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          run: |
+              pkg update
+              pkg install -y cmake ninja
+              CC=clang CXX=clang++ cmake . -G Ninja -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
+              cmake --build . --parallel --verbose
+              ctest -j2 --output-on-failure
+              ./benchmark 16389 100
