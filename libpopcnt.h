@@ -119,20 +119,26 @@
 #if defined(LIBPOPCNT_X86_OR_X64) && \
     defined(_MSC_VER)
   /*
-   * There is an LLVM/Clang bug on Windows where function targets
-   * for AVX2 and AVX512 fail to compile unless the user compiles
+   * There was an LLVM/Clang bug on Windows where function targets
+   * for AVX2 and AVX512 failed to compile unless the user compiled
    * using the options /arch:AVX2 and /arch:AVX512.
-   * All Clang versions <= 18.0 (from 2024) are affected by this bug.
-   * However, I expect this bug will be fixed in near future:
+   * All Clang versions <= 18.0 (from 2024) were affected by this bug,
+   * it has been fixed in Clang 19. Hence for Clang >= 22 we enable
+   * AVX2 & AVX512 function multi-versioning on Windows.
    * https://github.com/llvm/llvm-project/issues/53520
    */
   #if defined(__clang__)
-    #if defined(__AVX2__)
-      #define LIBPOPCNT_HAVE_AVX2
-    #endif
-    #if defined(__AVX512__)
+    #if LIBPOPCNT_CLANG_PREREQ(22, 0)
       #define LIBPOPCNT_HAVE_AVX2
       #define LIBPOPCNT_HAVE_AVX512
+    #else
+      #if defined(__AVX2__)
+        #define LIBPOPCNT_HAVE_AVX2
+      #endif
+      #if defined(__AVX512__)
+        #define LIBPOPCNT_HAVE_AVX2
+        #define LIBPOPCNT_HAVE_AVX512
+      #endif
     #endif
   /* MSVC 2017 or later does not require
   * /arch:AVX2 or /arch:AVX512 */
