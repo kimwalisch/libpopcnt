@@ -179,7 +179,7 @@
     #define LIBPOPCNT_HAVE_C11_ATOMIC
     static atomic_int libpopcnt_cpuid = -1;
   #else
-    static int libpopcnt_cpuid = -1;
+    static long libpopcnt_cpuid = -1;
   #endif
 #endif
 
@@ -584,7 +584,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
       atomic_store_explicit(&libpopcnt_cpuid, cpuid, memory_order_relaxed);
     }
   #else
-    int cpuid = libpopcnt_cpuid;
+    long cpuid = libpopcnt_cpuid;
     if (cpuid == -1)
     {
       cpuid = get_cpuid();

@@ -9,6 +9,7 @@
   * `ci.yml`: Add FreeBSD CI test.
   * `libpopcnt.h`: Fix inaccurate AVX2 array size comment (#20).
   * `libpopcnt.h`: Enable AVX2/AVX512 multiversioning for clang-cl >= 22 on Windows.
+  * `libpopcnt.h`: Fix MSVC C4057 warning in CPUID initialization code.
 
 2024-06-29 Kim Walisch  <kim.walisch@gmail.com>
 
