@@ -706,16 +706,15 @@ static uint64_t popcnt(const void* data, uint64_t size)
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
   uint64_t i = 0;
-  const uint64_t* ptr64 = (const uint64_t*) data;
-  uint64_t size64 = size / sizeof(uint64_t);
+  const uint8_t* ptr = (const uint8_t*) data;
   svuint64_t vcnt = svdup_u64(0);
 
-  for (; i + svcntd() * 4 <= size64; i += svcntd() * 4)
+  for (; i + svcntb() * 4 <= size; i += svcntb() * 4)
   {
-    svuint64_t vec0 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 0]);
-    svuint64_t vec1 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 1]);
-    svuint64_t vec2 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 2]);
-    svuint64_t vec3 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 3]);
+    svuint64_t vec0 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 0]));
+    svuint64_t vec1 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 1]));
+    svuint64_t vec2 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 2]));
+    svuint64_t vec3 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 3]));
 
     vec0 = svcnt_u64_x(svptrue_b64(), vec0);
     vec1 = svcnt_u64_x(svptrue_b64(), vec1);
@@ -728,31 +727,18 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec3);
   }
 
-  svbool_t pg = svwhilelt_b64(i, size64);
+  svbool_t pg = svwhilelt_b8(i, size);
 
-  while (svptest_any(svptrue_b64(), pg))
+  while (svptest_any(svptrue_b8(), pg))
   {
-    svuint64_t vec = svld1_u64(pg, &ptr64[i]);
-    vec = svcnt_u64_z(pg, vec);
+    svuint64_t vec = svreinterpret_u64_u8(svld1_u8(pg, &ptr[i]));
+    vec = svcnt_u64_x(svptrue_b64(), vec);
     vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec);
-    i += svcntd();
-    pg = svwhilelt_b64(i, size64);
+    i += svcntb();
+    pg = svwhilelt_b8(i, size);
   }
 
-  uint64_t cnt = svaddv_u64(svptrue_b64(), vcnt);
-  uint64_t bytes = size % sizeof(uint64_t);
-
-  if (bytes != 0)
-  {
-    i = size - bytes;
-    const uint8_t* ptr8 = (const uint8_t*) data;
-    svbool_t pg8 = svwhilelt_b8(i, size);
-    svuint8_t vec = svld1_u8(pg8, &ptr8[i]);
-    svuint8_t vcnt8 = svcnt_u8_z(pg8, vec);
-    cnt += svaddv_u8(pg8, vcnt8);
-  }
-
-  return cnt;
+  return svaddv_u64(svptrue_b64(), vcnt);
 }
 
 #elif (defined(__ARM_NEON) || \
