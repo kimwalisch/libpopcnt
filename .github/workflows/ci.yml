@@ -19,7 +19,7 @@ jobs:
       CC: gcc
       CXX: g++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build libpopcnt
         run: |
             cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
@@ -39,7 +39,7 @@ jobs:
       CC: gcc
       CXX: g++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build libpopcnt
         run: |
             cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-march=native -Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-march=native -Wall -Wextra -pedantic -Werror"
@@ -55,7 +55,7 @@ jobs:
       CC: gcc
       CXX: g++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install valgrind
         run: |
             sudo apt update
@@ -70,14 +70,12 @@ jobs:
         run: ./benchmark 16389 100
 
   gcc_linux_sanitizers:
-    # This test fails on Ubuntu 22.04 likely due to an Ubuntu or compiler bug.
-    # See discussion at: https://github.com/quantumlib/Stim/issues/717#issuecomment-2002623560
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       CC: gcc
       CXX: g++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build libpopcnt
         run: |
             cmake . -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror -O1 -g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror -O1 -g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
@@ -97,7 +95,7 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build libpopcnt
         run: |
             cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
@@ -117,7 +115,7 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build libpopcnt
         run: |
             cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-march=native -Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-march=native -Wall -Wextra -pedantic -Werror"
@@ -137,7 +135,7 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build libpopcnt
         run: |
             cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_INSTALL_PREFIX=$(pwd) -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wno-c++11-long-long -Wall -Wextra -pedantic -Werror"
@@ -151,7 +149,7 @@ jobs:
   msvc_windows_vs2022:
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build libpopcnt
         run: |
             cmake . -G "Visual Studio 17 2022" -DCMAKE_CXX_FLAGS="/W3 /WX /MP /EHsc"
@@ -172,7 +170,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: msys2/setup-msys2@v2
         with:
           update: true
