@@ -824,7 +824,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   /*
    * PF_ARM_SVE_INSTRUCTIONS_AVAILABLE was added in
    * the Windows 11 SDK. Define the value (39)
-   *  ourselves so we also work with older SDKs.
+   * ourselves so we also work with older SDKs.
    */
   #ifndef PF_ARM_SVE_INSTRUCTIONS_AVAILABLE
     #define PF_ARM_SVE_INSTRUCTIONS_AVAILABLE 39
