@@ -155,9 +155,13 @@
  *      dedicated SVE popcnt() branch above is used instead.
  *   2) The compiler fully supports __attribute__((target("+sve")))
  *      and <arm_sve.h> SVE ACLE intrinsics. The minimum versions are:
- *        GCC >= 10.1: arm_sve.h was introduced in GCC 10.1.
+ *        GCC >= 14: On GCC 13 and earlier __attribute__((target("+sve")))
+ *          leaks the SVE target state into the rest of the translation
+ *          unit, which breaks inlining of always_inline C++ standard
+ *          library functions with "target specific option mismatch"
+ *          errors (verified: fails on GCC 13, fixed in GCC 14).
  *        Clang >= 16.0: Clang's target attribute parsing for AArch64
- *          was X86-shaped before Clang 16. The arch=... format was only
+ *          was X86-shaped before Clang 16. The "+sve" format was only
  *          properly supported starting with Clang 16 (LLVM patch D133848,
  *          committed October 2022). On Clang 11-15 the attribute is
  *          silently ignored, causing SVE intrinsics to fail at compile time.
@@ -169,7 +173,7 @@
     !defined(__ARM_FEATURE_SVE) && \
     __has_attribute(target) && \
     __has_include(<arm_sve.h>) && \
-    (LIBPOPCNT_GNUC_PREREQ(10, 1) || LIBPOPCNT_CLANG_PREREQ(16, 0)) && \
+    (LIBPOPCNT_GNUC_PREREQ(14, 0) || LIBPOPCNT_CLANG_PREREQ(16, 0)) && \
     (defined(_WIN32) || \
      ((defined(__linux__) || \
        defined(__gnu_linux__) || \

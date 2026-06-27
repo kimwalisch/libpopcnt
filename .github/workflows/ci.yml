@@ -127,21 +127,50 @@ jobs:
 
   # AArch64 (arm64) Linux runners are free for public repositories.
   # This job builds the ARM SVE runtime dispatching code on a real
-  # AArch64 CPU using both GCC and Clang. It runs the ARM NEON
-  # fallback, or the ARM SVE algorithm if the runner CPU supports SVE.
+  # AArch64 CPU using GCC. It runs the ARM NEON fallback, or the ARM
+  # SVE algorithm if the runner CPU supports SVE.
+  # Our ARM SVE runtime dispatching code requires GCC >= 14 (see
+  # libpopcnt.h), but Ubuntu 24.04 ships GCC 13 by default, hence we
+  # install GCC 14. Otherwise the ARM SVE code path would be disabled
+  # and we would only test the ARM NEON code path.
   # Note: GitHub does not provide an "ubuntu-latest-arm" label yet,
   # only versioned labels such as "ubuntu-24.04-arm". When this image
   # is eventually deprecated the label below needs to be bumped.
   # https://github.com/orgs/community/discussions/149392
-  linux_arm:
+  Linux_ARM_GCC:
     strategy:
       matrix:
-        compiler: [{cc: gcc, cxx: g++}, {cc: clang, cxx: clang++}]
         config: ['Debug', 'Release']
     runs-on: ubuntu-24.04-arm
     env:
-      CC: ${{ matrix.compiler.cc }}
-      CXX: ${{ matrix.compiler.cxx }}
+      CC: gcc-14
+      CXX: g++-14
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install GCC 14
+        run: |
+            sudo apt update
+            sudo apt install -y gcc-14 g++-14
+      - name: Build libpopcnt
+        run: |
+            cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
+            cmake --build . --parallel --verbose
+      - name: CTest (unit tests)
+        run: ctest -j2
+      - name: benchmark
+        run: ./benchmark 16389 100
+
+  # Same as Linux_ARM_GCC, but using the Clang compiler. Ubuntu 24.04
+  # ships Clang 18 which is >= the Clang 16 minimum required by our ARM
+  # SVE runtime dispatching code, so no extra installation is needed.
+  Linux_ARM_Clang:
+    strategy:
+      matrix:
+        config: ['Debug', 'Release']
+    runs-on: ubuntu-24.04-arm
+    env:
+      CC: clang
+      CXX: clang++
     steps:
       - uses: actions/checkout@v5
       - name: Build libpopcnt
