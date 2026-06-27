@@ -821,8 +821,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
 #if defined(_WIN32)
   #include <windows.h>
-  /* PF_ARM_SVE_INSTRUCTIONS_AVAILABLE was added in the Windows 11 SDK.
-   * Define the value (39) ourselves so we also work with older SDKs. */
+  /*
+   * PF_ARM_SVE_INSTRUCTIONS_AVAILABLE was added in
+   * the Windows 11 SDK. Define the value (39)
+   *  ourselves so we also work with older SDKs.
+   */
   #ifndef PF_ARM_SVE_INSTRUCTIONS_AVAILABLE
     #define PF_ARM_SVE_INSTRUCTIONS_AVAILABLE 39
   #endif
@@ -830,8 +833,11 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   #include <sys/auxv.h>
 #endif
 
-/* HWCAP_SVE bit for AArch64. We define this ourselves instead of including
- * <asm/hwcap.h> which is not installed by default on some Linux distros. */
+/*
+ * HWCAP_SVE bit for AArch64. We define this ourselves
+ * instead of including <asm/hwcap.h> which is not
+ * installed by default on some Linux distros.
+ */
 #ifndef LIBPOPCNT_HWCAP_SVE
   #define LIBPOPCNT_HWCAP_SVE (1 << 22)
 #endif
@@ -861,10 +867,11 @@ static inline uint64x2_t vpadalq(uint64x2_t sum, uint8x16_t t)
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
 /*
- * ARM SVE runtime dispatch. We check once whether the CPU and OS
- * support SVE and cache the result, mirroring the CPUID approach
- * used for x86. If SVE is available we delegate to popcnt_arm_sve()
- * which is compiled with __attribute__((target("arch=armv8-a+sve"))).
+ * ARM SVE runtime dispatch. We check once whether the
+ * CPU and OS support SVE and cache the result, mirroring
+ * the CPUID approach used for x86. If SVE is available
+ * we delegate to popcnt_arm_sve() which is compiled with
+ * __attribute__((target("arch=armv8-a+sve"))).
  */
 #if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
   #if defined(__cplusplus)
