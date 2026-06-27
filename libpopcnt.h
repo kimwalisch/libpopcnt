@@ -149,6 +149,36 @@
 #endif
 
 /*
+ * Enable ARM SVE runtime dispatch when:
+ *   1) We are on AArch64 but SVE is NOT already enabled by the user
+ *      (e.g. -march=armv8-a+sve). If SVE is statically enabled the
+ *      dedicated SVE popcnt() branch above is used instead.
+ *   2) The compiler fully supports __attribute__((target("+sve")))
+ *      and <arm_sve.h> SVE ACLE intrinsics. The minimum versions are:
+ *        GCC >= 10.1: arm_sve.h was introduced in GCC 10.1.
+ *        Clang >= 16.0: Clang's target attribute parsing for AArch64
+ *          was X86-shaped before Clang 16. The arch=... format was only
+ *          properly supported starting with Clang 16 (LLVM patch D133848,
+ *          committed October 2022). On Clang 11-15 the attribute is
+ *          silently ignored, causing SVE intrinsics to fail at compile time.
+ *   3) The OS provides a reliable SVE detection API:
+ *       * Linux/Android: getauxval(AT_HWCAP) via <sys/auxv.h>
+ *       * Windows ARM64: IsProcessorFeaturePresent() via <windows.h>
+ */
+#if (defined(__aarch64__) || defined(_M_ARM64)) && \
+    !defined(__ARM_FEATURE_SVE) && \
+    __has_attribute(target) && \
+    __has_include(<arm_sve.h>) && \
+    (LIBPOPCNT_GNUC_PREREQ(10, 1) || LIBPOPCNT_CLANG_PREREQ(16, 0)) && \
+    (defined(_WIN32) || \
+     ((defined(__linux__) || \
+       defined(__gnu_linux__) || \
+       defined(__ANDROID__)) && \
+      __has_include(<sys/auxv.h>)))
+  #define LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH
+#endif
+
+/*
  * Only enable CPUID runtime checks if this is really
  * needed. E.g. do not enable if user has compiled
  * using -march=native on a CPU that supports AVX512.
@@ -180,6 +210,22 @@
     static atomic_int libpopcnt_cpuid = -1;
   #else
     static long libpopcnt_cpuid = -1;
+  #endif
+#endif
+
+#if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
+  #if defined(__cplusplus)
+    #include <atomic>
+    static std::atomic<int> libpopcnt_arm_sve(-1);
+  #elif defined(__STDC_VERSION__) && \
+        __STDC_VERSION__ >= 201112L && \
+       !defined(__STDC_NO_ATOMICS__) && \
+        __has_include(<stdatomic.h>)
+    #include <stdatomic.h>
+    #define LIBPOPCNT_HAVE_C11_ATOMIC_ARM_SVE
+    static atomic_int libpopcnt_arm_sve = -1;
+  #else
+    static int libpopcnt_arm_sve = -1;
   #endif
 #endif
 
@@ -553,6 +599,64 @@ static inline uint64_t popcnt_avx512(const uint8_t* ptr, uint64_t size)
 
 #endif
 
+/*
+ * ARM SVE popcount kernel, shared by two popcnt() code paths:
+ *   1) SVE statically enabled (e.g. -march=armv8-a+sve).
+ *   2) ARM SVE runtime dispatch from the NEON popcnt() (multiarch),
+ *      in which case it is compiled using
+ *      __attribute__((target("+sve"))) so that it works
+ *      even without -march=armv8-a+sve.
+ */
+#if (defined(__ARM_FEATURE_SVE) || \
+     defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)) && \
+    __has_include(<arm_sve.h>)
+
+#include <arm_sve.h>
+
+#if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH) && \
+    __has_attribute(target)
+  __attribute__((target("+sve")))
+#endif
+static inline uint64_t popcnt_arm_sve(const void* data, uint64_t size)
+{
+  uint64_t i = 0;
+  const uint8_t* ptr = (const uint8_t*) data;
+  svuint64_t vcnt = svdup_u64(0);
+
+  for (; i + svcntb() * 4 <= size; i += svcntb() * 4)
+  {
+    svuint64_t vec0 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 0]));
+    svuint64_t vec1 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 1]));
+    svuint64_t vec2 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 2]));
+    svuint64_t vec3 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 3]));
+
+    vec0 = svcnt_u64_x(svptrue_b64(), vec0);
+    vec1 = svcnt_u64_x(svptrue_b64(), vec1);
+    vec2 = svcnt_u64_x(svptrue_b64(), vec2);
+    vec3 = svcnt_u64_x(svptrue_b64(), vec3);
+
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec0);
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec1);
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec2);
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec3);
+  }
+
+  svbool_t pg = svwhilelt_b8(i, size);
+
+  while (svptest_any(svptrue_b8(), pg))
+  {
+    svuint64_t vec = svreinterpret_u64_u8(svld1_u8(pg, &ptr[i]));
+    vec = svcnt_u64_x(svptrue_b64(), vec);
+    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec);
+    i += svcntb();
+    pg = svwhilelt_b8(i, size);
+  }
+
+  return svaddv_u64(svptrue_b64(), vcnt);
+}
+
+#endif
+
 /* x86 CPUs */
 #if defined(LIBPOPCNT_X86_OR_X64)
 
@@ -696,8 +800,6 @@ static uint64_t popcnt(const void* data, uint64_t size)
 #elif defined(__ARM_FEATURE_SVE) && \
       __has_include(<arm_sve.h>)
 
-#include <arm_sve.h>
-
 /*
  * Count the number of 1 bits in the data array
  * @data: An array
@@ -705,40 +807,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
-  uint64_t i = 0;
-  const uint8_t* ptr = (const uint8_t*) data;
-  svuint64_t vcnt = svdup_u64(0);
-
-  for (; i + svcntb() * 4 <= size; i += svcntb() * 4)
-  {
-    svuint64_t vec0 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 0]));
-    svuint64_t vec1 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 1]));
-    svuint64_t vec2 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 2]));
-    svuint64_t vec3 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 3]));
-
-    vec0 = svcnt_u64_x(svptrue_b64(), vec0);
-    vec1 = svcnt_u64_x(svptrue_b64(), vec1);
-    vec2 = svcnt_u64_x(svptrue_b64(), vec2);
-    vec3 = svcnt_u64_x(svptrue_b64(), vec3);
-
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec0);
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec1);
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec2);
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec3);
-  }
-
-  svbool_t pg = svwhilelt_b8(i, size);
-
-  while (svptest_any(svptrue_b8(), pg))
-  {
-    svuint64_t vec = svreinterpret_u64_u8(svld1_u8(pg, &ptr[i]));
-    vec = svcnt_u64_x(svptrue_b64(), vec);
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec);
-    i += svcntb();
-    pg = svwhilelt_b8(i, size);
-  }
-
-  return svaddv_u64(svptrue_b64(), vcnt);
+  return popcnt_arm_sve(data, size);
 }
 
 #elif (defined(__ARM_NEON) || \
@@ -747,6 +816,43 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       __has_include(<arm_neon.h>)
 
 #include <arm_neon.h>
+
+#if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
+
+#if defined(_WIN32)
+  #include <windows.h>
+  /*
+   * PF_ARM_SVE_INSTRUCTIONS_AVAILABLE was added in
+   * the Windows 11 SDK. Define the value (39)
+   * ourselves so we also work with older SDKs.
+   */
+  #ifndef PF_ARM_SVE_INSTRUCTIONS_AVAILABLE
+    #define PF_ARM_SVE_INSTRUCTIONS_AVAILABLE 39
+  #endif
+#elif __has_include(<sys/auxv.h>)
+  #include <sys/auxv.h>
+#endif
+
+/*
+ * HWCAP_SVE bit for AArch64. We define this ourselves
+ * instead of including <asm/hwcap.h> which is not
+ * installed by default on some Linux distros.
+ */
+#ifndef LIBPOPCNT_HWCAP_SVE
+  #define LIBPOPCNT_HWCAP_SVE (1 << 22)
+#endif
+
+static inline int libpopcnt_has_arm_sve(void)
+{
+#if defined(_WIN32)
+  return IsProcessorFeaturePresent(PF_ARM_SVE_INSTRUCTIONS_AVAILABLE) ? 1 : 0;
+#else
+  unsigned long hwcaps = getauxval(AT_HWCAP);
+  return (hwcaps & LIBPOPCNT_HWCAP_SVE) ? 1 : 0;
+#endif
+}
+
+#endif /* LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH */
 
 static inline uint64x2_t vpadalq(uint64x2_t sum, uint8x16_t t)
 {
@@ -760,6 +866,41 @@ static inline uint64x2_t vpadalq(uint64x2_t sum, uint8x16_t t)
  */
 static inline uint64_t popcnt(const void* data, uint64_t size)
 {
+/*
+ * ARM SVE runtime dispatch. We check once whether the
+ * CPU and OS support SVE and cache the result, mirroring
+ * the CPUID approach used for x86. If SVE is available
+ * we delegate to popcnt_arm_sve() which is compiled with
+ * __attribute__((target("+sve"))).
+ */
+#if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
+  #if defined(__cplusplus)
+    int arm_sve = libpopcnt_arm_sve.load(std::memory_order_relaxed);
+    if (arm_sve == -1)
+    {
+      arm_sve = libpopcnt_has_arm_sve();
+      libpopcnt_arm_sve.store(arm_sve, std::memory_order_relaxed);
+    }
+  #elif defined(LIBPOPCNT_HAVE_C11_ATOMIC_ARM_SVE)
+    int arm_sve = atomic_load_explicit(&libpopcnt_arm_sve, memory_order_relaxed);
+    if (arm_sve == -1)
+    {
+      arm_sve = libpopcnt_has_arm_sve();
+      atomic_store_explicit(&libpopcnt_arm_sve, arm_sve, memory_order_relaxed);
+    }
+  #else
+    int arm_sve = libpopcnt_arm_sve;
+    if (arm_sve == -1)
+    {
+      arm_sve = libpopcnt_has_arm_sve();
+      __sync_val_compare_and_swap(&libpopcnt_arm_sve, -1, arm_sve);
+    }
+  #endif
+
+  if (arm_sve)
+    return popcnt_arm_sve(data, size);
+#endif
+
   uint64_t i = 0;
   uint64_t cnt = 0;
   uint64_t chunk_size = 64;
