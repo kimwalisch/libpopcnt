@@ -1,7 +1,7 @@
 /*
  * libpopcnt.h - C/C++ library for counting the number of 1 bits (bit
  * population count) in an array as quickly as possible using
- * specialized CPU instructions i.e. POPCNT, AVX2, AVX512, NEON.
+ * specialized CPU instructions i.e. POPCNT, AVX2, AVX512, ARM NEON, ARM SVE.
  *
  * Copyright (c) 2016 - 2026, Kim Walisch
  * Copyright (c) 2016 - 2018, Wojciech Muła
@@ -119,20 +119,26 @@
 #if defined(LIBPOPCNT_X86_OR_X64) && \
     defined(_MSC_VER)
   /*
-   * There is an LLVM/Clang bug on Windows where function targets
-   * for AVX2 and AVX512 fail to compile unless the user compiles
+   * There was an LLVM/Clang bug on Windows where function targets
+   * for AVX2 and AVX512 failed to compile unless the user compiled
    * using the options /arch:AVX2 and /arch:AVX512.
-   * All Clang versions <= 18.0 (from 2024) are affected by this bug.
-   * However, I expect this bug will be fixed in near future:
+   * All Clang versions <= 18.0 (from 2024) were affected by this bug,
+   * it has been fixed in Clang 19. Hence for Clang >= 22 we enable
+   * AVX2 & AVX512 function multi-versioning on Windows.
    * https://github.com/llvm/llvm-project/issues/53520
    */
   #if defined(__clang__)
-    #if defined(__AVX2__)
-      #define LIBPOPCNT_HAVE_AVX2
-    #endif
-    #if defined(__AVX512__)
+    #if LIBPOPCNT_CLANG_PREREQ(22, 0)
       #define LIBPOPCNT_HAVE_AVX2
       #define LIBPOPCNT_HAVE_AVX512
+    #else
+      #if defined(__AVX2__)
+        #define LIBPOPCNT_HAVE_AVX2
+      #endif
+      #if defined(__AVX512__)
+        #define LIBPOPCNT_HAVE_AVX2
+        #define LIBPOPCNT_HAVE_AVX512
+      #endif
     #endif
   /* MSVC 2017 or later does not require
   * /arch:AVX2 or /arch:AVX512 */
@@ -203,7 +209,7 @@
     #define LIBPOPCNT_HAVE_C11_ATOMIC
     static atomic_int libpopcnt_cpuid = -1;
   #else
-    static int libpopcnt_cpuid = -1;
+    static long libpopcnt_cpuid = -1;
   #endif
 #endif
 
@@ -614,16 +620,15 @@ static inline uint64_t popcnt_avx512(const uint8_t* ptr, uint64_t size)
 static inline uint64_t popcnt_arm_sve(const void* data, uint64_t size)
 {
   uint64_t i = 0;
-  const uint64_t* ptr64 = (const uint64_t*) data;
-  uint64_t size64 = size / sizeof(uint64_t);
+  const uint8_t* ptr = (const uint8_t*) data;
   svuint64_t vcnt = svdup_u64(0);
 
-  for (; i + svcntd() * 4 <= size64; i += svcntd() * 4)
+  for (; i + svcntb() * 4 <= size; i += svcntb() * 4)
   {
-    svuint64_t vec0 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 0]);
-    svuint64_t vec1 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 1]);
-    svuint64_t vec2 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 2]);
-    svuint64_t vec3 = svld1_u64(svptrue_b64(), &ptr64[i + svcntd() * 3]);
+    svuint64_t vec0 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 0]));
+    svuint64_t vec1 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 1]));
+    svuint64_t vec2 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 2]));
+    svuint64_t vec3 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 3]));
 
     vec0 = svcnt_u64_x(svptrue_b64(), vec0);
     vec1 = svcnt_u64_x(svptrue_b64(), vec1);
@@ -636,31 +641,18 @@ static inline uint64_t popcnt_arm_sve(const void* data, uint64_t size)
     vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec3);
   }
 
-  svbool_t pg = svwhilelt_b64(i, size64);
+  svbool_t pg = svwhilelt_b8(i, size);
 
-  while (svptest_any(svptrue_b64(), pg))
+  while (svptest_any(svptrue_b8(), pg))
   {
-    svuint64_t vec = svld1_u64(pg, &ptr64[i]);
-    vec = svcnt_u64_z(pg, vec);
+    svuint64_t vec = svreinterpret_u64_u8(svld1_u8(pg, &ptr[i]));
+    vec = svcnt_u64_x(svptrue_b64(), vec);
     vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec);
-    i += svcntd();
-    pg = svwhilelt_b64(i, size64);
+    i += svcntb();
+    pg = svwhilelt_b8(i, size);
   }
 
-  uint64_t cnt = svaddv_u64(svptrue_b64(), vcnt);
-  uint64_t bytes = size % sizeof(uint64_t);
-
-  if (bytes != 0)
-  {
-    i = size - bytes;
-    const uint8_t* ptr8 = (const uint8_t*) data;
-    svbool_t pg8 = svwhilelt_b8(i, size);
-    svuint8_t vec = svld1_u8(pg8, &ptr8[i]);
-    svuint8_t vcnt8 = svcnt_u8_z(pg8, vec);
-    cnt += svaddv_u8(pg8, vcnt8);
-  }
-
-  return cnt;
+  return svaddv_u64(svptrue_b64(), vcnt);
 }
 
 #endif
@@ -696,7 +688,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
       atomic_store_explicit(&libpopcnt_cpuid, cpuid, memory_order_relaxed);
     }
   #else
-    int cpuid = libpopcnt_cpuid;
+    long cpuid = libpopcnt_cpuid;
     if (cpuid == -1)
     {
       cpuid = get_cpuid();
@@ -844,7 +836,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
   #define LIBPOPCNT_HWCAP_SVE (1 << 22)
 #endif
 
-static inline int libpopcnt_get_arm_sve(void)
+static inline int libpopcnt_has_arm_sve(void)
 {
 #if defined(_WIN32)
   return IsProcessorFeaturePresent(PF_ARM_SVE_INSTRUCTIONS_AVAILABLE) ? 1 : 0;
@@ -879,21 +871,21 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
     int arm_sve = libpopcnt_arm_sve.load(std::memory_order_relaxed);
     if (arm_sve == -1)
     {
-      arm_sve = libpopcnt_get_arm_sve();
+      arm_sve = libpopcnt_has_arm_sve();
       libpopcnt_arm_sve.store(arm_sve, std::memory_order_relaxed);
     }
   #elif defined(LIBPOPCNT_HAVE_C11_ATOMIC_ARM_SVE)
     int arm_sve = atomic_load_explicit(&libpopcnt_arm_sve, memory_order_relaxed);
     if (arm_sve == -1)
     {
-      arm_sve = libpopcnt_get_arm_sve();
+      arm_sve = libpopcnt_has_arm_sve();
       atomic_store_explicit(&libpopcnt_arm_sve, arm_sve, memory_order_relaxed);
     }
   #else
     int arm_sve = libpopcnt_arm_sve;
     if (arm_sve == -1)
     {
-      arm_sve = libpopcnt_get_arm_sve();
+      arm_sve = libpopcnt_has_arm_sve();
       __sync_val_compare_and_swap(&libpopcnt_arm_sve, -1, arm_sve);
     }
   #endif
