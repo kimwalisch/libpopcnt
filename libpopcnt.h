@@ -241,7 +241,22 @@
  */
 #if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
   #if defined(_WIN32)
+    /*
+     * Prevent any issues with std::min() and std::max()
+     * in the user's code when including <windows.h>.
+     */
+    #ifndef NOMINMAX
+      #define LIBPOPCNT_NOMINMAX
+      #define NOMINMAX
+    #endif
+
     #include <windows.h>
+
+    #ifdef LIBPOPCNT_NOMINMAX
+      #undef LIBPOPCNT_NOMINMAX
+      #undef NOMINMAX
+    #endif
+
     /*
      * PF_ARM_SVE_INSTRUCTIONS_AVAILABLE was added in
      * the Windows 11 SDK. Define the value (39)
