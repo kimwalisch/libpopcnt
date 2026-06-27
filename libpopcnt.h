@@ -153,7 +153,7 @@
  *   1) We are on AArch64 but SVE is NOT already enabled by the user
  *      (e.g. -march=armv8-a+sve). If SVE is statically enabled the
  *      dedicated SVE popcnt() branch above is used instead.
- *   2) The compiler fully supports __attribute__((target("arch=armv8-a+sve")))
+ *   2) The compiler fully supports __attribute__((target("+sve")))
  *      and <arm_sve.h> SVE ACLE intrinsics. The minimum versions are:
  *        GCC >= 10.1: arm_sve.h was introduced in GCC 10.1.
  *        Clang >= 16.0: Clang's target attribute parsing for AArch64
@@ -604,7 +604,7 @@ static inline uint64_t popcnt_avx512(const uint8_t* ptr, uint64_t size)
  *   1) SVE statically enabled (e.g. -march=armv8-a+sve).
  *   2) ARM SVE runtime dispatch from the NEON popcnt() (multiarch),
  *      in which case it is compiled using
- *      __attribute__((target("arch=armv8-a+sve"))) so that it works
+ *      __attribute__((target("+sve"))) so that it works
  *      even without -march=armv8-a+sve.
  */
 #if (defined(__ARM_FEATURE_SVE) || \
@@ -615,7 +615,7 @@ static inline uint64_t popcnt_avx512(const uint8_t* ptr, uint64_t size)
 
 #if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH) && \
     __has_attribute(target)
-  __attribute__((target("arch=armv8-a+sve")))
+  __attribute__((target("+sve")))
 #endif
 static inline uint64_t popcnt_arm_sve(const void* data, uint64_t size)
 {
@@ -871,7 +871,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
  * CPU and OS support SVE and cache the result, mirroring
  * the CPUID approach used for x86. If SVE is available
  * we delegate to popcnt_arm_sve() which is compiled with
- * __attribute__((target("arch=armv8-a+sve"))).
+ * __attribute__((target("+sve"))).
  */
 #if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
   #if defined(__cplusplus)
