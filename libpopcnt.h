@@ -229,6 +229,47 @@
   #endif
 #endif
 
+/*
+ * ARM SVE detection helper for the runtime dispatch. The OS
+ * detection headers (<windows.h>, <sys/auxv.h>) are included
+ * here, outside the extern "C" block below, so that we never
+ * pull a large OS header into a C linkage scope.
+ */
+#if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
+  #if defined(_WIN32)
+    #include <windows.h>
+    /*
+     * PF_ARM_SVE_INSTRUCTIONS_AVAILABLE was added in
+     * the Windows 11 SDK. Define the value (39)
+     * ourselves so we also work with older SDKs.
+     */
+    #ifndef PF_ARM_SVE_INSTRUCTIONS_AVAILABLE
+      #define PF_ARM_SVE_INSTRUCTIONS_AVAILABLE 39
+    #endif
+  #elif __has_include(<sys/auxv.h>)
+    #include <sys/auxv.h>
+  #endif
+
+  /*
+   * HWCAP_SVE bit for AArch64. We define this ourselves
+   * instead of including <asm/hwcap.h> which is not
+   * installed by default on some Linux distros.
+   */
+  #ifndef LIBPOPCNT_HWCAP_SVE
+    #define LIBPOPCNT_HWCAP_SVE (1 << 22)
+  #endif
+
+  static inline int libpopcnt_has_arm_sve(void)
+  {
+  #if defined(_WIN32)
+    return IsProcessorFeaturePresent(PF_ARM_SVE_INSTRUCTIONS_AVAILABLE) ? 1 : 0;
+  #else
+    unsigned long hwcaps = getauxval(AT_HWCAP);
+    return (hwcaps & LIBPOPCNT_HWCAP_SVE) ? 1 : 0;
+  #endif
+  }
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -816,43 +857,6 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       __has_include(<arm_neon.h>)
 
 #include <arm_neon.h>
-
-#if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
-
-#if defined(_WIN32)
-  #include <windows.h>
-  /*
-   * PF_ARM_SVE_INSTRUCTIONS_AVAILABLE was added in
-   * the Windows 11 SDK. Define the value (39)
-   * ourselves so we also work with older SDKs.
-   */
-  #ifndef PF_ARM_SVE_INSTRUCTIONS_AVAILABLE
-    #define PF_ARM_SVE_INSTRUCTIONS_AVAILABLE 39
-  #endif
-#elif __has_include(<sys/auxv.h>)
-  #include <sys/auxv.h>
-#endif
-
-/*
- * HWCAP_SVE bit for AArch64. We define this ourselves
- * instead of including <asm/hwcap.h> which is not
- * installed by default on some Linux distros.
- */
-#ifndef LIBPOPCNT_HWCAP_SVE
-  #define LIBPOPCNT_HWCAP_SVE (1 << 22)
-#endif
-
-static inline int libpopcnt_has_arm_sve(void)
-{
-#if defined(_WIN32)
-  return IsProcessorFeaturePresent(PF_ARM_SVE_INSTRUCTIONS_AVAILABLE) ? 1 : 0;
-#else
-  unsigned long hwcaps = getauxval(AT_HWCAP);
-  return (hwcaps & LIBPOPCNT_HWCAP_SVE) ? 1 : 0;
-#endif
-}
-
-#endif /* LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH */
 
 static inline uint64x2_t vpadalq(uint64x2_t sum, uint8x16_t t)
 {
