@@ -125,6 +125,34 @@ jobs:
       - name: benchmark
         run: ./benchmark 16389 100
 
+  # AArch64 (arm64) Linux runners are free for public repositories.
+  # This job builds the ARM SVE runtime dispatching code on a real
+  # AArch64 CPU using both GCC and Clang. It runs the ARM NEON
+  # fallback, or the ARM SVE algorithm if the runner CPU supports SVE.
+  # Note: GitHub does not provide an "ubuntu-latest-arm" label yet,
+  # only versioned labels such as "ubuntu-24.04-arm". When this image
+  # is eventually deprecated the label below needs to be bumped.
+  # https://github.com/orgs/community/discussions/149392
+  linux_arm:
+    strategy:
+      matrix:
+        compiler: [{cc: gcc, cxx: g++}, {cc: clang, cxx: clang++}]
+        config: ['Debug', 'Release']
+    runs-on: ubuntu-24.04-arm
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build libpopcnt
+        run: |
+            cmake . -DCMAKE_BUILD_TYPE=${{matrix.config}} -DCMAKE_C_FLAGS="-Wall -Wextra -pedantic -Werror" -DCMAKE_CXX_FLAGS="-Wall -Wextra -pedantic -Werror"
+            cmake --build . --parallel --verbose
+      - name: CTest (unit tests)
+        run: ctest -j2
+      - name: benchmark
+        run: ./benchmark 16389 100
+
   clang_macos:
     strategy:
       matrix:
