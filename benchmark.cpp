@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
       __has_include(<arm_neon.h>)
   algo = "ARM NEON";
   #if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
-    if (libpopcnt_get_arm_sve())
+    if (libpopcnt_has_arm_sve())
       algo = "ARM SVE";
   #endif
 #elif defined(__PPC64__)
