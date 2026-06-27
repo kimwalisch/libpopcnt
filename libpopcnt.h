@@ -147,8 +147,14 @@
  *   1) We are on AArch64 but SVE is NOT already enabled by the user
  *      (e.g. -march=armv8-a+sve). If SVE is statically enabled the
  *      dedicated SVE popcnt() branch above is used instead.
- *   2) The compiler supports __attribute__((target(...))) and <arm_sve.h>
- *      so we can compile an SVE function without -march=armv8-a+sve.
+ *   2) The compiler fully supports __attribute__((target("arch=armv8-a+sve")))
+ *      and <arm_sve.h> SVE ACLE intrinsics. The minimum versions are:
+ *        GCC >= 10.1: arm_sve.h was introduced in GCC 10.1.
+ *        Clang >= 16.0: Clang's target attribute parsing for AArch64
+ *          was X86-shaped before Clang 16. The arch=... format was only
+ *          properly supported starting with Clang 16 (LLVM patch D133848,
+ *          committed October 2022). On Clang 11-15 the attribute is
+ *          silently ignored, causing SVE intrinsics to fail at compile time.
  *   3) The OS provides a reliable SVE detection API:
  *       * Linux/Android: getauxval(AT_HWCAP) via <sys/auxv.h>
  *       * Windows ARM64: IsProcessorFeaturePresent() via <windows.h>
@@ -157,7 +163,7 @@
     !defined(__ARM_FEATURE_SVE) && \
     __has_attribute(target) && \
     __has_include(<arm_sve.h>) && \
-    (LIBPOPCNT_GNUC_PREREQ(9, 1) || LIBPOPCNT_CLANG_PREREQ(9, 0)) && \
+    (LIBPOPCNT_GNUC_PREREQ(10, 1) || LIBPOPCNT_CLANG_PREREQ(16, 0)) && \
     (defined(_WIN32) || \
      ((defined(__linux__) || \
        defined(__gnu_linux__) || \
