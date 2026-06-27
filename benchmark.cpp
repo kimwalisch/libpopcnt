@@ -5,7 +5,7 @@
 ///
 /// Usage: ./benchmark [array bytes] [iters]
 ///
-/// Copyright (C) 2019 Kim Walisch, <kim.walisch@gmail.com>
+/// Copyright (C) 2026 Kim Walisch, <kim.walisch@gmail.com>
 ///
 /// This file is distributed under the BSD License. See the LICENSE
 /// file in the top level directory.
@@ -123,6 +123,10 @@ int main(int argc, char* argv[])
        defined(__aarch64__)) && \
       __has_include(<arm_neon.h>)
   algo = "ARM NEON";
+  #if defined(LIBPOPCNT_HAVE_ARM_SVE_MULTIARCH)
+    if (libpopcnt_get_arm_sve())
+      algo = "ARM SVE";
+  #endif
 #elif defined(__PPC64__)
   algo = "POPCNTD";
 #endif

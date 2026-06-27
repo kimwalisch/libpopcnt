@@ -8,6 +8,7 @@
   * `libpopcnt.h`: Fix potential threading data race in CPUID initialization code.
   * `libpopcnt.h`: Fix inaccurate AVX2 array size comment (#20).
   * `libpopcnt.h`: Fix MSVC C4057 warning in CPUID initialization code.
+  * `benchmark.cpp`: Add ARM SVE runtime detection.
   * `CMakeLists.txt`: Increase minimum CMake version to 3.9.
   * `ci.yml`: Fix hanging test.
   * `ci.yml`: Add FreeBSD CI test.
