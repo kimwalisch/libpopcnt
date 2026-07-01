@@ -617,32 +617,45 @@ static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
 #endif
 static inline uint64_t popcnt_avx512(const uint8_t* ptr, uint64_t size)
 {
-    __m512i cnt = _mm512_setzero_si512();
     uint64_t i = 0;
+    __m512i cnt0 = _mm512_setzero_si512();
 
-    for (; i + 256 <= size; i += 256)
+    if (i + 256 <= size)
     {
-      __m512i vec0 = _mm512_loadu_epi64(&ptr[i + 0]);
-      __m512i vec1 = _mm512_loadu_epi64(&ptr[i + 64]);
-      __m512i vec2 = _mm512_loadu_epi64(&ptr[i + 128]);
-      __m512i vec3 = _mm512_loadu_epi64(&ptr[i + 192]);
+      __m512i cnt1 = _mm512_setzero_si512();
+      __m512i cnt2 = _mm512_setzero_si512();
+      __m512i cnt3 = _mm512_setzero_si512();
 
-      vec0 = _mm512_popcnt_epi64(vec0);
-      vec1 = _mm512_popcnt_epi64(vec1);
-      vec2 = _mm512_popcnt_epi64(vec2);
-      vec3 = _mm512_popcnt_epi64(vec3);
+      do
+      {
+        __m512i vec0 = _mm512_loadu_epi64(&ptr[i + 0]);
+        __m512i vec1 = _mm512_loadu_epi64(&ptr[i + 64]);
+        __m512i vec2 = _mm512_loadu_epi64(&ptr[i + 128]);
+        __m512i vec3 = _mm512_loadu_epi64(&ptr[i + 192]);
 
-      cnt = _mm512_add_epi64(cnt, vec0);
-      cnt = _mm512_add_epi64(cnt, vec1);
-      cnt = _mm512_add_epi64(cnt, vec2);
-      cnt = _mm512_add_epi64(cnt, vec3);
+        vec0 = _mm512_popcnt_epi64(vec0);
+        vec1 = _mm512_popcnt_epi64(vec1);
+        vec2 = _mm512_popcnt_epi64(vec2);
+        vec3 = _mm512_popcnt_epi64(vec3);
+
+        cnt0 = _mm512_add_epi64(cnt0, vec0);
+        cnt1 = _mm512_add_epi64(cnt1, vec1);
+        cnt2 = _mm512_add_epi64(cnt2, vec2);
+        cnt3 = _mm512_add_epi64(cnt3, vec3);
+        i += 256;
+      }
+      while (i + 256 <= size);
+
+      cnt0 = _mm512_add_epi64(cnt0, cnt1);
+      cnt2 = _mm512_add_epi64(cnt2, cnt3);
+      cnt0 = _mm512_add_epi64(cnt0, cnt2);
     }
 
     for (; i + 64 <= size; i += 64)
     {
       __m512i vec = _mm512_loadu_epi64(&ptr[i]);
       vec = _mm512_popcnt_epi64(vec);
-      cnt = _mm512_add_epi64(cnt, vec);
+      cnt0 = _mm512_add_epi64(cnt0, vec);
     }
 
     /* Process last 63 bytes */
@@ -651,10 +664,10 @@ static inline uint64_t popcnt_avx512(const uint8_t* ptr, uint64_t size)
       __mmask64 mask = (__mmask64) (0xffffffffffffffffull >> (i + 64 - size));
       __m512i vec = _mm512_maskz_loadu_epi8(mask, &ptr[i]);
       vec = _mm512_popcnt_epi64(vec);
-      cnt = _mm512_add_epi64(cnt, vec);
+      cnt0 = _mm512_add_epi64(cnt0, vec);
     }
 
-    return _mm512_reduce_add_epi64(cnt);
+    return _mm512_reduce_add_epi64(cnt0);
 }
 
 #endif
