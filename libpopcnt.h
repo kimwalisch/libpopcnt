@@ -953,7 +953,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
       /* Each iteration processes 64 bytes */
       for (; i < limit; i++)
       {
-        uint8x16x4_t input = vld4q_u8(ptr);
+        uint8x16x4_t input = vld1q_u8_x4(ptr);
         ptr += chunk_size;
 
         t0 = vaddq_u8(t0, vcntq_u8(input.val[0]));

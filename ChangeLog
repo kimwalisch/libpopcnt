@@ -1,3 +1,9 @@
+2026-07-01 Kim Walisch  <kim.walisch@gmail.com>
+
+  Version 4.1
+
+  * `libpopcnt.h`: Improve ARM NEON performance by up to 2x.
+
 2026-06-27 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 4.0
