@@ -3,6 +3,7 @@
   Version 4.1
 
   * `libpopcnt.h`: Improve ARM NEON performance by up to 2x.
+  * `libpopcnt.h`: Improve ARM SVE performance by up to 2x.
 
 2026-06-27 Kim Walisch  <kim.walisch@gmail.com>
 

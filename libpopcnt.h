@@ -681,24 +681,37 @@ static inline uint64_t popcnt_arm_sve(const void* data, uint64_t size)
 {
   uint64_t i = 0;
   const uint8_t* ptr = (const uint8_t*) data;
-  svuint64_t vcnt = svdup_u64(0);
+  svuint64_t vcnt0 = svdup_u64(0);
 
-  for (; i + svcntb() * 4 <= size; i += svcntb() * 4)
+  if (i + svcntb() * 4 <= size)
   {
-    svuint64_t vec0 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 0]));
-    svuint64_t vec1 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 1]));
-    svuint64_t vec2 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 2]));
-    svuint64_t vec3 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 3]));
+    svuint64_t vcnt1 = svdup_u64(0);
+    svuint64_t vcnt2 = svdup_u64(0);
+    svuint64_t vcnt3 = svdup_u64(0);
 
-    vec0 = svcnt_u64_x(svptrue_b64(), vec0);
-    vec1 = svcnt_u64_x(svptrue_b64(), vec1);
-    vec2 = svcnt_u64_x(svptrue_b64(), vec2);
-    vec3 = svcnt_u64_x(svptrue_b64(), vec3);
+    do
+    {
+      svuint64_t vec0 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 0]));
+      svuint64_t vec1 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 1]));
+      svuint64_t vec2 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 2]));
+      svuint64_t vec3 = svreinterpret_u64_u8(svld1_u8(svptrue_b8(), &ptr[i + svcntb() * 3]));
 
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec0);
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec1);
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec2);
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec3);
+      vec0 = svcnt_u64_x(svptrue_b64(), vec0);
+      vec1 = svcnt_u64_x(svptrue_b64(), vec1);
+      vec2 = svcnt_u64_x(svptrue_b64(), vec2);
+      vec3 = svcnt_u64_x(svptrue_b64(), vec3);
+
+      vcnt0 = svadd_u64_x(svptrue_b64(), vcnt0, vec0);
+      vcnt1 = svadd_u64_x(svptrue_b64(), vcnt1, vec1);
+      vcnt2 = svadd_u64_x(svptrue_b64(), vcnt2, vec2);
+      vcnt3 = svadd_u64_x(svptrue_b64(), vcnt3, vec3);
+      i += svcntb() * 4;
+    }
+    while (i + svcntb() * 4 <= size);
+
+    vcnt0 = svadd_u64_x(svptrue_b64(), vcnt0, vcnt1);
+    vcnt2 = svadd_u64_x(svptrue_b64(), vcnt2, vcnt3);
+    vcnt0 = svadd_u64_x(svptrue_b64(), vcnt0, vcnt2);
   }
 
   svbool_t pg = svwhilelt_b8(i, size);
@@ -707,12 +720,12 @@ static inline uint64_t popcnt_arm_sve(const void* data, uint64_t size)
   {
     svuint64_t vec = svreinterpret_u64_u8(svld1_u8(pg, &ptr[i]));
     vec = svcnt_u64_x(svptrue_b64(), vec);
-    vcnt = svadd_u64_x(svptrue_b64(), vcnt, vec);
+    vcnt0 = svadd_u64_x(svptrue_b64(), vcnt0, vec);
     i += svcntb();
     pg = svwhilelt_b8(i, size);
   }
 
-  return svaddv_u64(svptrue_b64(), vcnt);
+  return svaddv_u64(svptrue_b64(), vcnt0);
 }
 
 #endif
