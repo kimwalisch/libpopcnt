@@ -14,6 +14,9 @@ possible using specialized CPU instructions i.e.
 ```libpopcnt.h``` has been tested successfully using the GCC,
 Clang and MSVC compilers.
 
+A Rust port is available as the
+[```simd-popcnt```](https://github.com/kimwalisch/simd-popcnt) crate.
+
 ## C/C++ API
 
 ```C
