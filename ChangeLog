@@ -4,6 +4,7 @@
 
   * `libpopcnt.h`: Improve ARM NEON performance by up to 2x.
   * `libpopcnt.h`: Improve ARM SVE performance by up to 2x.
+  * `libpopcnt.h`: Up to 10% faster AVX512 algorithm using Clang compiler.
 
 2026-06-27 Kim Walisch  <kim.walisch@gmail.com>
 
