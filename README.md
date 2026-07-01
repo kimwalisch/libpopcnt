@@ -88,18 +88,17 @@ on an x86 CPU with AVX512 support then all runtime ```CPUID``` checks are remove
 
 ## ARM SVE (Scalable Vector Extension)
 
-ARM SVE is a new vector instruction set for ARM CPUs that was first released in
-2020. ARM SVE supports a variable vector length from 128 to 2048 bits. Hence
-ARM SVE algorithms can be much faster than ARM NEON algorithms which are limited
-to 128 bits vector length.
+ARM SVE is a vector instruction set for ARM CPUs that was first released in
+2020. Unlike ARM NEON's fixed 128-bit vectors, ARM SVE's vector length is
+implementation-defined (128 up to 2048 bits). libpopcnt's ARM SVE popcount
+algorithm is faster than its ARM NEON algorithm, especially on CPUs whose SVE
+vector width is larger than NEON's 128 bits.
 
-libpopcnt's ARM SVE popcount algorithm is up to 3x faster than its ARM NEON
-popcount algorithm (on AWS Graviton3 CPUs). On Linux and Windows libpopcnt
-automatically detects at runtime whether the CPU supports ARM SVE and, if so,
-dispatches to the ARM SVE popcount algorithm (much like the ```CPUID``` checks
-used on x86 CPUs). Otherwise it transparently falls back to the portable ARM
-NEON popcount algorithm. This works out of the box, no special compiler flags
-are required.
+On Linux and Windows libpopcnt automatically detects at runtime whether the CPU
+supports ARM SVE and, if so, dispatches to the ARM SVE popcount algorithm (much
+like the ```CPUID``` checks used on x86 CPUs). Otherwise it transparently falls
+back to the portable ARM NEON popcount algorithm. This works out of the box, no
+special compiler flags are required.
 
 ## Development
 
