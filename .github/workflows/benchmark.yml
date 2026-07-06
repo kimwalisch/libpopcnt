@@ -1,0 +1,36 @@
+# Benchmarks the current code against the previous release (latest version tag)
+# on Linux, macOS and Windows. If the new code is more than 2% slower than the
+# previous release at any of the tested array sizes the job fails, which helps
+# detect performance regressions.
+#
+# The array sizes, iteration count and GB/s output match the simd-popcnt Rust
+# port's benchmark CI, so the two libraries' logs can be compared directly.
+
+name: benchmark
+
+# Run on every push, so any branch (including feature branches) is benchmarked.
+on: push
+
+jobs:
+  benchmark:
+    name: Benchmark vs. previous release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        # Use bash on every OS (Git Bash on Windows) so the one script works
+        # everywhere. CMake and a C/C++ compiler are preinstalled on the runners.
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Fetch all history and tags so the script can build the previous
+          # release from its git tag.
+          fetch-depth: 0
+
+      - name: Benchmark latest code vs. previous release
+        run: ./scripts/benchmark-vs-prev-release.sh
