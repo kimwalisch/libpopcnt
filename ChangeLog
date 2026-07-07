@@ -2,7 +2,7 @@
 
   Version 4.2
 
-  * `libpopcnt.h`: Improve tail bytes perf on x86 CPUs.
+  * `libpopcnt.h`: Improve tail bytes perf.
   * `benchmark.yml`: Add automated benchmark CI.
 
 2026-07-01 Kim Walisch  <kim.walisch@gmail.com>

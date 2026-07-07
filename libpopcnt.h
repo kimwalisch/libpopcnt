@@ -842,9 +842,23 @@ static uint64_t popcnt(const void* data, uint64_t size)
       if (i < size)
       {
         uint64_t bytes = (uint64_t) (size - i);
-        bytes = (bytes <= 7) ? bytes : 7;
-        for (uint64_t j = 0; j < bytes; j++)
-          cnt += popcnt64(ptr[i + j]);
+
+        uint64_t val = ptr[i + 0];
+        if (bytes == 1) goto tail_popcnt64;
+        val |= ((uint64_t) ptr[i + 1]) << 8;
+        if (bytes == 2) goto tail_popcnt64;
+        val |= ((uint64_t) ptr[i + 2]) << 16;
+        if (bytes == 3) goto tail_popcnt64;
+        val |= ((uint64_t) ptr[i + 3]) << 24;
+        if (bytes == 4) goto tail_popcnt64;
+        val |= ((uint64_t) ptr[i + 4]) << 32;
+        if (bytes == 5) goto tail_popcnt64;
+        val |= ((uint64_t) ptr[i + 5]) << 40;
+        if (bytes == 6) goto tail_popcnt64;
+        val |= ((uint64_t) ptr[i + 6]) << 48;
+
+        tail_popcnt64:
+        cnt += popcnt64(val);
       }
 
       return cnt;
@@ -868,11 +882,23 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
   if (i < size)
   {
-    uint64_t val = 0;
     uint64_t bytes = (uint64_t) (size - i);
-    bytes = (bytes <= 7) ? bytes : 7;
-    for (uint64_t j = 0; j < bytes; j++)
-      val |= ((uint64_t) ptr[i + j]) << (j * 8);
+
+    uint64_t val = ptr[i + 0];
+    if (bytes == 1) goto tail_popcnt64_bitwise;
+    val |= ((uint64_t) ptr[i + 1]) << 8;
+    if (bytes == 2) goto tail_popcnt64_bitwise;
+    val |= ((uint64_t) ptr[i + 2]) << 16;
+    if (bytes == 3) goto tail_popcnt64_bitwise;
+    val |= ((uint64_t) ptr[i + 3]) << 24;
+    if (bytes == 4) goto tail_popcnt64_bitwise;
+    val |= ((uint64_t) ptr[i + 4]) << 32;
+    if (bytes == 5) goto tail_popcnt64_bitwise;
+    val |= ((uint64_t) ptr[i + 5]) << 40;
+    if (bytes == 6) goto tail_popcnt64_bitwise;
+    val |= ((uint64_t) ptr[i + 6]) << 48;
+
+    tail_popcnt64_bitwise:
     cnt += popcnt64_bitwise(val);
   }
 
@@ -1011,11 +1037,23 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i < size)
   {
-    uint64_t val = 0;
     uint64_t bytes = (uint64_t) (size - i);
-    bytes = (bytes <= 7) ? bytes : 7;
-    for (uint64_t j = 0; j < bytes; j++)
-      val |= ((uint64_t) ptr[i + j]) << (j * 8);
+
+    uint64_t val = ptr[i + 0];
+    if (bytes == 1) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 1]) << 8;
+    if (bytes == 2) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 2]) << 16;
+    if (bytes == 3) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 3]) << 24;
+    if (bytes == 4) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 4]) << 32;
+    if (bytes == 5) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 5]) << 40;
+    if (bytes == 6) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 6]) << 48;
+
+    tail_popcnt64:
     cnt += popcnt64(val);
   }
 
@@ -1045,11 +1083,23 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i < size)
   {
-    uint64_t val = 0;
     uint64_t bytes = (uint64_t) (size - i);
-    bytes = (bytes <= 7) ? bytes : 7;
-    for (uint64_t j = 0; j < bytes; j++)
-      val |= ((uint64_t) ptr[i + j]) << (j * 8);
+
+    uint64_t val = ptr[i + 0];
+    if (bytes == 1) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 1]) << 8;
+    if (bytes == 2) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 2]) << 16;
+    if (bytes == 3) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 3]) << 24;
+    if (bytes == 4) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 4]) << 32;
+    if (bytes == 5) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 5]) << 40;
+    if (bytes == 6) goto tail_popcnt64;
+    val |= ((uint64_t) ptr[i + 6]) << 48;
+
+    tail_popcnt64:
     cnt += popcnt64(val);
   }
 
