@@ -565,7 +565,6 @@ static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
 
   uint64_t i = 0;
   uint64_t limit = size - size % 16;
-  uint64_t* cnt64;
 
   for(; i < limit; i += 16)
   {
@@ -597,7 +596,31 @@ static inline uint64_t popcnt_avx2(const __m256i* ptr, uint64_t size)
   for(; i < size; i++)
     cnt = _mm256_add_epi64(cnt, popcnt256(_mm256_loadu_si256(ptr + i)));
 
-  cnt64 = (uint64_t*) &cnt;
+  uint64_t* cnt64 = (uint64_t*) &cnt;
+
+  return cnt64[0] +
+         cnt64[1] +
+         cnt64[2] +
+         cnt64[3];
+}
+
+/*
+ * Plain popcnt256 loop for medium arrays (>= 96 && < 1024 bytes).
+ * For small arrays the AVX2 Harley-Seal reduction overhead
+ * does not pay off. Hence, this simpler AVX2 algorithm runs
+ * faster for these medium array sizes.
+ */
+#if __has_attribute(target)
+  __attribute__ ((target ("avx2")))
+#endif
+static inline uint64_t popcnt_avx2_medium(const __m256i* ptr, uint64_t size)
+{
+  __m256i cnt = _mm256_setzero_si256();
+
+  for (uint64_t i = 0; i < size; i++)
+    cnt = _mm256_add_epi64(cnt, popcnt256(_mm256_loadu_si256(ptr + i)));
+
+  uint64_t* cnt64 = (uint64_t*) &cnt;
 
   return cnt64[0] +
          cnt64[1] +
@@ -798,25 +821,30 @@ static uint64_t popcnt(const void* data, uint64_t size)
       defined(__AVX512BW__) && \
       defined(__AVX512VPOPCNTDQ__))
     /* For tiny arrays AVX512 is not worth it */
-    if (i + 40 <= size)
+    if (size >= 40)
   #else
     if ((cpuid & LIBPOPCNT_BIT_AVX512_VPOPCNTDQ) &&
-        i + 40 <= size)
+        size >= 40)
   #endif
       return popcnt_avx512(ptr, size);
 #endif
 
 #if defined(LIBPOPCNT_HAVE_AVX2)
   #if defined(__AVX2__)
-    /* AVX2 is only faster for arrays >= 512 bytes */
-    if (i + 512 <= size)
+    /* AVX2 is faster than scalar POPCNT from ~96 bytes */
+    if (size >= 96)
   #else
     if ((cpuid & LIBPOPCNT_BIT_AVX2) &&
-        i + 512 <= size)
+        size >= 96)
   #endif
     {
       const __m256i* ptr256 = (const __m256i*)(ptr + i);
-      cnt += popcnt_avx2(ptr256, (size - i) / 32);
+
+      if (size >= 1024)
+        cnt += popcnt_avx2(ptr256, size / 32);
+      else
+        cnt += popcnt_avx2_medium(ptr256, size / 32);
+
       i = size - size % 32;
     }
 #endif

@@ -76,7 +76,7 @@ Then ```libpopcnt.h``` chooses the fastest bit population count algorithm
 supported by your CPU:
 
 * If the CPU supports ```AVX512``` the ```AVX512 VPOPCNT``` algorithm is used.
-* Else if the CPU supports ```AVX2``` the ```AVX2 Harley Seal``` algorithm is used.
+* Else if the CPU supports ```AVX2``` one of two different ```AVX2``` popcount algorithms is used.
 * Else if the CPU supports ```POPCNT``` the ```POPCNT``` algorithm is used.
 * For CPUs without ```POPCNT``` instruction a portable integer algorithm is used.
 

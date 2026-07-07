@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     int cpuid = get_cpuid();
     if ((cpuid & LIBPOPCNT_BIT_AVX512_VPOPCNTDQ) && bytes >= 40)
       algo = "AVX512";
-    else if ((cpuid & LIBPOPCNT_BIT_AVX2) && bytes >= 512)
+    else if ((cpuid & LIBPOPCNT_BIT_AVX2) && bytes >= 96)
       algo = "AVX2";
     else if (cpuid & LIBPOPCNT_BIT_POPCNT)
       algo = "POPCNT";
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
         algo = "AVX512";
     #endif
     #if defined(LIBPOPCNT_HAVE_AVX2) && defined(__AVX2__)
-      if (algo.empty() && bytes >= 512)
+      if (algo.empty() && bytes >= 96)
         algo = "AVX2";
     #endif
     #if defined(LIBPOPCNT_HAVE_POPCNT) && defined(__POPCNT__)

@@ -3,6 +3,8 @@
   Version 4.2
 
   * `libpopcnt.h`: Improve tail bytes perf.
+  * `libpopcnt.h`: Up to 3x faster popcount for medium arrays (96 bytes to 1 KB)
+    using a simple AVX2 popcnt256 loop instead of scalar POPCNT or Harley-Seal.
   * `benchmark.yml`: Add automated benchmark CI.
 
 2026-07-01 Kim Walisch  <kim.walisch@gmail.com>
