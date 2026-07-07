@@ -869,7 +869,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
       if (i < size)
       {
-        uint64_t bytes = (uint64_t) (size - i);
+        uint64_t bytes = size - i;
 
         uint64_t val = ptr[i + 0];
         if (bytes == 1) goto tail_popcnt64;
@@ -910,7 +910,7 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
   if (i < size)
   {
-    uint64_t bytes = (uint64_t) (size - i);
+    uint64_t bytes = size - i;
 
     uint64_t val = ptr[i + 0];
     if (bytes == 1) goto tail_popcnt64_bitwise;
@@ -1065,7 +1065,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i < size)
   {
-    uint64_t bytes = (uint64_t) (size - i);
+    uint64_t bytes = size - i;
 
     uint64_t val = ptr[i + 0];
     if (bytes == 1) goto tail_popcnt64;
@@ -1111,7 +1111,7 @@ static inline uint64_t popcnt(const void* data, uint64_t size)
 
   if (i < size)
   {
-    uint64_t bytes = (uint64_t) (size - i);
+    uint64_t bytes = size - i;
 
     uint64_t val = ptr[i + 0];
     if (bytes == 1) goto tail_popcnt64;
