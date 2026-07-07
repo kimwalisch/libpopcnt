@@ -1,7 +1,8 @@
-2026-07-01 Kim Walisch  <kim.walisch@gmail.com>
+2026-07-07 Kim Walisch  <kim.walisch@gmail.com>
 
   Version 4.2
 
+  * `libpopcnt.h`: Improve tail bytes perf on x86 CPUs.
   * `benchmark.yml`: Add automated benchmark CI.
 
 2026-07-01 Kim Walisch  <kim.walisch@gmail.com>

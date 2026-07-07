@@ -841,12 +841,10 @@ static uint64_t popcnt(const void* data, uint64_t size)
 
       if (i < size)
       {
-        uint64_t val = 0;
         uint64_t bytes = (uint64_t) (size - i);
         bytes = (bytes <= 7) ? bytes : 7;
         for (uint64_t j = 0; j < bytes; j++)
-          val |= ((uint64_t) ptr[i + j]) << (j * 8);
-        cnt += popcnt64(val);
+          cnt += popcnt64(ptr[i + j]);
       }
 
       return cnt;
